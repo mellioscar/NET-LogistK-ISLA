@@ -1,0 +1,31 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Listado de Vehículos</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Dominio</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Tipo</th>
+            <th>Hidrogrúa</th>
+            <th>Carretilla</th>
+            <th>Fecha de Adquisición</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehiculo in vehiculos %}
+        <tr>
+            <td>{{ vehiculo.dominio }}</td>
+            <td>{{ vehiculo.marca }}</td>
+            <td>{{ vehiculo.modelo }}</td>
+            <td>{{ vehiculo.tipo }}</td>
+            <td>{{ vehiculo.hidrogrua|yesno:"Sí,No" }}</td>
+            <td>{{ vehiculo.carretilla|yesno:"Sí,No" }}</td>
+            <td>{{ vehiculo.fecha_adquisicion }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
