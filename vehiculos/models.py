@@ -1,3 +1,4 @@
+# vehiculos/models.py
 from django.db import models
 
 class Vehiculo(models.Model):
@@ -8,7 +9,9 @@ class Vehiculo(models.Model):
     tipo = models.CharField(max_length=20, choices=[('Balancín', 'Balancín'), ('Semi', 'Semi')])
     hidrogrua = models.BooleanField(default=False)  # Indica si tiene hidrogrúa
     carretilla = models.BooleanField(default=False)  # Indica si tiene carretilla elevadora
-    fecha_adquisicion = models.DateField()
+    anio = models.PositiveIntegerField()
+    vtv = models.DateField()
+    ruta = models.DateField()
 
     def __str__(self):
         return f"{self.marca} {self.modelo} - {self.dominio}"
