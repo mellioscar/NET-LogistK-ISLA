@@ -4,8 +4,11 @@ from .models import Reparto
 
 class RepartoForm(forms.ModelForm):
     fecha = forms.DateField(
-        input_formats=['%d/%m/%Y'],  # Define el formato dd/mm/aaaa
-        widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'})
+        input_formats=['%d/%m/%Y', '%Y-%m-%d'],  # Acepta ambos formatos
+        widget=forms.DateInput(format='%d/%m/%Y', attrs={
+            'placeholder': 'dd/mm/aaaa', 
+            'class': 'form-control'
+        })
     )
 
     class Meta:

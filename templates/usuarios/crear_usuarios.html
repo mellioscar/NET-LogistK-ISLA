@@ -1,12 +1,42 @@
-{% extends 'sb_admin2/index.html' %}
+{% extends "sb_admin2/index.html" %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>Crear Usuario</h2>
-    <form method="POST">
+    <form method="POST" class="row g-3">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_username" class="form-label me-3">Nombre de Usuario:</label>
+            {{ form.username }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_first_name" class="form-label me-3">Nombre:</label>
+            {{ form.first_name }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_last_name" class="form-label me-3">Apellido:</label>
+            {{ form.last_name }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_email" class="form-label me-3">Correo Electrónico:</label>
+            {{ form.email }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_password" class="form-label me-3">Contraseña:</label>
+            {{ form.password }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_confirm_password" class="form-label me-3">Confirmar Contraseña:</label>
+            {{ form.confirm_password }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_group" class="form-label me-3">Grupo:</label>
+            {{ form.group }}
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{% url 'listar_usuarios' %}" class="btn btn-danger">Cancelar</a>
+        </div>
     </form>
 </div>
 {% endblock %}

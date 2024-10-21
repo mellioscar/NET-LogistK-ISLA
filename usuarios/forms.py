@@ -3,9 +3,20 @@ from django import forms
 from django.contrib.auth.models import User, Group
 
 class CrearUsuarioForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
-    group = forms.ModelChoiceField(queryset=Group.objects.all(), required=True, label="Grupo")
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}), 
+        label="Contraseña"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}), 
+        label="Confirmar contraseña"
+    )
+    group = forms.ModelChoiceField(
+        queryset=Group.objects.all(), 
+        required=True, 
+        label="Grupo", 
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
     class Meta:
         model = User
@@ -15,6 +26,12 @@ class CrearUsuarioForm(forms.ModelForm):
             'email': 'Correo electrónico',
             'first_name': 'Nombre',
             'last_name': 'Apellido',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def clean(self):

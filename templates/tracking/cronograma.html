@@ -1,0 +1,57 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Cronograma Mensual</h2>
+<div class="container mt-4">
+    <div class="d-flex w-100">
+        <!-- Navegación entre meses -->
+        <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-outline-primary w-50 mx-2 text-center"><i class="fas fa-arrow-alt-circle-left"></i> Mes Anterior</a>
+
+        <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-outline-primary w-50 mx-2 text-center">Mes Siguiente <i class="fas fa-arrow-alt-circle-right"></i></i></a>
+    </div>
+
+    <!-- Estilos específicos para el calendario -->
+    <style>
+        .calendar-container {
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 5px;
+            font-size: 1.3em;
+            color: #b1b3b5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #9e9fa0;
+            font-weight: bold;
+        }
+
+        td {
+            width: calc(100% / 7);
+            background-color: #ffffff;
+        }
+
+        td:hover {
+            background-color: #e0e2e4;
+            font-weight: bold;
+        }
+
+    </style>
+
+    <div class="calendar-container">
+        {{ calendario_html|safe }}  <!-- Renderiza el calendario en HTML -->
+    </div>
+</div>
+{% endblock %}

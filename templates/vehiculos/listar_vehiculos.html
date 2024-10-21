@@ -2,6 +2,23 @@
 
 {% block content %}
 <h2>Listado de Vehículos</h2>
+
+<!-- Barra de búsqueda -->
+<form class="form-inline my-3" method="GET">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control bg-light border-0 small" placeholder="Buscar..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search fa-sm"></i>
+            </button>
+            <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger">
+                <i class="fas fa-times fa-sm"></i>
+            </a>
+
+        </div>
+    </div>
+</form>
+
 <table class="table table-bordered">
     <thead>
         <tr>

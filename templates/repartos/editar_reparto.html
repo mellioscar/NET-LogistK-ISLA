@@ -1,0 +1,13 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Editar Reparto</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+    <a href="{% url 'listar_repartos' %}" class="btn btn-danger">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

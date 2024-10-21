@@ -1,10 +1,50 @@
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
-<h1>Crear Nuevo Reparto</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Crear Reparto</button>
-</form>
+<div class="container mt-4">
+    <h2>Crear Nuevo Reparto</h2>
+    <form method="POST" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_fecha" class="form-label me-3">Fecha:</label>
+            {{ form.fecha }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_nro_reparto" class="form-label me-3">Nro.Reparto:</label>
+            {{ form.nro_reparto }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_chofer" class="form-label me-3">Chofer:</label>
+            {{ form.chofer }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_acompanante" class="form-label me-3">Acompañante:</label>
+            {{ form.acompanante }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_zona" class="form-label me-3">Zona:</label>
+            {{ form.zona }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_facturas" class="form-label me-3">Facturas:</label>
+            {{ form.facturas }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_estado" class="form-label me-3">Estado:</label>
+            {{ form.estado }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_entregas" class="form-label me-3">Entregas:</label>
+            {{ form.entregas }}
+        </div>
+        <div class="col-md-4 d-flex align-items-center mb-3">
+            <label for="id_incompletos" class="form-label me-3">Incompletos:</label>
+            {{ form.incompletos }}
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{% url 'listar_repartos' %}" class="btn btn-danger">Cancelar</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

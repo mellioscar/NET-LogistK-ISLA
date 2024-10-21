@@ -54,42 +54,66 @@
 
             <!-- Encabezado del menú -->
             <div class="sidebar-heading">
-                Gestión
+                Logística
             </div>
 
-            <!-- Elemento de navegación - Repartos con menú desplegable -->
+            <!-- Repartos con menú desplegable -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepartos"
                     aria-expanded="true" aria-controls="collapseRepartos">
-                    <i class="fas fa-fw fa-truck"></i>
+                    <i class="fas fa-road"></i>
                     <span>Repartos</span>
                 </a>
                 <div id="collapseRepartos" class="collapse" aria-labelledby="headingRepartos" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Repartos:</h6>
-                        <a class="collapse-item" href="{% url 'listar_repartos' %}">Ver Repartos</a>
+                        <a class="collapse-item" href="{% url 'listar_repartos' %}">Listar Repartos</a>
                         <a class="collapse-item" href="{% url 'crear_reparto' %}">Crear Reparto</a>
                     </div>
                 </div>
             </li>
 
-            <!-- Elemento de navegación - Vehículos con menú desplegable -->
+            <!-- Tracking con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTracking"
+                    aria-expanded="true" aria-controls="collapseRepartos">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Tracking</span>
+                </a>
+                <div id="collapseTracking" class="collapse" aria-labelledby="headingTracking" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Tracking:</h6>
+                        <a class="collapse-item" href="{% url 'mapa_tracking' %}">Mapa Tracking</a>
+                        <a class="collapse-item" href="{% url 'cronograma' %}">Cronograma</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Separador -->
+            <hr class="sidebar-divider">
+
+            <!-- Encabezado del menú -->
+            <div class="sidebar-heading">
+                Configuración
+            </div>
+
+            <!-- Vehículos con menú desplegable -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVehiculos"
                     aria-expanded="true" aria-controls="collapseVehiculos">
-                    <i class="fas fa-fw fa-car"></i>
+                    <i class="fas fa-fw fa-truck"></i>
                     <span>Vehículos</span>
                 </a>
                 <div id="collapseVehiculos" class="collapse" aria-labelledby="headingVehiculos" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Vehículos:</h6>
-                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Ver Vehículos</a>
+                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Listar Vehículos</a>
                         <a class="collapse-item" href="{% url 'agregar_vehiculo' %}">Agregar Vehículo</a>
                     </div>
                 </div>
             </li>
 
-            <!-- Elemento de navegación - Usuarios con menú desplegable -->
+            <!-- Usuarios con menú desplegable -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsuarios"
                     aria-expanded="true" aria-controls="collapseUsuarios">
@@ -99,7 +123,7 @@
                 <div id="collapseUsuarios" class="collapse" aria-labelledby="headingUsuarios" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Usuarios:</h6>
-                        <a class="collapse-item" href="{% url 'listar_usuarios' %}">Ver Usuarios</a>
+                        <a class="collapse-item" href="{% url 'listar_usuarios' %}">Listar Usuarios</a>
                         <a class="collapse-item" href="{% url 'crear_usuario' %}">Agregar Usuario</a>
                     </div>
                 </div>
@@ -129,19 +153,6 @@
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
-
-                    <!-- Barra superior - Búsqueda -->
-                    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Buscar..."
-                                aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
 
                     <!-- Barra superior - Navegación -->
                     <ul class="navbar-nav ml-auto">

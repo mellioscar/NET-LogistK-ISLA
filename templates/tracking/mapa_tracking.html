@@ -1,0 +1,9 @@
+{% extends "sb_admin2/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Mapa de Tracking</h2>
+    <iframe src="{% static 'tracking/tracking_mapa.html' %}" width="100%" height="600px"></iframe>
+</div>
+{% endblock %}
