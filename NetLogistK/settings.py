@@ -52,6 +52,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Configuración para los mensajes de Django
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
+}
+
+# Imágenes de perfil
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 ROOT_URLCONF = 'NetLogistK.urls'
 
 TEMPLATES = [
@@ -65,6 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'usuarios.context_processors.user_profile',
             ],
         },
     },
@@ -106,7 +122,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# Cambio del idioma a Español (Argentina)
+LANGUAGE_CODE = 'es-ar'
 
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
 
@@ -121,6 +138,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'NetLogistK' / 'static']
 
+
+# Configuraciones para la autenticación
+LOGIN_URL = 'login'  # Redirige al login si no está autenticado
+LOGIN_REDIRECT_URL = 'dashboard'  # Después de iniciar sesión, redirige aquí
+LOGOUT_REDIRECT_URL = 'login'  # Redirige al login después de cerrar sesión
 
 
 # Default primary key field type

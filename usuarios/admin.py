@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Profile
 
-# Register your models here.
+# Si quieres registrar el modelo Profile
+admin.site.register(Profile)

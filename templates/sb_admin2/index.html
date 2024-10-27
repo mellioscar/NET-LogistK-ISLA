@@ -10,7 +10,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{% block title %}Net-LogistK{% endblock %}</title>
+    <title>{% block title %}NET-LogistK{% endblock %}</title>
 
     <link rel="icon" type="image/x-icon" href="{% static 'img/Icono NET-LOGISTK.ico' %}">
 
@@ -34,7 +34,7 @@
             <!-- Sidebar - Marca de la aplicación -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
                 <div class="sidebar-brand-icon">
-                    <img src="{% static 'img/Logo NET-LOGISTK.png' %}" alt="Net-LogistK Logo" width="40" height="40" style="border-radius: 20%">
+                    <img src="{% static 'img/Logo NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="40" height="40" style="border-radius: 20%">
                 </div>
                 <div class="sidebar-brand-text mx-3">Net-LogistK</div>
             </a>
@@ -196,49 +196,26 @@
                             </div>
                         </li>
 
-                        <!-- Ítem de navegación - Mensajes -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-envelope fa-fw"></i>
-                                <span class="badge badge-danger badge-counter">5</span>
-                            </a>
-                            <!-- Dropdown - Mensajes -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="messagesDropdown">
-                                <h6 class="dropdown-header">Centro de Mensajes</h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="{% static 'img/undraw_profile_1.svg' %}" alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div class="font-weight-bold">
-                                        <div class="text-truncate">Hola, ¿podrías ayudarme con un problema que tengo?</div>
-                                        <div class="small text-gray-500">Emily Fowler · Hace 58m</div>
-                                    </div>
-                                </a>
-                            </div>
-                        </li>
-
                         <div class="topbar-divider d-none d-sm-block"></div>
 
                         <!-- Ítem de navegación - Información del usuario -->
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Usuario</span>
-                                <img class="img-profile rounded-circle" src="{% static 'img/undraw_profile.svg' %}">
+                            <!-- <a class="nav-link dropdown-toggle" href="{% url 'profile_logged_in' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.user.username }}</span>
+                                
+                                <img class="img-profile rounded-circle" src="{% if profile.image and profile.image.url %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}">
+                            </a> -->
+                            <a class="nav-link dropdown-toggle" href="{% url 'profile_logged_in' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.user.username }}</span>
+                                <img class="img-profile rounded-circle" 
+                                src="{% if profile and profile.image %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
+                                alt="Foto de Perfil">
                             </a>
+                            
                             <!-- Dropdown - Información del usuario -->
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Perfil
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Configuración
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a href="{% url 'profile' request.user.id %}" class="dropdown-item">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Perfil
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
@@ -447,7 +424,7 @@
                 <div class="modal-body">Selecciona "Cerrar sesión" si estás listo para terminar tu sesión actual.</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
-                    <a class="btn btn-primary" href="login.html">Cerrar sesión</a>
+                    <a class="btn btn-primary" href="{% url 'login' %}">Cerrar sesión</a>
                 </div>
             </div>
         </div>

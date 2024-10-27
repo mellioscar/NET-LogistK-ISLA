@@ -1,7 +1,7 @@
 # views.py
 from django.shortcuts import render
 from django.utils import timezone
-from django.db.models import Count, Sum  # Asegúrate de importar Sum aquí
+from django.db.models import Count, Sum
 from datetime import datetime
 from vehiculos.models import Vehiculo
 from repartos.models import Reparto
@@ -64,3 +64,4 @@ def dashboard(request):
         'labels_estados': labels_estados,
         'data_estados': data_estados,
     })
+
