@@ -9,9 +9,13 @@ from usuarios import views as usuarios_views
 from repartos import views as repartos_views
 from tracking import views as tracking_views
 from .views import dashboard
+from django.urls import path
+from . import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('exportar-reporte-pdf/', views.exportar_reporte_pdf, name='exportar_reporte_pdf'),
 
     # Redirigir a login por defecto
     path('', usuarios_views.login_view, name='login'),  # Vista de login como página inicial
@@ -36,7 +40,7 @@ urlpatterns = [
     path('ver_repartos/', repartos_views.listar_repartos, name='listar_repartos'),
     path('agregar_reparto/', repartos_views.crear_reparto, name='crear_reparto'),
     path('editar_reparto/<int:id>/', repartos_views.editar_reparto, name='editar_reparto'),
-    path('eliminar_reparto/<int:id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
+    path('eliminar_reparto/<int:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),

@@ -3,10 +3,10 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-lg-4 text-center mb-4">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body shadow animated--grow-in">
                     <h5 class="card-title">Foto de Perfil</h5>
                     {% load static %}
                     <img src="{% if profile.image and profile.image.url %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
@@ -19,7 +19,7 @@
 
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body shadow animated--grow-in">
                     <h5 class="card-title">Detalles de la Cuenta</h5>
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}

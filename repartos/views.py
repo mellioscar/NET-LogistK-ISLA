@@ -2,6 +2,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Reparto
 from .forms import RepartoForm
+from django.contrib import messages
 from django.db.models import Q
 
 def listar_repartos(request):
@@ -43,8 +44,11 @@ def editar_reparto(request, id):
     return render(request, 'repartos/editar_reparto.html', {'form': form})
 
 
-def eliminar_reparto(id):
-    reparto = get_object_or_404(Reparto, id=id)
-    reparto.delete()
-    return redirect('listar_repartos')
 
+def eliminar_reparto(request, reparto_id):
+    reparto = get_object_or_404(Reparto, id=reparto_id)
+    if request.method == 'POST':
+        reparto.delete()
+        messages.success(request, f'Reparto con ID {reparto_id} eliminado correctamente.')
+        return redirect('listar_repartos')
+    return redirect('listar_repartos')

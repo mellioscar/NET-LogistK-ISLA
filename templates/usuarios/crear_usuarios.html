@@ -1,42 +1,68 @@
+<!-- crear_usuarios.html-->
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Crear Usuario</h2>
-    <form method="POST" class="row g-3">
-        {% csrf_token %}
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_username" class="form-label me-3">Nombre de Usuario:</label>
-            {{ form.username }}
+<div class="card o-hidden border-0 shadow-lg my-5">
+    <div class="card-body p-0">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="p-5">
+                    <h2>Crear Usuario</h2>
+
+                    <form method="POST" class="user">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="id_username">Nombre de Usuario</label>
+                            {{ form.username }}
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                <label for="id_first_name">Nombre</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_last_name">Apellido</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_email">Correo Electrónico</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                <label for="id_password1">Contraseña</label>
+                                {{ form.password1 }}
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_password2">Confirmar Contraseña</label>
+                                {{ form.password2 }}
+                            </div>
+                        </div>
+                        <div class="form-group row justify-content-center">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary btn-user btn-block">
+                                    Guardar
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'listar_usuarios' %}" class="btn btn-danger btn-user btn-block">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </form>
+                    <!-- Muestra mensajes -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_first_name" class="form-label me-3">Nombre:</label>
-            {{ form.first_name }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_last_name" class="form-label me-3">Apellido:</label>
-            {{ form.last_name }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_email" class="form-label me-3">Correo Electrónico:</label>
-            {{ form.email }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_password" class="form-label me-3">Contraseña:</label>
-            {{ form.password }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_confirm_password" class="form-label me-3">Confirmar Contraseña:</label>
-            {{ form.confirm_password }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_group" class="form-label me-3">Grupo:</label>
-            {{ form.group }}
-        </div>
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <a href="{% url 'listar_usuarios' %}" class="btn btn-danger">Cancelar</a>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

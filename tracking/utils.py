@@ -23,9 +23,9 @@ def crear_mapa_tracking():
     # Construir la ruta del archivo KML usando Path
     kml_file_path = Path(settings.BASE_DIR) / 'NetLogistK' / 'ZonasCI.kml'
 
-    # Cargar el archivo KML utilizando fastkml
+    # Cargar el archivo KML y eliminar la declaración de codificación
     with open(kml_file_path, 'rt', encoding='utf-8') as f:
-        kml_content = f.read()
+        kml_content = f.read().replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "")
 
     # Procesar el archivo KML
     k = kml.KML()

@@ -1,50 +1,52 @@
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Crear Vehículo</h2>
-    <form method="POST" class="row g-3">
-        {% csrf_token %}
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_dominio" class="form-label me-3">Dominio: </label>
-            {{ form.dominio }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_marca" class="form-label me-3">Marca: </label>
-            {{ form.marca }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_modelo" class="form-label me-3">Modelo:</label>
-            {{ form.modelo }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_tipo" class="form-label me-3">Tipo:</label>
-            {{ form.tipo }}
-        </div>
-        <div class="col-md-4 d-flex mb-3">
-            <label for="id_hidrogrua" class="form-label me-3">Hidrogrúa:</label>
-            {{ form.hidrogrua }}
-        </div>
-        <div class="col-md-4 d-flex mb-3">
-            <label for="id_carretilla" class="form-label me-3">Carretilla:</label>
-            {{ form.carretilla }}
-        </div>        
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_anio" class="form-label me-3">Año:</label>
-            {{ form.anio }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_vtv" class="form-label me-3">VTV:</label>
-            {{ form.vtv }}
-        </div>
-        <div class="col-md-4 d-flex align-items-center mb-3">
-            <label for="id_ruta" class="form-label me-3">RUTA:</label>
-            {{ form.ruta }}
-        </div>
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger">Cancelar</a>
-        </div>
-    </form>
+<div class="card">
+    <div class="card-body shadow animated--grow-in">
+        <h2>Crear Vehículo</h2>
+        <form method="POST" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_dominio" class="form-label me-3">Dominio: </label>
+                {{ form.dominio }}
+            </div>
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_marca" class="form-label me-3">Marca: </label>
+                {{ form.marca }}
+            </div>
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_modelo" class="form-label me-3">Modelo:</label>
+                {{ form.modelo }}
+            </div>
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_tipo" class="form-label me-3">Tipo:</label>
+                {{ form.tipo }}
+            </div>
+            <div class="col-md-4 d-flex mb-3">
+                <label for="id_hidrogrua" class="form-label me-3">Hidrogrúa:</label>
+                {{ form.hidrogrua }}
+            </div>
+            <div class="col-md-4 d-flex mb-3">
+                <label for="id_carretilla" class="form-label me-3">Carretilla:</label>
+                {{ form.carretilla }}
+            </div>        
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_anio" class="form-label me-3">Año:</label>
+                {{ form.anio }}
+            </div>
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_vtv" class="form-label me-3">VTV:</label>
+                {{ form.vtv }}
+            </div>
+            <div class="col-md-4 d-flex align-items-center mb-3">
+                <label for="id_ruta" class="form-label me-3">RUTA:</label>
+                {{ form.ruta }}
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

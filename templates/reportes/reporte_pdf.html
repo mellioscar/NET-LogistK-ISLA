@@ -1,0 +1,153 @@
+<!-- reportes/reporte_pdf.html -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte PDF</title>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 5px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            height: 50px;
+            margin-right: 15px;
+        }
+        .dashboard-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px;
+            width: 23%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .table-section {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #0056b3;
+        }
+        /* .footer {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #555;
+            text-align: left;
+        } */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #f2f2f2;
+            padding: 7px;
+            text-align: left;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Encabezado con Logo y Título -->
+    <div class="header">
+        <img src="{{ logo_url }}" alt="Logo de NET_LogistK" style="height: 100px;">
+        <h1>Reporte de Repartos</h1>
+    </div>
+    
+    <div>
+        <hr class="sidebar-divider">
+        <p>{{ fecha }}</p>
+    </div>
+
+    <!-- Cards de Resumen -->
+    <div class="dashboard-summary">
+        <div class="card" style="background-color: #f8f9fa; border: 1px solid #0056b3; border-radius: 8px; padding: 20px; width: 23%; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h3>Total Repartos</h3>
+            <p>{{ total_repartos }}</p>
+        </div>
+        <div class="card" style="background-color: #f8f9fa; border: 1px solid #0056b3; border-radius: 8px; padding: 20px; width: 23%; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h3>Vehículos Disponibles</h3>
+            <p>{{ total_vehiculos }}</p>
+        </div>
+        <div class="card" style="background-color: #f8f9fa; border: 1px solid #0056b3; border-radius: 8px; padding: 20px; width: 23%; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h3>Repartos Finalizados</h3>
+            <p>{{ porcentaje_repartos_finalizados|floatformat:2 }}%</p>
+        </div>
+        <div class="card" style="background-color: #f8f9fa; border: 1px solid #0056b3; border-radius: 8px; padding: 20px; width: 23%; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h3>Entregas Incompletas</h3>
+            <p>{{ total_entregas_incompletas_hoy }}</p>
+        </div>
+    </div>
+    
+
+
+    <!-- Listado de Repartos -->
+    <div class="table-section">
+        <h2>Listado de Repartos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nro de Reparto</th>
+                    <th>Chofer</th>
+                    <th>Zona</th>
+                    <th>Facturas</th>
+                    <th>Estado</th>
+                    <th>Entregas</th>
+                    <th>Incompletos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reparto in repartos %}
+                    <tr>
+                        <td>{{ reparto.nro_reparto }}</td>
+                        <td>{{ reparto.chofer }}</td>
+                        <td>{{ reparto.zona }}</td>
+                        <td>{{ reparto.facturas }}</td>
+                        <td>{{ reparto.estado }}</td>
+                        <td>{{ reparto.entregas }}</td>
+                        <td>{{ reparto.incompletos }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8">No hay repartos para la fecha seleccionada.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pie de página con los datos del usuario -->
+    <div class="footer">
+        <h5>Generado por: {{ usuario }} (Fecha: {{ fecha }})</h5>
+    </div>
+</body>
+</html>

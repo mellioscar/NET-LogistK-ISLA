@@ -2,11 +2,64 @@
 from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Count, Sum
-from datetime import datetime
+from datetime import datetime, date
 from vehiculos.models import Vehiculo
 from repartos.models import Reparto
 from django.db.models.functions import TruncMonth
 import pytz
+
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.templatetags.static import static
+
+def exportar_reporte_pdf(request):
+    # Obtener la fecha seleccionada
+    fecha_str = request.GET.get('fecha')
+    if fecha_str:
+        fecha_actual = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    else:
+        fecha_actual = date.today()
+
+    # Obtener datos de repartos
+    logo_url = request.build_absolute_uri(static('img/Logo NET-LOGISTK.jpg'))
+    repartos = Reparto.objects.filter(fecha=fecha_actual)
+    total_repartos = repartos.count()
+    total_vehiculos = Vehiculo.objects.count()
+    total_repartos_finalizados = repartos.filter(estado='Finalizado').count()
+    porcentaje_repartos_finalizados = (total_repartos_finalizados / total_repartos) * 100 if total_repartos > 0 else 0
+    total_entregas_incompletas_hoy = repartos.aggregate(total_incompletos=Sum('incompletos'))['total_incompletos'] or 0
+
+    # Calcular los porcentajes de estados para el gráfico de barras
+    estados = repartos.values('estado').annotate(total=Count('estado'))
+    estados_data = []
+    for estado in estados:
+        porcentaje = (estado['total'] / total_repartos) * 100 if total_repartos > 0 else 0
+        estados_data.append({
+            'estado': estado['estado'],
+            'porcentaje': porcentaje,
+            'total': estado['total']
+        })
+
+    context = {
+        'fecha': fecha_actual,
+        'repartos': repartos,
+        'total_repartos': total_repartos,
+        'total_vehiculos': total_vehiculos,
+        'porcentaje_repartos_finalizados': porcentaje_repartos_finalizados,
+        'total_entregas_incompletas_hoy': total_entregas_incompletas_hoy,
+        'logo_url': logo_url,
+        'usuario': request.user.get_full_name() or request.user.username,
+    }
+
+    html_string = render_to_string('reportes/reporte_pdf.html', context)
+    html = HTML(string=html_string)
+    pdf_file = html.write_pdf()
+
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporte_{fecha_actual}.pdf"'
+    return response
+
 
 def dashboard(request):
     # Zona horaria de Buenos Aires
@@ -64,4 +117,3 @@ def dashboard(request):
         'labels_estados': labels_estados,
         'data_estados': data_estados,
     })
-

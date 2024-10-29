@@ -40,6 +40,7 @@ def logout_view(request):
     storage = messages.get_messages(request)
     return redirect('login')
 
+
 @login_required
 def listar_usuarios(request):
     query = request.GET.get('search', '')
@@ -54,11 +55,18 @@ def listar_usuarios(request):
     
     return render(request, 'usuarios/listar_usuarios.html', {'usuarios': usuarios, 'search': query})
 
+
 def crear_usuario(request):
     if request.method == 'POST':
         form = CrearUsuarioForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)
+            user.save()
+
+            # Asignar el grupo "Ventas" al nuevo usuario
+            ventas_group, created = Group.objects.get_or_create(name='Ventas')
+            user.groups.add(ventas_group)
+
             messages.success(request, 'Usuario creado exitosamente.')
             return redirect('listar_usuarios')
     else:
