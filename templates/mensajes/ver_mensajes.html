@@ -1,0 +1,46 @@
+<!-- ver_mensajes.html -->
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Lista de Mensajes</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Remitente</th>
+                        <th>Fecha de Envío</th>
+                        <th>Contenido</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for mensaje in mensajes %}
+                        <tr>
+                            <td>{{ mensaje.emisor.username }}</td>
+                            <td>{{ mensaje.fecha_envio|date:"d M Y, H:i" }}</td>
+                            <td>{{ mensaje.contenido|truncatewords:10 }}</td>
+                            <td>{{ mensaje.leido|yesno:"Leído,No leído" }}</td>
+                            <td>
+                                <a href="{% url 'leer_mensaje' mensaje.id %}" class="btn btn-sm btn-primary">Leer</a>
+                                <a href="{% url 'responder_mensaje' mensaje.emisor.id %}" class="btn btn-sm btn-success">Responder</a>
+                                <a href="{% url 'eliminar_mensaje' mensaje.id %}" onclick="return confirm('¿Estás seguro de eliminar este mensaje?');" class="btn btn-sm btn-danger">Eliminar</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No tienes mensajes.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

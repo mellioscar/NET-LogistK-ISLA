@@ -19,8 +19,6 @@ Net-LogistK es una aplicación web integral para la gestión de logística, dist
 - **Backend**: Django (Python)
 - **Frontend**: ReactJS, Bootstrap (SB Admin 2 Template)
 - **Mapas**: Leaflet.js para integración con OpenStreetMap
-- **Autenticación**: Firebase Authentication
-- **Base de Datos**: Firebase Realtime Database para almacenamiento de datos en tiempo real
 
 ## Instalación y Configuración
 

@@ -1,0 +1,23 @@
+{% extends 'sb_admin2/index.html' %}
+
+{% block content %}
+<h2>Cambiar Contraseña</h2>
+
+<div class="card o-hidden border-0 shadow-lg my-5">
+    <div class="card-body p-4">
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}  <!-- Renderiza el formulario de cambio de contraseña -->
+            
+            <div class="row justify-content-center">
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-warning btn-block">Actualizar Contraseña</button>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'listar_usuarios' %}" class="btn btn-danger btn-block">Cancelar</a>
+            </div>
+        </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

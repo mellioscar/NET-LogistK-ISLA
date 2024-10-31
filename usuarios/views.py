@@ -5,11 +5,28 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import UserUpdateForm, ProfileUpdateForm, CrearUsuarioForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from .forms import UserUpdateForm, ProfileUpdateForm
 from django.db import IntegrityError
-from .models import Profile
 from django.contrib.auth.models import Group
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib import messages
+
+@login_required
+def cambiar_contrasena(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Mantener la sesión activa tras el cambio
+            messages.success(request, 'Tu contraseña ha sido actualizada exitosamente.')
+            return redirect('profile_logged_in')  # Redirige a la página de perfil
+        else:
+            messages.error(request, 'Por favor, corrige los errores en el formulario.')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'usuarios/cambiar_contrasena.html', {'form': form})
 
 
 def login_view(request):
@@ -63,7 +80,7 @@ def crear_usuario(request):
             user = form.save(commit=False)
             user.save()
 
-            # Asignar el grupo "Ventas" al nuevo usuario
+            # Asignar el grupo "Ventas" a nuevo usuario
             ventas_group, created = Group.objects.get_or_create(name='Ventas')
             user.groups.add(ventas_group)
 
@@ -82,7 +99,8 @@ def logged_in_user_profile(request):
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
-        
+        password_form = PasswordChangeForm(user, request.POST)  # Inicializa con datos POST
+
         # Actualización del grupo
         group_id = request.POST.get("group")
         if group_id:
@@ -92,36 +110,45 @@ def logged_in_user_profile(request):
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             profile = p_form.save(commit=False)
-            # Asignar imagen predeterminada si no se proporciona una
             if not profile.image:
                 profile.image = 'profile_pics/default.jpg'
             profile.save()
             messages.success(request, 'Tu perfil ha sido actualizado.')
-            return redirect('profile_logged_in')  # Redirige para evitar reenvío de formulario
+
+            # Cambio de contraseña
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # Mantener la sesión después del cambio
+                messages.success(request, 'Tu contraseña ha sido actualizada.')
+                return redirect('profile_logged_in')
+            else:
+                messages.error(request, 'Por favor, corrige los errores en el formulario de cambio de contraseña.')
+
     else:
         u_form = UserUpdateForm(instance=user)
         p_form = ProfileUpdateForm(instance=profile)
+        password_form = PasswordChangeForm(user)  # Inicializa sin datos POST para GET
 
     context = {
         'u_form': u_form,
         'p_form': p_form,
+        'password_form': password_form,
         'groups': Group.objects.all(),
         'user_group': user.groups.first(),
-        'profile': profile  # Aseguramos que el contexto incluya el perfil
+        'profile': profile,
     }
 
     return render(request, 'usuarios/profile.html', context)
 
 
-
 @login_required
 def profile(request, user_id):
     user = User.objects.get(id=user_id)
-    profile = user.profile
+    selected_profile = user.profile
 
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=user)
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=selected_profile)
 
         group_id = request.POST.get("group")
         if group_id:
@@ -137,7 +164,7 @@ def profile(request, user_id):
             return redirect('profile', user_id=user.id)
     else:
         u_form = UserUpdateForm(instance=user)
-        p_form = ProfileUpdateForm(instance=profile)
+        p_form = ProfileUpdateForm(instance=selected_profile)
 
     context = {
         'u_form': u_form,
@@ -145,10 +172,11 @@ def profile(request, user_id):
         'groups': Group.objects.all(),
         'user_group': user.groups.first(),
         'user_id': user_id,
-        'profile': profile  # Incluimos el perfil en el contexto
+        'selected_profile': selected_profile
     }
 
     return render(request, 'usuarios/profile.html', context)
+
 
 
 def register_view(request):

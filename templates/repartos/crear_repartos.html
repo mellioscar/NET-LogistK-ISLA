@@ -42,9 +42,14 @@
                 <label for="id_incompletos" class="form-label me-3">Incompletos:</label>
                 {{ form.incompletos }}
             </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                <a href="{% url 'listar_repartos' %}" class="btn btn-danger">Cancelar</a>
+            
+            <div class="col-12 row justify-content-center">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-block">Guardar</button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'listar_repartos' %}" class="btn btn-danger btn-block">Cancelar</a>
+                </div>
             </div>
         </form>
     </div>

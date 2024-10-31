@@ -2,21 +2,25 @@
 {% extends 'sb_admin2/index.html' %}
 
 {% block content %}
+<h2>Perfil de Usuario</h2>
+
 <div class="container mt-4">
     <div class="row mb-4">
+        <!-- Foto de perfil y detalles de la cuenta -->
         <div class="col-lg-4 text-center mb-4">
             <div class="card">
                 <div class="card-body shadow animated--grow-in">
                     <h5 class="card-title">Foto de Perfil</h5>
                     {% load static %}
-                    <img src="{% if profile.image and profile.image.url %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
-                        alt="Foto de Perfil" class="img-fluid rounded-circle" style="object-fit: contain; max-width: 300px;">
+                    <img src="{% if selected_profile.image and selected_profile.image.url %}{{ selected_profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
+                    alt="Foto de Perfil" class="img-fluid rounded-circle" style="object-fit: contain; max-width: 300px;">
                     
                     <p class="text-muted">JPG o PNG de no más de 5 MB</p>
                 </div>
             </div>
         </div>
 
+        <!-- Formulario de edición de perfil -->
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body shadow animated--grow-in">
@@ -50,17 +54,34 @@
                                     <option value="{{ group.id }}" {% if user_group == group %}selected{% endif %}>{{ group.name }}</option>
                                 {% endfor %}
                             </select>
-                        </div>                        
-                        <button type="submit" class="btn btn-primary btn-block mt-3">Guardar cambios</button>
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary btn-block">Guardar cambios</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'listar_usuarios' %}" class="btn btn-danger btn-block">Cancelar</a>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Formulario de cambio de contraseña -->
+    <div class="row mt-4 mb-4">
+        <div class="col-lg-8 offset-lg-4">
+            <div class="card">
+                <div class="card-body shadow animated--grow-in">
+                    <h5 class="card-title">Cambiar Contraseña</h5>
+                    <a href="{% url 'cambiar_contrasena' %}" class="btn btn-warning btn-block">Cambiar Contraseña</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    
 </div>
 {% endblock %}

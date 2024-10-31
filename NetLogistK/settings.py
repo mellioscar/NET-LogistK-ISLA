@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'usuarios',
     'vehiculos',
     'tracking',
+    'mensajes',
 ]
 
 MIDDLEWARE = [

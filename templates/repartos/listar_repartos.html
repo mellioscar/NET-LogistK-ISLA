@@ -1,3 +1,4 @@
+<!-- listar_repartos.html -->
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
@@ -18,64 +19,78 @@
     </div>
 </form>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Nro de Reparto</th>
-            <th>Chofer</th>
-            <th>Acompañante</th>
-            <th>Zona</th>
-            <th>Facturas</th>
-            <th>Estado</th>
-            <th>Entregas</th>
-            <th>Incompletos</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for reparto in repartos %}
-        <tr>
-            <td>{{ reparto.fecha|date:"d/m/Y" }}</td>
-            <td>{{ reparto.nro_reparto }}</td>
-            <td>{{ reparto.chofer }}</td>
-            <td>{{ reparto.acompanante }}</td>
-            <td>{{ reparto.zona }}</td>
-            <td>{{ reparto.facturas }}</td>
-            <td>{{ reparto.estado }}</td>
-            <td>{{ reparto.entregas }}</td>
-            <td>{{ reparto.incompletos }}</td>
-            <td>
-                <a href="{% url 'editar_reparto' reparto.id %}" class="btn btn-info btn-sm">Editar</a>
-                <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ reparto.id }}">Eliminar</button>
-            
-            </td>
-        </tr>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Repartos</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Nro de Reparto</th>
+                        <th>Chofer</th>
+                        <th>Acompañante</th>
+                        <th>Zona</th>
+                        <th>Facturas</th>
+                        <th>Estado</th>
+                        <th>Entregas</th>
+                        <th>Incompletos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
 
-        <!-- Modal de confirmación de eliminación de reparto -->
-        <div class="modal fade" id="deleteModal{{ reparto.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ reparto.id }}" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel{{ reparto.id }}">Confirmar Eliminación</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                <tbody>
+                    {% for reparto in repartos %}
+                    <tr>
+                        <td>{{ reparto.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ reparto.nro_reparto }}</td>
+                        <td>{{ reparto.chofer }}</td>
+                        <td>{{ reparto.acompanante }}</td>
+                        <td>{{ reparto.zona }}</td>
+                        <td>{{ reparto.facturas }}</td>
+                        <td>
+                            <span style="{% if reparto.estado == 'Finalizado' %}color: green; font-weight: bold;{% elif reparto.estado == 'Abierto' %}color: blue; font-weight: bold;{% elif reparto.estado == 'Cerrado' %}color: red; font-weight: bold;{% endif %}">
+                            {{ reparto.estado }}
+                            </span>
+                        </td>
+                        <td>{{ reparto.entregas }}</td>
+                        <td>{{ reparto.incompletos }}</td>
+                        <td>
+                            <a href="{% url 'editar_reparto' reparto.id %}" class="btn btn-info btn-sm">Editar</a>
+                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ reparto.id }}">Eliminar</button>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de confirmación de eliminación de reparto -->
+                    <div class="modal fade" id="deleteModal{{ reparto.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ reparto.id }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteModalLabel{{ reparto.id }}">Confirmar Eliminación</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Estás seguro que deseas eliminar el reparto <strong>Nro.: {{ reparto.nro_reparto }} del {{ reparto.fecha }}</strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    <form method="POST" action="{% url 'eliminar_reparto' reparto.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        ¿Estás seguro que deseas eliminar el reparto <strong>Nro.: {{ reparto.nro_reparto }} del {{ reparto.fecha }}</strong>?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                        <form method="POST" action="{% url 'eliminar_reparto' reparto.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
-    </tbody>
-</table>
+    </div>
+</div>
+
 {% endblock %}

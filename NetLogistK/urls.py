@@ -8,10 +8,10 @@ from vehiculos import views as vehiculos_views
 from usuarios import views as usuarios_views
 from repartos import views as repartos_views
 from tracking import views as tracking_views
+from mensajes import views as mensajes_views
 from .views import dashboard
 from django.urls import path
 from . import views
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +31,7 @@ urlpatterns = [
     path('crear_usuario/', usuarios_views.crear_usuario, name='crear_usuario'),
     path('', usuarios_views.login_view, name='login'),
     path('register/', usuarios_views.register_view, name='register'),
+    path('cambiar_contrasena/', usuarios_views.cambiar_contrasena, name='cambiar_contrasena'),
     path('logout/', usuarios_views.logout_view, name='logout'),
     path('profile/', usuarios_views.logged_in_user_profile, name='profile_logged_in'),  # Para el perfil del usuario logueado
     path('profile/<int:user_id>/', usuarios_views.profile, name='profile'),  # Para el perfil de cualquier otro usuario
@@ -41,10 +42,18 @@ urlpatterns = [
     path('agregar_reparto/', repartos_views.crear_reparto, name='crear_reparto'),
     path('editar_reparto/<int:id>/', repartos_views.editar_reparto, name='editar_reparto'),
     path('eliminar_reparto/<int:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
+    path('repartos_filtrados/', repartos_views.repartos_filtrados, name='repartos_filtrados'),
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),
     path('cronograma/', tracking_views.cronograma, name='cronograma'),
+
+    # Rutas para Mensajes
+    path('ver_mensajes/', mensajes_views.ver_mensajes, name='ver_mensajes'),
+    path('enviar_mensaje/', mensajes_views.enviar_mensaje, name='enviar_mensaje'),
+    path('leer_mensaje/<int:mensaje_id>/', mensajes_views.leer_mensaje, name='leer_mensaje'),
+    path('responder_mensaje/<int:emisor_id>/', mensajes_views.responder_mensaje, name='responder_mensaje'),
+    path('eliminar_mensaje/<int:mensaje_id>/', mensajes_views.eliminar_mensaje, name='eliminar_mensaje'),
 
     # Ruta para el dashboard protegido
     path('dashboard/', login_required(dashboard), name='dashboard'),  # Proteger el acceso al dashboard

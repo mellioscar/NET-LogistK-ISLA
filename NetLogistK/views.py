@@ -13,6 +13,10 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.templatetags.static import static
 
+from django.contrib.auth.decorators import login_required
+from mensajes.models import Mensaje
+from usuarios.models import Profile
+
 def exportar_reporte_pdf(request):
     # Obtener la fecha seleccionada
     fecha_str = request.GET.get('fecha')
@@ -61,6 +65,7 @@ def exportar_reporte_pdf(request):
     return response
 
 
+@login_required
 def dashboard(request):
     # Zona horaria de Buenos Aires
     zona_horaria = pytz.timezone('America/Argentina/Buenos_Aires')
@@ -105,7 +110,16 @@ def dashboard(request):
     estados_repartos = Reparto.objects.filter(fecha=fecha_seleccionada).values('estado').annotate(total=Count('estado'))
     labels_estados = [estado['estado'] for estado in estados_repartos]
     data_estados = [estado['total'] for estado in estados_repartos]
+
+
+    # Obtener el perfil del usuario autenticado
+    profile_logged_in = Profile.objects.get(user=request.user)
+    # Obtener la cantidad de mensajes no leídos del usuario actual
+    mensajes_no_leidos = Mensaje.objects.filter(receptor=request.user, leido=False).count()
     
+    # Obtener los últimos 5 mensajes no leídos
+    mensajes_recientes = Mensaje.objects.filter(receptor=request.user, leido=False).order_by('-fecha_envio')[:5]
+
     return render(request, 'sb_admin2/index.html', {
         'fecha_actual': fecha_seleccionada,
         'total_repartos_hoy': total_repartos_hoy,
@@ -116,4 +130,7 @@ def dashboard(request):
         'data_repartos_mensuales': data_repartos_mensuales,
         'labels_estados': labels_estados,
         'data_estados': data_estados,
+        'profile_logged_in': profile_logged_in,
+        'mensajes_no_leidos': mensajes_no_leidos,
+        'mensajes_recientes': mensajes_recientes,
     })

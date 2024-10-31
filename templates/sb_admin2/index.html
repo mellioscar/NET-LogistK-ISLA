@@ -129,6 +129,22 @@
                 </div>
             </li>
 
+            <!-- Mensajes con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMensajes"
+                    aria-expanded="true" aria-controls="collapseMensajes">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Mensajes</span>
+                </a>
+                <div id="collapseMensajes" class="collapse" aria-labelledby="headingMensajes" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Mensajes:</h6>
+                        <a class="collapse-item" href="{% url 'ver_mensajes' %}">Ver Mensajes</a>
+                        <a class="collapse-item" href="{% url 'enviar_mensaje' %}">Enviar Mensaje</a>
+                    </div>
+                </div>
+            </li>
+
             <!-- Separador -->
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -149,6 +165,19 @@
                 <!-- Barra superior -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
+                    <!-- Mensajes Flash -->
+                    {% if messages %}
+                        <div class="container mt-3">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
                     <!-- Botón para la barra lateral en dispositivos móviles -->
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
@@ -163,63 +192,31 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-envelope fa-fw"></i>
                                 <!-- Counter - Messages -->
-                                <span class="badge badge-danger badge-counter">6</span>
+                                <span class="badge badge-danger badge-counter">{{ mensajes_no_leidos }}</span>
                             </a>
                             <!-- Dropdown - Mensajes -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="messagesDropdown">
                                 <h6 class="dropdown-header">
-                                    Message Center
+                                    Centro de Mensajes
                                 </h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/person.png"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div class="font-weight-bold">
-                                        <div class="text-truncate">Hi there! I am wondering if you can help me with a
-                                            problem I've been having.</div>
-                                        <div class="small text-gray-500">Emily Fowler · 58m</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/person.png"
-                                            alt="...">
-                                        <div class="status-indicator"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">I have the photos that you ordered last month, how
-                                            would you like them sent to you?</div>
-                                        <div class="small text-gray-500">Jae Chun · 1d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/person.png"
-                                            alt="...">
-                                        <div class="status-indicator bg-warning"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Last month's report looks great, I am very happy with
-                                            the progress so far, keep up the good work!</div>
-                                        <div class="small text-gray-500">Morgan Alvarez · 2d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Am I a good boy? The reason I ask is because someone
-                                            told me that people say this to all dogs, even if they aren't good...</div>
-                                        <div class="small text-gray-500">Chicken the Dog · 2w</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Ver todos los Mensajes</a>
+                                
+                                {% for mensaje in mensajes_recientes %}
+                                    <a class="dropdown-item d-flex align-items-center" href="{% url 'leer_mensaje' mensaje.id %}">
+                                        <div class="dropdown-list-image mr-3">
+                                            <img class="rounded-circle" src="{% if mensaje.emisor.profile.image %}{{ mensaje.emisor.profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" alt="Imagen de perfil">
+                                            <div class="status-indicator bg-success"></div>
+                                        </div>
+                                        <div class="font-weight-bold">
+                                            <div class="text-truncate">{{ mensaje.contenido|truncatewords:10 }}</div>
+                                            <div class="small text-gray-500">{{ mensaje.emisor.username }} · {{ mensaje.fecha_envio|date:"d M. Y H:i" }}</div>
+                                        </div>
+                                    </a>
+                                {% empty %}
+                                    <p class="dropdown-item text-center small text-gray-500">No tienes mensajes nuevos.</p>
+                                {% endfor %}
+                                
+                                <a class="dropdown-item text-center small text-gray-500" href="{% url 'ver_mensajes' %}">Ver todos los Mensajes</a>
                             </div>
                         </li>
 
@@ -228,7 +225,7 @@
                         <!-- Ítem de navegación - Información del usuario -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="{% url 'profile_logged_in' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.user.username }}</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ full_name }}</span>
                                 <img class="img-profile rounded-circle" 
                                 src="{% if profile and profile.image %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
                                 alt="Foto de Perfil">
@@ -388,13 +385,13 @@
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">ESTADISTICAS DE ENTREGAS</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">ESTADISTICAS DE REPARTOS</h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="chart-pie pt-4 pb-2">
+                                    <div class="chart-pie">
                                         <canvas id="myPieChart"></canvas>
                                     </div>
-                                    <div class="mt-4 text-center small">
+                                    <div class="text-center small">
                                         <span class="mr-2">
                                             <i class="fas fa-circle text-primary"></i> Abierto
                                         </span>
@@ -405,9 +402,17 @@
                                             <i class="fas fa-circle text-info"></i> Finalizado
                                         </span>
                                     </div>
+                                    <!-- Botón para ver repartos filtrados -->
+                                    <div class="text-center">
+                                        <form method="get" action="{% url 'repartos_filtrados' %}">
+                                            <input type="hidden" name="fecha" value="{{ fecha_actual|date:'Y-m-d' }}">
+                                            <button type="submit" class="btn-icon-split btn-primary btn-sm">VER REPARTOS</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
                     {% endblock %}
                 </div>
@@ -419,10 +424,12 @@
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; App NET-LogistK 2024</span>
+                        <span>Copyright &copy; App NET-LogistK 2024</span> |
+                        <a href="https://www.linkedin.com/in/oscar-lizzi-36402a2b3/" target="_blank" class="text-primary">Acerca de mí</a>
                     </div>
                 </div>
             </footer>
+
             <!-- Fin del pie de página -->
 
         </div>

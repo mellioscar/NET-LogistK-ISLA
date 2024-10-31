@@ -4,6 +4,7 @@ from .models import Reparto
 from .forms import RepartoForm
 from django.contrib import messages
 from django.db.models import Q
+from datetime import datetime
 
 def listar_repartos(request):
     query = request.GET.get('search', '') 
@@ -44,7 +45,6 @@ def editar_reparto(request, id):
     return render(request, 'repartos/editar_reparto.html', {'form': form})
 
 
-
 def eliminar_reparto(request, reparto_id):
     reparto = get_object_or_404(Reparto, id=reparto_id)
     if request.method == 'POST':
@@ -52,3 +52,23 @@ def eliminar_reparto(request, reparto_id):
         messages.success(request, f'Reparto con ID {reparto_id} eliminado correctamente.')
         return redirect('listar_repartos')
     return redirect('listar_repartos')
+
+
+def repartos_filtrados(request):
+    # Obtener parámetros de fecha y estado de la URL
+    fecha_str = request.GET.get('fecha')
+    fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else None
+    estado = request.GET.get('estado')
+
+    # Filtrar repartos por fecha y estado si está presente
+    repartos = Reparto.objects.filter(fecha=fecha)
+    if estado:
+        repartos = repartos.filter(estado=estado)
+
+    context = {
+        'repartos': repartos,
+        'fecha': fecha,
+        'estado': estado,
+    }
+
+    return render(request, 'repartos/repartos_filtrados.html', context)
