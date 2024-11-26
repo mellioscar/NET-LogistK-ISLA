@@ -1,4 +1,4 @@
-# NET-LogistK 
+# NET-LogistK ISLA
 
 ## Descripción del Proyecto
 
@@ -22,7 +22,7 @@ Net-LogistK es una aplicación web integral para la gestión de logística, dist
 
 ## Instalación y Configuración
 
-1. **Clonar el Repositorio**: `git clone https://github.com/mellioscar/OscarLizzi_NET-LogistK.git`
+1. **Clonar el Repositorio**: `git clone https://github.com/mellioscar/NET-LogistK-ISLA.git`
 2. **Instalar Dependencias**: Ejecutar `pip install -r requirements.txt` para instalar las dependencias de Python.
 3. **Migrar la Base de Datos**: `python manage.py migrate`
 4. **Iniciar el Servidor**: `python manage.py runserver`

@@ -1,13 +1,14 @@
 <!-- listar_vehiculos.html -->
 {% extends "sb_admin2/index.html" %}
+{% load static %}
 
 {% block content %}
 <h2>Listado de Vehículos</h2>
 
 <!-- Barra de búsqueda -->
-<form class="form-inline my-3" method="GET">
+<form class="form-inline my-2" method="GET">
     <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-0 small" placeholder="Buscar..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
+        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
         <div class="input-group-append">
             <button class="btn btn-primary" type="submit">
                 <i class="fas fa-search fa-sm"></i>
@@ -28,31 +29,74 @@
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>Dominio</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Tipo</th>
-                        <th>Hidrogrúa</th>
-                        <th>Carretilla</th>
-                        <th>Año</th>
+                        <th>
+                            <a href="?sort=dominio&order={% if sort == 'dominio' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Dominio
+                                {% if sort == "dominio" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=marca&order={% if sort == 'marca' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Marca
+                                {% if sort == "marca" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=marca&order={% if sort == 'modelo' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Modelo
+                                {% if sort == "modelo" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=modelo&order={% if sort == 'tipo' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Tipo
+                                {% if sort == "tipo" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=tipo&order={% if sort == 'sucursal' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Sucursal
+                                {% if sort == "sucursal" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=anio&order={% if sort == 'anio' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                Año
+                                {% if sort == "anio" %}
+                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>VTV</th>
                         <th>RUTA</th>
+                        <th>Seguro</th>
                         <th>Acciones</th>
                     </tr>
-                </thead>
-
+                </thead>                
                 <tbody>
                     {% for vehiculo in vehiculos %}
                     <tr>
                         <td>{{ vehiculo.dominio }}</td>
                         <td>{{ vehiculo.marca }}</td>
                         <td>{{ vehiculo.modelo }}</td>
-                        <td>{{ vehiculo.tipo }}</td>
-                        <td>{{ vehiculo.hidrogrua|yesno:"Sí,No" }}</td>
-                        <td>{{ vehiculo.carretilla|yesno:"Sí,No" }}</td>
+                        <td style="text-align: center;">
+                            <img src="{% static 'img/' %}{{ vehiculo.tipo|lower }}.png" alt="{{ vehiculo.tipo }}" style="width: 55px;" title="{{ vehiculo.tipo }}">
+                        </td>                        
+                        <td>{{ vehiculo.sucursal }}</td>
                         <td>{{ vehiculo.anio }}</td>
-                        <td>{{ vehiculo.vtv|date:"d/m/Y" }}</td>
-                        <td>{{ vehiculo.ruta|date:"d/m/Y" }}</td>
+                        <td>{{ vehiculo.fecha_vtv }}</td>
+                        <td>{{ vehiculo.fecha_ruta }}</td>
+                        <td>{{ vehiculo.fecha_seguro }}</td>
                         <td>
                             <a href="{% url 'editar_vehiculo' vehiculo.id %}" class="btn btn-info btn-sm">Editar</a>
                             <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ vehiculo.id }}">Eliminar</button>
@@ -70,7 +114,7 @@
                                     </button>
                                 </div>
                                 <div class="modal-body">
-                                    ¿Estás seguro que deseas eliminar el vehículo <strong>{{ vehiculo.marca }} {{ vehiculo.modelo }} Dominio: {{ vehiculo.dominio }}</strong>?
+                                    ¿Estás seguro que deseas eliminar el vehículo <strong>{{ vehiculo.marca_nombre }} {{ vehiculo.modelo_nombre }} Dominio: {{ vehiculo.dominio }}</strong>?
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -88,6 +132,5 @@
         </div>
     </div>
 </div>
-
 
 {% endblock %}

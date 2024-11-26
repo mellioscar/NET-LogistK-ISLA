@@ -1,21 +1,20 @@
 # usuarios/context_processors.py
-
-from .models import Profile, PerfilUsuario
-from mensajes.models import Mensaje
+from firebase_admin import firestore
 
 def user_profile(request):
-    # Solo devolver datos si el usuario está autenticado
     if request.user.is_authenticated:
-        profile = Profile.objects.filter(user=request.user).first()
-        perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
+        user_uid = request.session.get('firebase_uid')
+        if not user_uid:
+            return {}
         
-        # Contar mensajes no leídos del usuario autenticado
-        mensajes_no_leidos = Mensaje.objects.filter(receptor=request.user, leido=False).count()
-
-        return {
-            'profile': profile,
-            'full_name': request.user.get_full_name(),  # Nombre completo del usuario
-            'tipo_usuario': perfil_usuario.tipo_usuario if perfil_usuario else None,  # Tipo de usuario
-            'mensajes_no_leidos': mensajes_no_leidos,  # Cantidad de mensajes no leídos
-        }
+        db = firestore.client()
+        user_doc = db.collection('usuarios').document(user_uid).get()
+        
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            return {
+                'full_name': user_data.get('nombre_completo', ''),
+                'email': user_data.get('email', ''),
+                'rol': user_data.get('rol', ''),
+            }
     return {}

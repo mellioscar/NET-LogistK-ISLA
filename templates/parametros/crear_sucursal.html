@@ -1,0 +1,28 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>{% if id %}Editar Sucursal{% else %}Crear Sucursal{% endif %}</h2>
+<!-- Crear o editar sucursal -->
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ sucursal.nombre }}" required>
+    </div>
+    <div class="form-group">
+        <label for="direccion">Dirección</label>
+        <textarea class="form-control" id="direccion" name="direccion" rows="3" required>{{ sucursal.direccion }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="latitud">Latitud</label>
+        <input type="number" step="0.000001" class="form-control" id="latitud" name="latitud" value="{{ sucursal.latitud }}">
+    </div>
+    <div class="form-group">
+        <label for="longitud">Longitud</label>
+        <input type="number" step="0.000001" class="form-control" id="longitud" name="longitud" value="{{ sucursal.longitud }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'listar_sucursales' %}" class="btn btn-danger">Cancelar</a>
+</form>
+
+{% endblock %}

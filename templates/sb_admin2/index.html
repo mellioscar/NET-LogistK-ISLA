@@ -10,7 +10,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{% block title %}NET-LogistK{% endblock %}</title>
+    <title>{% block title %}NET-LogistK ISLA{% endblock %}</title>
 
     <link rel="icon" type="image/x-icon" href="{% static 'img/Icono NET-LOGISTK.ico' %}">
 
@@ -36,7 +36,7 @@
                 <div class="sidebar-brand-icon">
                     <img src="{% static 'img/Logo NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="40" height="40" style="border-radius: 20%">
                 </div>
-                <div class="sidebar-brand-text mx-3">Net-LogistK</div>
+                <div class="sidebar-brand-text mx-3">NET-LogistK ISLA</div>
             </a>
 
             <!-- Separador -->
@@ -94,7 +94,31 @@
 
             <!-- Encabezado del menú -->
             <div class="sidebar-heading">
-                Configuración
+                Utilidades
+            </div>
+
+            <!-- Mensajes con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMensajes"
+                    aria-expanded="true" aria-controls="collapseMensajes">
+                    <i class="fas fa-fw fa-mail-bulk"></i>
+                    <span>Mensajes</span>
+                </a>
+                <div id="collapseMensajes" class="collapse" aria-labelledby="headingMensajes" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Mensajes:</h6>
+                        <a class="collapse-item" href="{% url 'ver_mensajes' %}">Ver Mensajes</a>
+                        <a class="collapse-item" href="{% url 'enviar_mensaje' %}">Enviar Mensaje</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Separador -->
+            <hr class="sidebar-divider">
+
+            <!-- Encabezado del menú -->
+            <div class="sidebar-heading">
+                Ajustes
             </div>
 
             <!-- Vehículos con menú desplegable -->
@@ -129,18 +153,34 @@
                 </div>
             </li>
 
-            <!-- Mensajes con menú desplegable -->
+            <!-- Párametros con menú desplegable -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMensajes"
-                    aria-expanded="true" aria-controls="collapseMensajes">
-                    <i class="fas fa-fw fa-users"></i>
-                    <span>Mensajes</span>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#configuracionDispositivo" aria-expanded="true" aria-controls="configuracionDispositivo">
+                    <i class="fas fa-fw fa-mobile-alt"></i>
+                    <span>Dispositivos</span>
                 </a>
-                <div id="collapseMensajes" class="collapse" aria-labelledby="headingMensajes" data-parent="#accordionSidebar">
+                <div id="configuracionDispositivo" class="collapse" aria-labelledby="headingDispositivo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Opciones de Mensajes:</h6>
-                        <a class="collapse-item" href="{% url 'ver_mensajes' %}">Ver Mensajes</a>
-                        <a class="collapse-item" href="{% url 'enviar_mensaje' %}">Enviar Mensaje</a>
+                        <h6 class="collapse-header">Gestión de Dispositivos:</h6>
+                        <a class="collapse-item" href="{}">Listar Dispositivos</a>
+                        <a class="collapse-item" href="{}">Agregar Dispositivo</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Párametros con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#configuracionParametros" aria-expanded="true" aria-controls="configuracionParametros">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>Parámetros</span>
+                </a>
+                <div id="configuracionParametros" class="collapse" aria-labelledby="headingParametros" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestión de Parámetros:</h6>
+                        <a class="collapse-item" href="{% url 'listar_sucursales' %}">Sucursales</a>
+                        <a class="collapse-item" href="{% url 'listar_marcas' %}">Marcas</a>
+                        <a class="collapse-item" href="{% url 'listar_modelos' %}">Modelos</a>
+                        <a class="collapse-item" href="{% url 'listar_tipos_service' %}">Tipos de Service</a>
                     </div>
                 </div>
             </li>
@@ -192,7 +232,13 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-envelope fa-fw"></i>
                                 <!-- Counter - Messages -->
-                                <span class="badge badge-danger badge-counter">{{ mensajes_no_leidos }}</span>
+                                <span class="badge badge-danger badge-counter">
+                                    {% if mensajes_no_leidos > 0 %}
+                                        {{ mensajes_no_leidos }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </span>                                
                             </a>
                             <!-- Dropdown - Mensajes -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -204,19 +250,19 @@
                                 {% for mensaje in mensajes_recientes %}
                                     <a class="dropdown-item d-flex align-items-center" href="{% url 'leer_mensaje' mensaje.id %}">
                                         <div class="dropdown-list-image mr-3">
-                                            <img class="rounded-circle" src="{% if mensaje.emisor.profile.image %}{{ mensaje.emisor.profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" alt="Imagen de perfil">
+                                            <img class="rounded-circle" src="{% static 'img/person.png' %}" alt="Imagen de perfil">
                                             <div class="status-indicator bg-success"></div>
                                         </div>
                                         <div class="font-weight-bold">
                                             <div class="text-truncate">{{ mensaje.contenido|truncatewords:10 }}</div>
-                                            <div class="small text-gray-500">{{ mensaje.emisor.username }} · {{ mensaje.fecha_envio|date:"d M. Y H:i" }}</div>
+                                            <div class="small text-gray-500">{{ mensaje.emisor }} · {{ mensaje.fecha_envio|date:"d M. Y H:i" }}</div>
                                         </div>
                                     </a>
                                 {% empty %}
                                     <p class="dropdown-item text-center small text-gray-500">No tienes mensajes nuevos.</p>
-                                {% endfor %}
+                                {% endfor %}                            
                                 
-                                <a class="dropdown-item text-center small text-gray-500" href="{% url 'ver_mensajes' %}">Ver todos los Mensajes</a>
+                                <a class="dropdown-item text-center small text-gray-600" href="{% url 'ver_mensajes' %}"><strong>Ver todos los Mensajes</strong></a>
                             </div>
                         </li>
 
@@ -224,16 +270,16 @@
 
                         <!-- Ítem de navegación - Información del usuario -->
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="{% url 'profile_logged_in' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ full_name }}</span>
-                                <img class="img-profile rounded-circle" 
-                                src="{% if profile and profile.image %}{{ profile.image.url }}{% else %}{% static 'img/person.png' %}{% endif %}" 
-                                alt="Foto de Perfil">
+                            <a class="nav-link dropdown-toggle" href="{% url 'perfil_usuario' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <!-- Nombre completo del usuario -->
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.session.firebase_user_name }}</span>
+                                <!-- Ícono dinámico según el rol -->
+                                <i class="fas {{ request.session.firebase_user_icon|default:'fa-user' }}"></i>
                             </a>
                             
                             <!-- Dropdown - Información del usuario -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                                <a href="{% url 'profile' request.user.id %}" class="dropdown-item">
+                                <a href="{% url 'perfil_usuario' %}" class="dropdown-item">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Perfil
                                 </a>
                                 <div class="dropdown-divider"></div>
@@ -243,6 +289,7 @@
                                 </a>
                             </div>
                         </li>
+
 
                     </ul>
 
@@ -256,9 +303,9 @@
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
                     <!-- Botón de Generar Reporte, incluyendo la fecha como parámetro GET -->
-                        <a href="{% url 'exportar_reporte_pdf' %}?fecha={{ fecha_actual|date:'Y-m-d' }}" 
+                        <a href="{% url 'exportar_excel' %}?fecha={{ fecha_actual|date:'Y-m-d' }}" 
                             class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                            <i class="fas fa-download fa-sm text-white-50"></i> Generar reporte
+                            <i class="fas fa-download fa-sm text-white-50"></i> Exportar a Excel
                         </a>
                     </div>
                     <!-- Selector de Fecha en el Dashboard -->
@@ -424,8 +471,8 @@
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; App NET-LogistK 2024</span> |
-                        <a href="https://www.linkedin.com/in/oscar-lizzi-36402a2b3/" target="_blank" class="text-primary">Acerca de mí</a>
+                        <span>Copyright &copy; App NET-LogistK ISLA</span> |
+                        <a href="https://carlosisla.com.ar/" target="_blank" class="text-primary">Carlos Isla y Cía.</a>
                     </div>
                 </div>
             </footer>

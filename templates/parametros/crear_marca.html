@@ -1,0 +1,14 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>{% if id %}Editar Marca{% else %}Crear Marca{% endif %}</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input type="text" name="nombre" id="nombre" class="form-control" value="{{ marca.nombre|default:'' }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'listar_marcas' %}" class="btn btn-danger">Cancelar</a>
+</form>
+{% endblock %}

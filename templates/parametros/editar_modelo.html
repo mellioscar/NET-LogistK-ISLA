@@ -1,0 +1,22 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>{% if id %}Editar Modelo{% else %}Crear Modelo{% endif %}</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input type="text" name="nombre" id="nombre" class="form-control" value="{{ modelo.nombre|default:'' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="marca">Marca</label>
+        <select name="marca" id="marca" class="form-control" required>
+            {% for marca in marcas %}
+            <option value="{{ marca.id }}" {% if modelo.marca_id == marca.id %}selected{% endif %}>{{ marca.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'listar_modelos' %}" class="btn btn-danger">Cancelar</a>
+</form>
+{% endblock %}

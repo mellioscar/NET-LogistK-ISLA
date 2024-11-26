@@ -2,6 +2,7 @@
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
+<h2>Mensajes</h2>
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">Lista de Mensajes</h6>
@@ -22,13 +23,19 @@
                 <tbody>
                     {% for mensaje in mensajes %}
                         <tr>
-                            <td>{{ mensaje.emisor.username }}</td>
-                            <td>{{ mensaje.fecha_envio|date:"d M Y, H:i" }}</td>
+                            <td>{{ mensaje.emisor }}</td> <!-- Asumimos que la vista pasa el nombre del remitente -->
+                            <td>
+                                {% if mensaje.fecha_envio %}
+                                    {{ mensaje.fecha_envio|date:"d M Y, H:i" }}
+                                {% else %}
+                                    Sin fecha
+                                {% endif %}
+                            </td>
                             <td>{{ mensaje.contenido|truncatewords:10 }}</td>
                             <td>{{ mensaje.leido|yesno:"Leído,No leído" }}</td>
                             <td>
                                 <a href="{% url 'leer_mensaje' mensaje.id %}" class="btn btn-sm btn-primary">Leer</a>
-                                <a href="{% url 'responder_mensaje' mensaje.emisor.id %}" class="btn btn-sm btn-success">Responder</a>
+                                <a href="{% url 'responder_mensaje' mensaje.emisor_uid %}" class="btn btn-sm btn-success">Responder</a>
                                 <a href="{% url 'eliminar_mensaje' mensaje.id %}" onclick="return confirm('¿Estás seguro de eliminar este mensaje?');" class="btn btn-sm btn-danger">Eliminar</a>
                             </td>
                         </tr>
@@ -42,5 +49,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

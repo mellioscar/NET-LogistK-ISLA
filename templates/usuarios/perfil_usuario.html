@@ -1,0 +1,44 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Perfil del Usuario</h2>
+<div class="card o-hidden border-0 shadow-lg">
+    <div class="card-body p-0">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="p-5">
+
+                    <!-- Ícono del rol -->
+                    <div class="text-center mb-1">
+                        <i class="fas {{ request.session.firebase_user_icon|default:'fa-user' }} fa-3x text-primary"></i>
+                    </div>
+
+                    <!-- Nombre completo -->
+                    <div class="text-center">
+                        <h4><strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong></h4>
+                    </div>
+
+                    <!-- Correo Electrónico -->
+                    <div class="form-group">
+                        <label for="email">Correo Electrónico:</label>
+                        <input type="email" class="form-control" id="email" value="{{ usuario.email }}" disabled>
+                    </div>
+
+                    <!-- Rol y Sucursal -->
+                    <div class="form-group row">
+                        <div class="col-md-6">
+                            <label for="rol">Rol:</label>
+                            <input type="text" class="form-control" id="rol" value="{{ usuario.rol }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sucursal">Sucursal:</label>
+                            <input type="text" class="form-control" id="sucursal" value="{{ usuario.sucursal }}" disabled>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

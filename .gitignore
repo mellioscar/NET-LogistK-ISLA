@@ -180,6 +180,9 @@ cython_debug/
 .runtimeconfig.json
 .firebase/
 
+# Credenciales
+secrets/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 

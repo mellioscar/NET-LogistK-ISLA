@@ -1,0 +1,18 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Crear Tipo de Service</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre" required>
+    </div>
+    <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Ingrese una descripción" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'listar_tipos_service' %}" class="btn btn-danger">Cancelar</a>
+</form>
+{% endblock %}

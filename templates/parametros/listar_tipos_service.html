@@ -1,0 +1,32 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Tipos de Service</h2>
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <a href="{% url 'crear_tipo_service' %}" class="btn btn-primary mb-3">Agregar Nuevo Tipo de Service</a>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in tipos_service %}
+                <tr>
+                    <td>{{ service.nombre }}</td>
+                    <td>{{ service.descripcion }}</td>
+                    <td>
+                        <a href="{% url 'editar_tipo_service' service.id %}" class="btn btn-info btn-sm">Editar</a>
+                        <a href="{% url 'eliminar_tipo_service' service.id %}" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar este tipo de service?')">Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

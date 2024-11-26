@@ -1,54 +1,163 @@
-<!-- editar_vehiculo.html -->
 <!-- vehiculos/editar_vehiculo.html -->
-{% extends 'sb_admin2/index.html' %}
+{% extends "sb_admin2/index.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="card-body shadow animated--grow-in">
-        <h2>Editar Vehículo</h2>
-        <form method="POST" class="row g-3">
-            {% csrf_token %}
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_dominio" class="form-label me-3">Dominio: </label>
-                {{ form.dominio }}
-            </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_marca" class="form-label me-3">Marca: </label>
-                {{ form.marca }}
-            </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_modelo" class="form-label me-3">Modelo:</label>
-                {{ form.modelo }}
-            </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_tipo" class="form-label me-3">Tipo:</label>
-                {{ form.tipo }}
-            </div>
-            <div class="col-md-4 d-flex mb-3">
-                <label for="id_hidrogrua" class="form-label me-3">Hidrogrúa:</label>
-                {{ form.hidrogrua }}
-            </div>
-            <div class="col-md-4 d-flex mb-3">
-                <label for="id_carretilla" class="form-label me-3">Carretilla:</label>
-                {{ form.carretilla }}
-            </div>        
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_anio" class="form-label me-3">Año:</label>
-                {{ form.anio }}
-            </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_vtv" class="form-label me-3">VTV:</label>
-                {{ form.vtv }}
-            </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_ruta" class="form-label me-3">RUTA:</label>
-                {{ form.ruta }}
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger">Cancelar</a>
-            </div>
-        </form>
-    </div>
+<h2>Editar Vehículo</h2>
+
+{% if errores %}
+<div class="alert alert-danger">
+    <ul>
+        {% for campo, mensaje in errores.items %}
+        <li>{{ mensaje }}</li>
+        {% endfor %}
+    </ul>
 </div>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <!-- Sección 1: Datos del Vehículo -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Datos del Vehículo</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="dominio">Dominio</label>
+                        <input type="text" class="form-control" id="dominio" name="dominio" value="{{ vehiculo.dominio }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="marca">Marca</label>
+                        <select class="form-control" id="marca" name="marca" required>
+                            <option value="">Seleccione una marca</option>
+                            {% for marca in marcas %}
+                            <option value="{{ marca.id }}" {% if marca.id == vehiculo.marca %}selected{% endif %}>{{ marca.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="sucursal">Sucursal</label>
+                        <select class="form-control" id="sucursal" name="sucursal" required>
+                            <option value="">Seleccione una sucursal</option>
+                            {% for sucursal in sucursales %}
+                            <option value="{{ sucursal.id }}" {% if sucursal.id == vehiculo.sucursal %}selected{% endif %}>{{ sucursal.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelo">Modelo</label>
+                        <select class="form-control" id="modelo" name="modelo" required>
+                            <option value="">Seleccione un modelo</option>
+                            {% for modelo in modelos %}
+                            <option value="{{ modelo.id }}" {% if modelo.id == vehiculo.modelo %}selected{% endif %}>{{ modelo.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="anio">Año de Fabricación</label>
+                        <input type="number" class="form-control" id="anio" name="anio" value="{{ vehiculo.anio }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo">Tipo de Vehículo</label>
+                        <select class="form-control" id="tipo" name="tipo" required>
+                            <option value="">Seleccione el tipo de vehículo</option>
+                            <option value="Auto" {% if vehiculo.tipo == "Auto" %}selected{% endif %}>Auto</option>
+                            <option value="Autoelevador" {% if vehiculo.tipo == "Autoelevador" %}selected{% endif %}>Autoelevador</option>
+                            <option value="Camion" {% if vehiculo.tipo == "Camion" %}selected{% endif %}>Camión</option>
+                            <option value="Camioneta" {% if vehiculo.tipo == "Camioneta" %}selected{% endif %}>Camioneta</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección 2: Vencimientos del Vehículo -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Vencimientos del Vehículo</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="fecha_vtv">Fecha de VTV</label>
+                        <input type="date" class="form-control" id="fecha_vtv" name="fecha_vtv" value="{{ vehiculo.fecha_vtv }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="alerta_vtv">Alerta de VTV</label>
+                        <input type="date" class="form-control" id="alerta_vtv" name="alerta_vtv" value="{{ vehiculo.alerta_vtv }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="fecha_ruta">Fecha de RUTA</label>
+                        <input type="date" class="form-control" id="fecha_ruta" name="fecha_ruta" value="{{ vehiculo.fecha_ruta }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="alerta_ruta">Alerta de RUTA</label>
+                        <input type="date" class="form-control" id="alerta_ruta" name="alerta_ruta" value="{{ vehiculo.alerta_ruta }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="fecha_seguro">Fecha de Seguro</label>
+                        <input type="date" class="form-control" id="fecha_seguro" name="fecha_seguro" value="{{ vehiculo.fecha_seguro }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="alerta_seguro">Alerta de Seguro</label>
+                        <input type="date" class="form-control" id="alerta_seguro" name="alerta_seguro" value="{{ vehiculo.alerta_seguro }}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="tipo_service">Tipo de Service</label>
+                        <select class="form-control" id="tipo_service" name="tipo_service">
+                            <option value="">Seleccione un tipo de service</option>
+                            {% for service in tipos_service %}
+                            <option value="{{ service.id }}" {% if service.id == vehiculo.tipo_service %}selected{% endif %}>{{ service.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="alerta_service">Alerta de Fecha de Service</label>
+                        <input type="date" class="form-control" id="alerta_service" name="alerta_service" value="{{ vehiculo.alerta_service }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="kilometraje">Kilometraje</label>
+                        <input type="number" class="form-control" id="kilometraje" name="kilometraje" value="{{ vehiculo.kilometraje }}">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="observaciones">Observaciones</label>
+                <textarea class="form-control" id="observaciones" name="observaciones" rows="3">{{ vehiculo.observaciones }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Guardar y Cancelar -->
+    <div class="form-group row">
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary btn-block">Guardar</button>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger btn-block">Cancelar</a>
+        </div>
+    </div>
+</form>
+
 {% endblock %}
