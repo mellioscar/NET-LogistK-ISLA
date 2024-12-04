@@ -1,63 +1,99 @@
 # usuarios/views.py
-from firebase_admin import auth, firestore
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import JsonResponse
 import json
+import requests
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from firebase import db
-from django.middleware.csrf import get_token
+from django.contrib import messages
+from firebase_utils import get_user_from_firestore
+from firebase_admin import firestore, auth
+from usuarios.error_messages import FIREBASE_ERROR_MESSAGES
+
+# Control de intentos de inicio de sesión
+MAX_FAILED_ATTEMPTS = 10
+
+# Firebase API Key
+API_KEY = "AIzaSyCkj3ZWSU_UdlDoyfonJTexHkcF7JLV4m4"
+
+def sign_in_with_email_and_password(email, password):
+    """
+    Autentica un usuario con Firebase usando la API REST.
+    """
+    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            # Capturar el mensaje de error devuelto por Firebase
+            error_code = response.json().get("error", {}).get("message", "Error desconocido")
+            translated_message = FIREBASE_ERROR_MESSAGES.get(error_code, "Error desconocido.")
+            raise ValueError(translated_message)
+    except requests.RequestException as e:
+        raise ValueError("Error en la comunicación con Firebase. Por favor, intenta nuevamente.")
+
 
 def login_view(request):
     if request.method == "POST":
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if not email or not password:
+            messages.error(request, "Correo y contraseña son obligatorios.")
+            return render(request, "usuarios/login.html")
+
+        # Limpia la sesión antes de iniciar una nueva
+        request.session.flush()
+
         try:
-            print("Iniciando autenticación...")
-            body = json.loads(request.body)
-            id_token = body.get("idToken")
+            # Autenticar usuario usando la API REST de Firebase
+            user = sign_in_with_email_and_password(email, password)
+            id_token = user["idToken"]
+            refresh_token = user["refreshToken"]
+            uid = user["localId"]
 
-            if not id_token:
-                return JsonResponse({"error": "Token no proporcionado"}, status=400)
+            if not uid or not id_token or not refresh_token:
+                messages.error(request, "No se pudo obtener los datos necesarios del usuario.")
+                return render(request, "usuarios/login.html")
 
-            # Verificar el token con Firebase
-            decoded_token = auth.verify_id_token(id_token, clock_skew_seconds=59)
-            uid = decoded_token.get("uid")
-
-            # Obtener datos adicionales del usuario desde Firestore
+            # Consultar Firestore para datos adicionales del usuario
             user_doc = db.collection("usuarios").document(uid).get()
-
             if not user_doc.exists:
-                return JsonResponse({"error": "Usuario no encontrado en Firestore"}, status=404)
+                messages.error(request, "Usuario no encontrado en Firestore.")
+                return render(request, "usuarios/login.html")
 
+            # Obtener datos del documento
             user_data = user_doc.to_dict()
+            nombre = user_data.get("nombre")
+            apellido = user_data.get("apellido")
+            rol = user_data.get("rol")
+            sucursal = user_data.get("sucursal")
 
-            # Guardar los datos en la sesión
+            # Establecer tokens y datos adicionales en la sesión
             request.session["firebase_id_token"] = id_token
-            request.session["firebase_uid"] = uid
-            request.session["firebase_user_email"] = user_data["email"]
-            request.session["firebase_user_name"] = user_data.get("nombre", "")
-            request.session["firebase_user_last_name"] = user_data.get("apellido", "Apellido no definido")
-            request.session["firebase_user_role"] = user_data.get("rol", "Sin rol asignado")
-            request.session["firebase_user_sucursal"] = user_data.get("sucursal", "Sin sucursal asignada")
-            role = user_data.get("rol", "Ventas")
-            request.session["firebase_user_icon"] = {
-                "Administrador": "fa-user-cog",
-                "Gerente": "fa-user-tie",
-                "Logistica": "fa-truck-moving",
-                "Ventas": "fa-user"
-            }.get(role, "fa-user")
+            request.session["firebase_refresh_token"] = refresh_token
+            request.session["user_id"] = uid
+            request.session["user_email"] = email
+            request.session["user_nombre"] = nombre
+            request.session["user_apellido"] = apellido
+            request.session["user_rol"] = rol
+            request.session["user_sucursal"] = sucursal
 
-            # Redirigir al dashboard
-            return JsonResponse({"message": "Inicio de sesión exitoso", "redirect_url": "/dashboard/"}, status=200)
+            # Mensaje de bienvenida
+            messages.success(request, f"Bienvenido/a, {nombre} {apellido}!")
+            return redirect("dashboard")
 
-        except Exception as e:
-            print(f"Error autenticando: {e}")
-            return JsonResponse({"error": f"Error autenticando: {str(e)}"}, status=401)
+        except ValueError as e:
+            messages.error(request, str(e))
+            return render(request, "usuarios/login.html")
 
-    elif request.method == "GET":
-        # Renderizar el formulario de login
-        csrf_token = get_token(request)
-        return render(request, "usuarios/login.html", {"csrf_token": csrf_token})
-
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+    return render(request, "usuarios/login.html")
 
 
 def logged_in_user_profile(request):
@@ -182,31 +218,25 @@ def eliminar_usuario(request, uid):
 
 
 def logout_view(request):
-    # Eliminar el token de la sesión
-    if 'firebase_id_token' in request.session:
-        del request.session['firebase_id_token']
-    request.session.flush()  # Limpiar toda la sesión
+    request.session.flush()  # Limpia toda la sesión
     return redirect('login')  # Redirigir al login
 
 
 def perfil_usuario(request):
-    try:
-        # Obtener el UID del usuario logueado desde la sesión
-        user_uid = request.session.get("firebase_uid")
+    """
+    Muestra el perfil del usuario autenticado.
+    """
+    # Obtener el UID del usuario logueado desde la sesión
+    user_uid = request.session.get("user_id")
 
-        # Obtener el documento del usuario desde Firestore
-        user_doc = db.collection('usuarios').document(user_uid).get()
+    # Obtener el documento del usuario desde Firestore
+    user_doc = db.collection('usuarios').document(user_uid).get()
 
-        # Convertir el documento a un diccionario
-        usuario = user_doc.to_dict()
+    # Convertir el documento a un diccionario
+    usuario = user_doc.to_dict()
 
-        # Renderizar el template del perfil
-        return render(request, 'usuarios/perfil_usuario.html', {'usuario': usuario})
-
-    except Exception as e:
-        print(f"Error al obtener el perfil del usuario: {e}")
-        messages.error(request, f"Error al cargar el perfil del usuario: {str(e)}")
-        return redirect("dashboard")
+    # Renderizar el template del perfil
+    return render(request, 'usuarios/perfil_usuario.html', {'usuario': usuario})
 
 
 def editar_usuario(request, uid):

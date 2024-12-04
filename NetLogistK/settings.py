@@ -12,7 +12,7 @@ try:
     if not firebase_admin._apps:
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
         firebase_admin.initialize_app(cred)
-        print("Settings.py - Firebase inicializado correctamente.")
+        print("Settings.py 1ro - Firebase inicializado correctamente.")
     else:
         print("Firebase ya estaba inicializado.")
 except Exception as e:
@@ -21,7 +21,7 @@ except Exception as e:
 # Seguridad
 SECRET_KEY = 'django-insecure-)_(9&m_jk-2dqth1177o5($27cg56h8gg=++zn@3!iyvco=nv4'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'tracking',
     'mensajes',
     'parametros',
+    'recursos',
+    'zonas',
 ]
 
 # Middlewares
@@ -51,7 +53,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Activa sesiones si las necesitas para Firebase
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'NetLogistK.middleware.FirebaseAuthenticationMiddleware',
 ]
 
@@ -68,6 +69,8 @@ MESSAGE_TAGS = {
 # Archivos multimedia
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # Configuración de plantillas
 ROOT_URLCONF = 'NetLogistK.urls'
@@ -130,7 +133,7 @@ STATICFILES_DIRS = [BASE_DIR / 'NetLogistK' / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de sesiones (puedes usar Firebase en lugar de Django si no necesitas sesiones locales)
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # O usa 'django.contrib.sessions.backends.db'
+#SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # O usa 'django.contrib.sessions.backends.db'
 
 # Iconos de los Roles de los Usuarios
 ROLE_ICONS = {

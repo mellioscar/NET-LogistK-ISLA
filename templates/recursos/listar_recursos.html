@@ -1,0 +1,80 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Listado de Recursos</h2>
+<!-- Barra de búsqueda -->
+<form class="form-inline my-3" method="GET">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar Recurso..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search fa-sm"></i>
+            </button>
+            <a href="{% url 'listar_recursos' %}" class="btn btn-danger">
+                <i class="fas fa-times fa-sm"></i>
+            </a>
+        </div>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th class="align-middle">Nombre</th>
+            <th class="align-middle">Apellido</th>
+            <th class="align-middle">DNI</th>
+            <th class="align-middle">Categoría</th>
+            <th class="align-middle">Legajo</th>
+            <th>
+                Vencimiento<br>
+                <small>Carnet de Conducir</small>
+            </th>
+            <th>
+                Vencimiento<br>
+                <small>Psicofísico</small>
+            </th>
+            <th>
+                Vencimiento<br>
+                <small>Cargas Generales</small>
+            </th>
+            <th class="align-middle">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for recurso in recursos %}
+        <tr>
+            <td>{{ recurso.nombre }}</td>
+            <td>{{ recurso.apellido }}</td>
+            <td>{{ recurso.dni }}</td>
+            <td>{{ recurso.categoria }}</td>
+            <td>{{ recurso.legajo }}</td>
+            <td>
+                {% if recurso.carnet_conducir %}
+                    {{ recurso.carnet_conducir }}
+                {% else %}
+                    Sin definir
+                {% endif %}
+            </td>
+            <td>
+                {% if recurso.psicofisico %}
+                    {{ recurso.psicofisico }}
+                {% else %}
+                    Sin definir
+                {% endif %}
+            </td>
+            <td>
+                {% if recurso.carnet_cargas_generales %}
+                    {{ recurso.carnet_cargas_generales }}
+                {% else %}
+                    Sin definir
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'editar_recurso' recurso.id %}" class="btn btn-info btn-sm">Editar</a>
+                <a href="{% url 'eliminar_recurso' recurso.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Editar Zona</h2>
+
+<!-- Mostrar mensajes de error -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+    <div class="card-body shadow animated--grow-in">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ zona.nombre }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <input type="text" class="form-control" id="descripcion" name="descripcion" value="{{ zona.descripcion }}" required>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label for="sucursal" class="form-label">Sucursal</label>
+                    <select class="form-control" id="sucursal" name="sucursal" required>
+                        <option value="">Seleccione una sucursal</option>
+                        {% for sucursal in sucursales %}
+                            <option value="{{ sucursal.nombre }}" {% if sucursal.nombre == zona.sucursal %}selected{% endif %}>
+                                {{ sucursal.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="info" class="form-label">Información Adicional</label>
+                    <textarea class="form-control" id="info" name="info" rows="3">{{ zona.info }}</textarea>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a href="{% url 'listar_zonas' %}" class="btn btn-danger">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

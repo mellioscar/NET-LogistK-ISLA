@@ -1,9 +1,8 @@
 <!-- sb_admin2/index.html -->
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-ar">
 {% load static %}    
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -12,7 +11,7 @@
 
     <title>{% block title %}NET-LogistK ISLA{% endblock %}</title>
 
-    <link rel="icon" type="image/x-icon" href="{% static 'img/Icono NET-LOGISTK.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 
     <!-- Archivos CSS -->
     <link rel="stylesheet" href="{% static 'vendor/fontawesome-free/css/all.min.css' %}">
@@ -24,7 +23,6 @@
 </head>
 
 <body id="page-top">
-
     <!-- Contenedor principal -->
     <div id="wrapper">
 
@@ -89,6 +87,22 @@
                 </div>
             </li>
 
+            <!-- Recursos con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecursos"
+                    aria-expanded="true" aria-controls="collapseRepartos">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Recursos</span>
+                </a>
+                <div id="collapseRecursos" class="collapse" aria-labelledby="headingRecursos" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Recursos:</h6>
+                        <a class="collapse-item" href="{% url 'listar_recursos' %}">Listar Recursos</a>
+                        <a class="collapse-item" href="{% url 'crear_recurso' %}">Agregar Recurso</a>
+                    </div>
+                </div>
+            </li>
+
             <!-- Separador -->
             <hr class="sidebar-divider">
 
@@ -131,7 +145,10 @@
                 <div id="collapseVehiculos" class="collapse" aria-labelledby="headingVehiculos" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Vehículos:</h6>
-                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Listar Vehículos</a>
+                        <!-- <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Listar Vehículos</a> -->
+                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}" data-url="{% url 'ver_vehiculos' %}">
+                            <span>Listar Vehículos</span>
+                        </a>
                         <a class="collapse-item" href="{% url 'agregar_vehiculo' %}">Agregar Vehículo</a>
                     </div>
                 </div>
@@ -162,8 +179,8 @@
                 <div id="configuracionDispositivo" class="collapse" aria-labelledby="headingDispositivo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Gestión de Dispositivos:</h6>
-                        <a class="collapse-item" href="{}">Listar Dispositivos</a>
-                        <a class="collapse-item" href="{}">Agregar Dispositivo</a>
+                        <a class="collapse-item" href="{% url 'listar_dispositivos' %}">Listar Dispositivos</a>
+                        <a class="collapse-item" href="{% url 'crear_dispositivo' %}">Agregar Dispositivo</a>
                     </div>
                 </div>
             </li>
@@ -181,6 +198,7 @@
                         <a class="collapse-item" href="{% url 'listar_marcas' %}">Marcas</a>
                         <a class="collapse-item" href="{% url 'listar_modelos' %}">Modelos</a>
                         <a class="collapse-item" href="{% url 'listar_tipos_service' %}">Tipos de Service</a>
+                        <a class="collapse-item" href="{% url 'listar_zonas' %}">Zonas de Reparto</a>
                     </div>
                 </div>
             </li>
@@ -272,7 +290,7 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="{% url 'perfil_usuario' %}" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <!-- Nombre completo del usuario -->
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.session.firebase_user_name }}</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.session.user_nombre }} {{ request.session.user_apellido }}</span>
                                 <!-- Ícono dinámico según el rol -->
                                 <i class="fas {{ request.session.firebase_user_icon|default:'fa-user' }}"></i>
                             </a>
@@ -503,7 +521,7 @@
                 </div>
                 <div class="modal-body">Selecciona "Cerrar sesión" si estás listo para terminar tu sesión actual.</div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-danger" type="button" data-dismiss="modal">Cancelar</button>
                     <a class="btn btn-primary" href="{% url 'login' %}">Cerrar sesión</a>
                 </div>
             </div>
@@ -538,7 +556,6 @@
 <script src="{% static 'js/dashboard-charts.js' %}"></script>
 <!-- Scripts para los gráficos circulares -->
 <script src="{% static 'js/dashboard-charts-circular.js' %}"></script>
-
 
 </body>
 </html>

@@ -1,48 +1,67 @@
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
+<h2>Crear Nuevo Reparto</h2>
+
+<!-- Mostrar mensajes de error -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
 <div class="card">
     <div class="card-body shadow animated--grow-in">
-        <h2>Crear Nuevo Reparto</h2>
         <form method="POST" class="row g-3">
             {% csrf_token %}
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_fecha" class="form-label me-3">Fecha:</label>
-                {{ form.fecha }}
+            <div class="col-md-4 mb-3">
+                <label for="fecha" class="form-label">Fecha:</label>
+                <input type="date" class="form-control" name="fecha" required>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_nro_reparto" class="form-label me-3">Nro.Reparto:</label>
-                {{ form.nro_reparto }}
+            <div class="col-md-4 mb-3">
+                <label for="nro_reparto" class="form-label">Nro. Reparto:</label>
+                <input type="number" class="form-control" name="nro_reparto" required>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_chofer" class="form-label me-3">Chofer:</label>
-                {{ form.chofer }}
+            <div class="col-md-4 mb-3">
+                <label for="chofer" class="form-label">Chofer:</label>
+                <select class="form-control" name="chofer" required>
+                    {% for chofer in choferes %}
+                        <option value="{{ chofer.id }}">{{ chofer.nombre }} {{ chofer.apellido }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_acompanante" class="form-label me-3">Acompañante:</label>
-                {{ form.acompanante }}
+            <div class="col-md-4 mb-3">
+                <label for="acompanante" class="form-label">Acompañante:</label>
+                <input type="text" class="form-control" name="acompanante">
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_zona" class="form-label me-3">Zona:</label>
-                {{ form.zona }}
+            <div class="col-md-4 mb-3">
+                <label for="zona" class="form-label">Zona:</label>
+                <select class="form-control" name="zona" required>
+                    {% for zona in zonas %}
+                        <option value="{{ zona.id }}">{{ zona.nombre }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_facturas" class="form-label me-3">Facturas:</label>
-                {{ form.facturas }}
+            <div class="col-md-4 mb-3">
+                <label for="facturas" class="form-label">Facturas:</label>
+                <input type="number" class="form-control" name="facturas" required>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_estado" class="form-label me-3">Estado:</label>
-                {{ form.estado }}
+            <div class="col-md-4 mb-3">
+                <label for="estado" class="form-label">Estado:</label>
+                <select class="form-control" name="estado" required>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En Proceso">En Proceso</option>
+                    <option value="Completado">Completado</option>
+                </select>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_entregas" class="form-label me-3">Entregas:</label>
-                {{ form.entregas }}
+            <div class="col-md-4 mb-3">
+                <label for="entregas" class="form-label">Entregas:</label>
+                <input type="number" class="form-control" name="entregas" required>
             </div>
-            <div class="col-md-4 d-flex align-items-center mb-3">
-                <label for="id_incompletos" class="form-label me-3">Incompletos:</label>
-                {{ form.incompletos }}
+            <div class="col-md-4 mb-3">
+                <label for="incompletos" class="form-label">Incompletos:</label>
+                <input type="number" class="form-control" name="incompletos">
             </div>
-            
             <div class="col-12 row justify-content-center">
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary btn-block">Guardar</button>
@@ -52,6 +71,6 @@
                 </div>
             </div>
         </form>
-    </div>
+            </div>
 </div>
 {% endblock %}

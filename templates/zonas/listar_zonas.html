@@ -1,0 +1,31 @@
+{% extends "sb_admin2/index.html" %}
+
+{% block content %}
+<h2>Listado de Zonas</h2>
+<a href="{% url 'crear_zona' %}" class="btn btn-primary mb-3">Crear Nueva Zona</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Sucursal</th>
+            <th>Info</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for zona in zonas %}
+        <tr>
+            <td>{{ zona.nombre }}</td>
+            <td>{{ zona.descripcion }}</td>
+            <td>{{ zona.sucursal }}</td>
+            <td>{{ zona.info }}</td>
+            <td>
+                <a href="{% url 'editar_zona' zona.id %}" class="btn btn-info btn-sm">Editar</a>
+                <a href="{% url 'eliminar_zona' zona.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,7 +1,6 @@
-{% load static %}
 <!DOCTYPE html>
-<html lang="es">
-
+<html lang="es-ar">
+{% load static %}
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Net-LogistK - Login</title>
+    <title>Net-LogistK ISLA - Login</title>
     <link rel="icon" type="image/x-icon" href="{% static 'img/Icono NET-LOGISTK.ico' %}">
 
     <!-- Custom fonts for this template-->
@@ -28,7 +27,7 @@
                     <div class="card-body p-0">
                         <div class="row">
                             <div class="col-lg-6 d-none d-lg-flex flex-column justify-content-center align-items-center bg-login-image" style="padding-left: 30px">
-                                <img src="{% static 'img/Logo Isla.jpg' %}" class="img-fluid o-hidden shadow-lg rounded my-2" 
+                                <img src="{% static 'img/Logo Isla.jpg' %}" class="img-fluid o-hidden shadow-lg rounded my-3" 
                                     alt="Logo de Carlos Isla">
                                 <img src="{% static 'img/Logo NET-LOGISTK.jpg' %}" class="img-fluid o-hidden shadow-lg rounded my-1" 
                                     alt="Logo de Net-LogistK">
@@ -38,37 +37,31 @@
                                     <div class="text-center">
                                         <h1 class="h4 text-gray-900 mb-5">¡Bienvenido de nuevo!</h1>
                                     </div>
-                                    <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
-                                    <form id="login-form" class="user">
-                                        <!-- <div class="form-group">
-                                            <input type="email" id="email" class="form-control" placeholder="Correo Electrónico" required>
+
+                                    <!-- Mostrar mensajes de error -->
+                                    {% if messages %}
+                                    <div class="alert alert-danger">
+                                        {% for message in messages %}
+                                            <p>{{ message }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    <form method="POST" action="/login/">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <input type="email" name="email" class="form-control" placeholder="Correo Electrónico" required>
                                         </div>
                                         <div class="form-group">
-                                            <input type="password" id="password" class="form-control" placeholder="Contraseña" required>
+                                            <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
                                         </div>
-                                        <div class="form-group">
-                                            <div class="custom-control custom-checkbox small">
-                                                <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                <label class="custom-control-label" for="customCheck">Recordarme</label>
-                                            </div>
-                                        </div>
-                                        <button type="submit" id="login-button" class="btn btn-primary btn-block">
+                                        <hr class="my-4 w-75" style="border-top: 1px solid #007bff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                        <button type="submit" class="btn btn-primary btn-block">
                                             Iniciar Sesión
-                                        </button> -->
-                                        <!-- <form id="login-form" class="user"> -->
-                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                            <div class="form-group">
-                                                <input type="email" id="email" class="form-control" placeholder="Correo Electrónico" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <input type="password" id="password" class="form-control" placeholder="Contraseña" required>
-                                            </div>
-                                            <button type="submit" id="login-button" class="btn btn-primary btn-block">
-                                                Iniciar Sesión
-                                            </button>
-                                        <!-- </form> -->
+                                        </button>
                                     </form>
-                                    <hr>
+
+                                    
                                 </div>
                             </div>
                         </div>
@@ -84,74 +77,6 @@
     <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
-    <!-- Firebase -->
-    <!-- Firebase App (SDK principal) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-    <!-- Firebase Authentication -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-
-    <script>
-        // Inicializar Firebase (debe llamarse antes de usar cualquier otro servicio de Firebase)
-        if (!firebase.apps.length) {
-            console.log("Inicializando Firebase...");
-            firebase.initializeApp({
-                apiKey: "AIzaSyCkj3ZWSU_UdlDoyfonJTexHkcF7JLV4m4",
-                authDomain: "net-logistk-isla.firebaseapp.com",
-                projectId: "net-logistk-isla",
-                storageBucket: "net-logistk-isla.appspot.com",
-                messagingSenderId: "212056174616",
-                appId: "1:212056174616:web:885af0b80697cf5a46d36d"
-            });
-        } else {
-            console.log("Firebase ya estaba inicializado.");
-            firebase.app(); // Usa la instancia existente si ya fue inicializada
-        }
-    
-        document.getElementById("login-form").addEventListener("submit", async (event) => {
-            event.preventDefault();
-    
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-    
-            try {
-                const auth = firebase.auth();
-                console.log("Autenticando en Firebase...");
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                console.log("Autenticación exitosa:", userCredential);
-    
-                const idToken = await userCredential.user.getIdToken();
-                console.log("Token generado:", idToken);
-    
-                const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-    
-                // Enviar el token al servidor
-                const response = await fetch("{% url 'login' %}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken,
-                    },
-                    body: JSON.stringify({ idToken }),
-                });
-    
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("Inicio de sesión exitoso en el servidor:", data);
-                    window.location.href = "{% url 'dashboard' %}"; // Redirigir al dashboard
-                } else {
-                    const errorData = await response.json();
-                    console.error("Error en el servidor:", errorData);
-                    document.getElementById("error-message").innerText = errorData.error;
-                    document.getElementById("error-message").classList.remove("d-none");
-                }
-            } catch (error) {
-                console.error("Error en Firebase Authentication:", error);
-                document.getElementById("error-message").innerText = error.message;
-                document.getElementById("error-message").classList.remove("d-none");
-            }
-        });
-    </script>
-    
 </body>
 
 </html>

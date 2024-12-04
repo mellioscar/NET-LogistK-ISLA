@@ -3,20 +3,14 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Count, Sum
 from datetime import datetime, date
-from vehiculos.models import Vehiculo
-from repartos.models import Reparto
 from django.db.models.functions import TruncMonth
 import pytz
 from firebase_admin import auth
-from firebase import db  # Importar cliente Firestore desde firebase.py
-
-from mensajes.models import Mensaje
-
+from firebase import db
 from openpyxl import Workbook
 from django.http import HttpResponse
 
 from NetLogistK.decorators import firebase_login_required
-
 
 def exportar_repartos_excel(request):
     # Obtener la fecha seleccionada
@@ -26,8 +20,9 @@ def exportar_repartos_excel(request):
     else:
         fecha_actual = date.today()
 
-    # Filtrar los repartos por la fecha seleccionada
-    repartos = Reparto.objects.filter(fecha=fecha_actual)
+    # Consultar Firestore para obtener repartos de la fecha seleccionada
+    repartos_ref = db.collection('repartos')
+    docs = repartos_ref.where('fecha', '==', fecha_str).stream() if fecha_str else repartos_ref.stream()
 
     # Crear el archivo Excel
     workbook = Workbook()
@@ -42,17 +37,18 @@ def exportar_repartos_excel(request):
     hoja.append(encabezados)
 
     # Agregar los datos de los repartos
-    for reparto in repartos:
+    for doc in docs:
+        reparto = doc.to_dict()
         hoja.append([
-            reparto.fecha.strftime("%d/%m/%Y"),
-            reparto.nro_reparto,
-            reparto.chofer,
-            reparto.acompanante if reparto.acompanante else "None",
-            reparto.zona,
-            reparto.facturas,
-            reparto.estado,
-            reparto.entregas,
-            reparto.incompletos
+            reparto.get('fecha', 'Sin fecha'),
+            reparto.get('nro_reparto', 'Sin nro'),
+            reparto.get('chofer', 'Sin chofer'),
+            reparto.get('acompanante', 'None'),
+            reparto.get('zona', 'Sin zona'),
+            reparto.get('facturas', 0),
+            reparto.get('estado', 'Sin estado'),
+            reparto.get('entregas', 0),
+            reparto.get('incompletos', 0),
         ])
 
     # Configurar la respuesta HTTP para descargar el archivo
@@ -65,8 +61,6 @@ def exportar_repartos_excel(request):
     workbook.save(response)
     return response
 
-
-from firebase_admin import firestore
 
 @firebase_login_required
 def dashboard(request):

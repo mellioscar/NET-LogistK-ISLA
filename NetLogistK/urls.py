@@ -9,6 +9,9 @@ from repartos import views as repartos_views
 from tracking import views as tracking_views
 from mensajes import views as mensajes_views
 from parametros import views as parametros_views
+from recursos import views as recursos_views
+from dispositivos import views as dispositivos_views
+from zonas import views as zonas_views
 from .views import dashboard
 from . import views
 
@@ -37,7 +40,7 @@ urlpatterns = [
     # Rutas para Repartos
     path('ver_repartos/', repartos_views.listar_repartos, name='listar_repartos'),
     path('agregar_reparto/', repartos_views.crear_reparto, name='crear_reparto'),
-    path('editar_reparto/<int:id>/', repartos_views.editar_reparto, name='editar_reparto'),
+    path('editar_reparto/<str:id>/', repartos_views.editar_reparto, name='editar_reparto'),
     path('eliminar_reparto/<int:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
     path('repartos_filtrados/', repartos_views.repartos_filtrados, name='repartos_filtrados'),
 
@@ -75,6 +78,24 @@ urlpatterns = [
     path('tipos_service/crear/', parametros_views.crear_tipo_service, name='crear_tipo_service'),
     path('tipos_service/editar/<str:tipo_service_id>/', parametros_views.editar_tipo_service, name='editar_tipo_service'),
     path('tipos_service/eliminar/<str:tipo_service_id>/', parametros_views.eliminar_tipo_service, name='eliminar_tipo_service'),
+
+    # Rutas para Recursos
+    path('recursos/', recursos_views.listar_recursos, name='listar_recursos'),
+    path('recursos/crear/', recursos_views.crear_recurso, name='crear_recurso'),
+    path('recursos/editar/<str:recurso_id>/', recursos_views.editar_recurso, name='editar_recurso'),
+    path('recursos/eliminar/<str:recurso_id>/', recursos_views.eliminar_recurso, name='eliminar_recurso'),
+
+    # Rutas para Dispositivos
+    path('dispositivos/', dispositivos_views.listar_dispositivos, name='listar_dispositivos'),
+    path('dispositivos/crear/', dispositivos_views.crear_dispositivo, name='crear_dispositivo'),
+    path('dispositivos/editar/<str:dispositivo_id>/', dispositivos_views.editar_dispositivo, name='editar_dispositivo'),
+    path('dispositivos/eliminar/<str:dispositivo_id>/', dispositivos_views.eliminar_dispositivo, name='eliminar_dispositivo'),
+
+    # Rutas para Zonas
+    path('zonas/', zonas_views.listar_zonas, name='listar_zonas'),
+    path('zonas/crear/', zonas_views.crear_zona, name='crear_zona'),
+    path('zonas/editar/<str:zona_id>/', zonas_views.editar_zona, name='editar_zona'),
+    path('zonas/eliminar/<str:zona_id>/', zonas_views.eliminar_zona, name='eliminar_zona'),
 
     # Ruta para el dashboard
     path('dashboard/', dashboard, name='dashboard'),
