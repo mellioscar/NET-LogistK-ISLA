@@ -22,9 +22,9 @@
         <tr>
             <th class="align-middle">Nombre</th>
             <th class="align-middle">Apellido</th>
-            <th class="align-middle">DNI</th>
             <th class="align-middle">Categoría</th>
             <th class="align-middle">Legajo</th>
+            <th class="align-middle">Sucursal</th>
             <th>
                 Vencimiento<br>
                 <small>Carnet de Conducir</small>
@@ -45,9 +45,9 @@
         <tr>
             <td>{{ recurso.nombre }}</td>
             <td>{{ recurso.apellido }}</td>
-            <td>{{ recurso.dni }}</td>
             <td>{{ recurso.categoria }}</td>
             <td>{{ recurso.legajo }}</td>
+            <td>{{ recurso.sucursal }}</td>
             <td>
                 {% if recurso.carnet_conducir %}
                     {{ recurso.carnet_conducir }}

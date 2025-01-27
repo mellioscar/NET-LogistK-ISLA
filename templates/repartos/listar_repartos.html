@@ -2,22 +2,44 @@
 {% extends "sb_admin2/index.html" %}
 
 {% block content %}
-<h2>Lista de Repartos</h2>
+<h2>Listado de Repartos</h2>
 
 <!-- Barra de búsqueda -->
-<form class="form-inline my-3" method="GET">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-0 small" placeholder="Buscar..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i>
-            </button>
-            <a href="{% url 'listar_repartos' %}" class="btn btn-danger">
-                <i class="fas fa-times fa-sm"></i>
-            </a>
+<form id="filter-form" class="form-inline my-3 d-flex justify-content-between align-items-center" method="GET">
+    <!-- Contenedor de búsqueda y filtros -->
+    <div class="d-flex align-items-center flex-wrap">
+        <!-- Campo de búsqueda -->
+        <div class="input-group mr-3" style="width: 400px;">
+            <input type="text" name="search" class="form-control bg-light border-1" placeholder="Buscar Reparto..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search fa-sm"></i>
+                </button>
+                <a href="{% url 'listar_repartos' %}" class="btn btn-danger">
+                    <i class="fas fa-times fa-sm"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Selector de estado -->
+        <div class="d-flex align-items-center ml-3">
+            <label for="estado" class="mr-2 mb-0"><strong>Estado de Repartos:</strong></label>
+            <select id="estado-select" name="estado" class="form-control">
+                <option value="">Todos</option>
+                <option value="Abierto" {% if estado == "Abierto" %}selected{% endif %}>Abierto</option>
+                <option value="Cerrado" {% if estado == "Cerrado" %}selected{% endif %}>Cerrado</option>
+                <option value="Cancelado" {% if estado == "Cancelado" %}selected{% endif %}>Cancelado</option>
+                <option value="Finalizado" {% if estado == "Finalizado" %}selected{% endif %}>Finalizado</option>
+            </select>
         </div>
     </div>
+
+    <!-- Botón Crear Reparto -->
+    <div>
+        <a href="{% url 'crear_reparto' %}" class="btn btn-info">Crear Reparto</a>
+    </div>
 </form>
+
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -32,6 +54,7 @@
                         <th>Nro de Reparto</th>
                         <th>Chofer</th>
                         <th>Acompañante</th>
+                        <th>Sucursal</th>
                         <th>Zona</th>
                         <th>Facturas</th>
                         <th>Estado</th>
@@ -44,15 +67,19 @@
                 <tbody>
                     {% for reparto in repartos %}
                     <tr>
-                        <td>{{ reparto.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ reparto.fecha }}</td>
                         <td>{{ reparto.nro_reparto }}</td>
-                        <td>{{ reparto.chofer }}</td>
-                        <td>{{ reparto.acompanante }}</td>
+                        <td>{{ reparto.chofer.nombre }}</td>
+                        <td>{{ reparto.acompanante.nombre }}</td>
+                        <td>{{ reparto.sucursal }}</td>
                         <td>{{ reparto.zona }}</td>
                         <td>{{ reparto.facturas }}</td>
                         <td>
-                            <span style="{% if reparto.estado == 'Finalizado' %}color: green; font-weight: bold;{% elif reparto.estado == 'Abierto' %}color: blue; font-weight: bold;{% elif reparto.estado == 'Cerrado' %}color: red; font-weight: bold;{% endif %}">
-                            {{ reparto.estado }}
+                            <span style="{% if reparto.estado_reparto == 'Finalizado' %}color: green; font-weight: bold;
+                            {% elif reparto.estado_reparto == 'Abierto' %}color: blue; font-weight: bold;
+                            {% elif reparto.estado_reparto == 'Cerrado' %}color: red; font-weight: bold;
+                            {% elif reparto.estado_reparto == 'Cancelado' %}color: red; font-weight: bold;{% endif %}">
+                                {{ reparto.estado_reparto }}
                             </span>
                         </td>
                         <td>{{ reparto.entregas }}</td>
@@ -92,5 +119,10 @@
         </div>
     </div>
 </div>
-
+<!-- Script para manejar el cambio de estado -->
+<script>
+    document.getElementById('estado-select').addEventListener('change', function() {
+        document.getElementById('filter-form').submit();
+    });
+</script>
 {% endblock %}

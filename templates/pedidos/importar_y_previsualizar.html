@@ -1,0 +1,66 @@
+{% extends "sb_admin2/index.html" %}
+{% block content %}
+<h2>Importar y Previsualizar Pedidos</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if pedidos_validos or pedidos_invalidos %}
+        <h3>Pedidos Válidos</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Factura</th>
+                    <th>Reparto</th>
+                    <th>Peso (kg)</th>
+                    <th>Nombre Cliente</th>
+                    <th>Dirección</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos_validos %}
+                <tr>
+                    <td>{{ pedido.factura }}</td>
+                    <td>{{ pedido.reparto }}</td>
+                    <td>{{ pedido.peso_kilos }}</td>
+                    <td>{{ pedido.cliente.nombre }}</td>
+                    <td>{{ pedido.cliente.direccion }}</td>
+                    <td>{{ pedido.cliente.email }}</td>
+                    <td>{{ pedido.cliente.telefono }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Pedidos Inválidos</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Fila</th>
+                    <th>Errores</th>
+                    <th>Pedido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for error in pedidos_invalidos %}
+                <tr>
+                    <td>{{ error.fila }}</td>
+                    <td>{{ error.errores|join:", " }}</td>
+                    <td>{{ error.pedido }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" name="guardar_pedidos" class="btn btn-primary">Guardar Pedidos Válidos</button>
+        <input type="hidden" name="pedidos_validos" value="{{ pedidos_validos|safe }}">
+    {% else %}
+        <div class="mb-3">
+            <label for="archivo" class="form-label">Archivo Excel:</label>
+            <input type="file" class="form-control" name="archivo" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Cargar Archivo</button>
+    {% endif %}
+</form>
+{% endblock %}

@@ -24,7 +24,7 @@ class FirebaseAuthenticationMiddleware:
             return redirect('login')
 
         try:
-            print("[MIDDLEWARE] Verificando token ID...")
+            #print("[MIDDLEWARE] Verificando token ID...")
             decoded_token = verify_id_token(firebase_token)
             request.firebase_user = decoded_token
 

@@ -63,6 +63,18 @@
                         </select>
                     </div>
                 </div>
+                <!-- Sucursal -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="sucursal">Sucursal</label>
+                        <select class="form-control" id="sucursal" name="sucursal" required>
+                            <option value="">Seleccione una sucursal</option>
+                            {% for sucursal in sucursales %}
+                                <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

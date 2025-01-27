@@ -1,0 +1,12 @@
+{% extends "sb_admin2/index.html" %}
+{% block content %}
+<h2>Importar Pedidos desde Excel</h2>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="archivo" class="form-label">Archivo Excel:</label>
+        <input type="file" class="form-control" name="archivo" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Importar</button>
+</form>
+{% endblock %}

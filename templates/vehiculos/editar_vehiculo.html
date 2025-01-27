@@ -118,7 +118,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="tipo_service">Tipo de Service</label>
                         <select class="form-control" id="tipo_service" name="tipo_service">
@@ -129,16 +129,25 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="alerta_service">Alerta de Fecha de Service</label>
                         <input type="date" class="form-control" id="alerta_service" name="alerta_service" value="{{ vehiculo.alerta_service }}">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="kilometraje">Kilometraje</label>
                         <input type="number" class="form-control" id="kilometraje" name="kilometraje" value="{{ vehiculo.kilometraje }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="activo">Activo</label>
+                        <select class="form-control" id="activo" name="activo" required>
+                            <option value="Si">Sí</option>
+                            <option value="No">No</option>
+                        </select>
                     </div>
                 </div>
             </div>

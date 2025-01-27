@@ -13,10 +13,11 @@
 <div class="card">
     <div class="card-body shadow animated--grow-in">
         <form method="POST" class="row g-3">
+        <input type="hidden" name="sucursal" value="{{ user.sucursal }}">
             {% csrf_token %}
             <div class="col-md-4 mb-3">
                 <label for="fecha" class="form-label">Fecha:</label>
-                <input type="date" class="form-control" name="fecha" required>
+                <input type="date" class="form-control" name="fecha" value="{{ hoy }}" required>
             </div>
             <div class="col-md-4 mb-3">
                 <label for="nro_reparto" class="form-label">Nro. Reparto:</label>
@@ -25,6 +26,7 @@
             <div class="col-md-4 mb-3">
                 <label for="chofer" class="form-label">Chofer:</label>
                 <select class="form-control" name="chofer" required>
+                    <option value="">Seleccione un Chofer</option>
                     {% for chofer in choferes %}
                         <option value="{{ chofer.id }}">{{ chofer.nombre }} {{ chofer.apellido }}</option>
                     {% endfor %}
@@ -32,35 +34,39 @@
             </div>
             <div class="col-md-4 mb-3">
                 <label for="acompanante" class="form-label">Acompañante:</label>
-                <input type="text" class="form-control" name="acompanante">
-            </div>
+                <select class="form-control" name="acompanante">
+                    <option value="">Sin acompañante</option>
+                    {% for acompanante in acompanantes %}
+                        <option value="{{ acompanante.id }}">{{ acompanante.nombre }} {{ acompanante.apellido }}</option>
+                    {% endfor %}
+                </select>
+            </div>            
             <div class="col-md-4 mb-3">
                 <label for="zona" class="form-label">Zona:</label>
                 <select class="form-control" name="zona" required>
+                    <option value="">Seleccione una Zona</option>
                     {% for zona in zonas %}
                         <option value="{{ zona.id }}">{{ zona.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label for="facturas" class="form-label">Facturas:</label>
-                <input type="number" class="form-control" name="facturas" required>
+                <label for="vehiculo" class="form-label">Vehículo:</label>
+                <select class="form-control" name="vehiculo" required>
+                    <option value="">Seleccione un Vehiculo</option>
+                    {% for vehiculo in vehiculos %}
+                        <option value="{{ vehiculo.id }}">{{ vehiculo.dominio }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-4 mb-3">
                 <label for="estado" class="form-label">Estado:</label>
                 <select class="form-control" name="estado" required>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="En Proceso">En Proceso</option>
-                    <option value="Completado">Completado</option>
+                    <option value="Abierto">Abierto</option>
+                    <option value="Cerrado">Cerrado</option>
+                    <option value="Cancelado">Cancelado</option>
+                    <option value="Finalizado">Finalizado</option>
                 </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="entregas" class="form-label">Entregas:</label>
-                <input type="number" class="form-control" name="entregas" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="incompletos" class="form-label">Incompletos:</label>
-                <input type="number" class="form-control" name="incompletos">
             </div>
             <div class="col-12 row justify-content-center">
                 <div class="col-md-3">

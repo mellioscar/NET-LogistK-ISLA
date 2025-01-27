@@ -30,11 +30,14 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Marca de la aplicación -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
+            <a class="sidebar-brand d-flex align-items-center bg-gradient-light justify-content-center" href="{% url 'dashboard' %}" style=" border-radius: 10px;">
                 <div class="sidebar-brand-icon">
-                    <img src="{% static 'img/Logo NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="40" height="40" style="border-radius: 20%">
+                    <img src="{% static 'img/NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="70" height="50" style="border-radius: 10%; border: 1px solid #ccc;">
                 </div>
-                <div class="sidebar-brand-text mx-3">NET-LogistK ISLA</div>
+                <div class="sidebar-brand-text mx-1">
+                    <span style="color: rgb(0, 24, 206); font-weight: bold; text-shadow: 1px 1px 4px rgb(48, 147, 239);">NET-LogistK</span> 
+                    <span style="color: rgb(238, 11, 41); font-weight: bold; text-shadow: 1px 1px 4px rgb(48, 147, 239);">ISLA</span>
+                </div>
             </a>
 
             <!-- Separador -->
@@ -59,7 +62,7 @@
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepartos"
                     aria-expanded="true" aria-controls="collapseRepartos">
-                    <i class="fas fa-road"></i>
+                    <i class="fas fa-fw fa-road"></i>
                     <span>Repartos</span>
                 </a>
                 <div id="collapseRepartos" class="collapse" aria-labelledby="headingRepartos" data-parent="#accordionSidebar">
@@ -71,11 +74,28 @@
                 </div>
             </li>
 
+            <!-- Pedidos con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePedidos"
+                    aria-expanded="true" aria-controls="collapsePedidos">
+                    <i class="fas fa-fw fa-clipboard-list"></i>
+                    <span>Pedidos</span>
+                </a>
+                <div id="collapsePedidos" class="collapse" aria-labelledby="headingPedidos" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Pedidos:</h6>
+                        <a class="collapse-item" href="{% url 'listar_pedidos' %}">Listar Pedidos</a>
+                        <a class="collapse-item" href="{% url 'agregar_pedidos' %}">Agregar Pedidos</a>
+                        <a class="collapse-item" href="{% url 'importar_y_previsualizar_pedidos' %}">Importar Pedidos</a>
+                    </div>
+                </div>
+            </li>
+
             <!-- Tracking con menú desplegable -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTracking"
                     aria-expanded="true" aria-controls="collapseRepartos">
-                    <i class="fas fa-map-marked-alt"></i>
+                    <i class="fas fa-fw fa-map-marked-alt"></i>
                     <span>Tracking</span>
                 </a>
                 <div id="collapseTracking" class="collapse" aria-labelledby="headingTracking" data-parent="#accordionSidebar">
@@ -91,7 +111,7 @@
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecursos"
                     aria-expanded="true" aria-controls="collapseRepartos">
-                    <i class="fas fa-users-cog"></i>
+                    <i class="fas fa-fw fa-users-cog"></i>
                     <span>Recursos</span>
                 </a>
                 <div id="collapseRecursos" class="collapse" aria-labelledby="headingRecursos" data-parent="#accordionSidebar">
@@ -146,9 +166,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Vehículos:</h6>
                         <!-- <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Listar Vehículos</a> -->
-                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}" data-url="{% url 'ver_vehiculos' %}">
-                            <span>Listar Vehículos</span>
-                        </a>
+                        <a class="collapse-item" href="{% url 'ver_vehiculos' %}" data-url="{% url 'ver_vehiculos' %}">Listar Vehículos</a>
                         <a class="collapse-item" href="{% url 'agregar_vehiculo' %}">Agregar Vehículo</a>
                     </div>
                 </div>
@@ -481,7 +499,7 @@
                     </div>
                     {% endblock %}
                 </div>
-
+                
             </div>
             <!-- Fin del contenido principal -->
 

@@ -12,6 +12,7 @@ from parametros import views as parametros_views
 from recursos import views as recursos_views
 from dispositivos import views as dispositivos_views
 from zonas import views as zonas_views
+from pedidos import views as pedidos_views
 from .views import dashboard
 from . import views
 
@@ -41,8 +42,15 @@ urlpatterns = [
     path('ver_repartos/', repartos_views.listar_repartos, name='listar_repartos'),
     path('agregar_reparto/', repartos_views.crear_reparto, name='crear_reparto'),
     path('editar_reparto/<str:id>/', repartos_views.editar_reparto, name='editar_reparto'),
-    path('eliminar_reparto/<int:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
+    path('eliminar_reparto/<str:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
     path('repartos_filtrados/', repartos_views.repartos_filtrados, name='repartos_filtrados'),
+
+    # Rutas para Pedidos
+    path('agregar/', pedidos_views.agregar_pedidos, name='agregar_pedidos'),
+    path('listar/', pedidos_views.listar_pedidos, name='listar_pedidos'),
+    #path('agregar_pedidos/', views.obtener_pedidos, name='obtener_pedidos'),
+    path('eliminar_pedido/<str:pedido_id>/', pedidos_views.eliminar_pedido, name='eliminar_pedido'),
+    path('importar/', pedidos_views.importar_y_previsualizar_pedidos, name='importar_y_previsualizar_pedidos'),
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),

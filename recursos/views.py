@@ -43,14 +43,22 @@ def listar_recursos(request):
     return render(request, 'recursos/listar_recursos.html', {'recursos': recursos_list, 'search': search_query})
 
 
-# Crear Recurso
 def crear_recurso(request):
     if request.method == 'POST':
+        # Obtener el id de la sucursal seleccionada
+        sucursal_id = request.POST['sucursal']
+        
+        # Buscar el nombre de la sucursal usando el id
+        sucursal_doc = db.collection('sucursales').document(sucursal_id).get()
+        sucursal_nombre = sucursal_doc.to_dict().get('nombre', '') if sucursal_doc.exists else ''
+
+        # Crear el recurso con el nombre de la sucursal
         data = {
             'nombre': request.POST['nombre'],
             'apellido': request.POST['apellido'],
             'dni': request.POST['dni'],
             'categoria': request.POST['categoria'],
+            'sucursal': sucursal_nombre,  # Guardar el nombre de la sucursal
             'carnet_conducir': request.POST.get('carnet_conducir'),
             'aviso_carnet_conducir': request.POST.get('aviso_carnet_conducir'),
             'psicofisico': request.POST.get('psicofisico'),
@@ -62,18 +70,68 @@ def crear_recurso(request):
         }
         db.collection('recursos').document().set(data)
         return redirect('listar_recursos')
-    return render(request, 'recursos/crear_recurso.html')
 
-# Editar Recurso
+    # Obtener sucursales desde Firestore
+    sucursales = db.collection('sucursales').stream()
+    sucursales_list = [
+        {"id": doc.id, **doc.to_dict()} for doc in sucursales
+    ]
+
+    return render(request, 'recursos/crear_recurso.html', {'sucursales': sucursales_list})
+
+
 def editar_recurso(request, recurso_id):
     recurso_ref = db.collection('recursos').document(recurso_id)
     if request.method == 'POST':
-        recurso_ref.update(request.POST.dict())
-        return redirect('listar_recursos')
-    recurso = recurso_ref.get().to_dict()
-    return render(request, 'recursos/editar_recurso.html', {'recurso': recurso, 'id': recurso_id})
+        # Obtener el id de la sucursal seleccionada
+        sucursal_id = request.POST['sucursal']
+        
+        # Buscar el nombre de la sucursal usando el id
+        sucursal_doc = db.collection('sucursales').document(sucursal_id).get()
+        sucursal_nombre = sucursal_doc.to_dict().get('nombre', '') if sucursal_doc.exists else ''
 
-# Eliminar Recurso
+        updated_data = {
+            'nombre': request.POST['nombre'],
+            'apellido': request.POST['apellido'],
+            'dni': request.POST['dni'],
+            'categoria': request.POST['categoria'],
+            'sucursal': sucursal_nombre,  # Guardar el nombre de la sucursal
+            'carnet_conducir': request.POST.get('carnet_conducir'),
+            'aviso_carnet_conducir': request.POST.get('aviso_carnet_conducir'),
+            'psicofisico': request.POST.get('psicofisico'),
+            'aviso_psicofisico': request.POST.get('aviso_psicofisico'),
+            'carnet_cargas_generales': request.POST.get('carnet_cargas_generales'),
+            'aviso_cargas_generales': request.POST.get('aviso_cargas_generales'),
+            'legajo': int(request.POST['legajo']),
+        }
+        recurso_ref.update(updated_data)
+        return redirect('listar_recursos')
+
+    # Obtener el recurso actual
+    recurso = recurso_ref.get().to_dict()
+
+    # Obtener todas las sucursales
+    sucursales = db.collection('sucursales').stream()
+    sucursales_list = [
+        {"id": doc.id, **doc.to_dict()} for doc in sucursales
+    ]
+
+    # Identificar el id de la sucursal actual del recurso
+    sucursal_id_actual = None
+    for sucursal in sucursales_list:
+        if sucursal["nombre"] == recurso.get("sucursal"):  # Comparar por nombre
+            sucursal_id_actual = sucursal["id"]
+            break
+
+    recurso["sucursal_id"] = sucursal_id_actual  # Agregar el id de la sucursal al recurso
+
+    return render(request, 'recursos/editar_recurso.html', {
+        'recurso': recurso,
+        'id': recurso_id,
+        'sucursales': sucursales_list,
+    })
+
+
 def eliminar_recurso(request, recurso_id):
     db.collection('recursos').document(recurso_id).delete()
     return redirect('listar_recursos')

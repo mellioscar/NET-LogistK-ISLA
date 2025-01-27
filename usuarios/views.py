@@ -1,11 +1,11 @@
 # usuarios/views.py
-import json
+#import json
 import requests
-from django.http import JsonResponse
+#from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from firebase import db
 from django.contrib import messages
-from firebase_utils import get_user_from_firestore
+#from firebase_utils import get_user_from_firestore
 from firebase_admin import firestore, auth
 from usuarios.error_messages import FIREBASE_ERROR_MESSAGES
 

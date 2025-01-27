@@ -12,7 +12,7 @@ try:
     if not firebase_admin._apps:
         cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
         firebase_admin.initialize_app(cred)
-        print("Settings.py 1ro - Firebase inicializado correctamente.")
+        #print("Settings.py - Firebase inicializado correctamente.")
     else:
         print("Firebase ya estaba inicializado.")
 except Exception as e:
@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     'vehiculos',
     'tracking',
     'mensajes',
+    'dispositivos',
     'parametros',
     'recursos',
     'zonas',
+    'pedidos',
 ]
 
 # Middlewares
