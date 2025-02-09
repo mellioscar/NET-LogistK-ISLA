@@ -1,4 +1,4 @@
-# urls.py
+# NetLogistK/urls.py
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -50,10 +50,13 @@ urlpatterns = [
     path('listar/', pedidos_views.listar_pedidos, name='listar_pedidos'),
     path('eliminar_pedido/<str:pedido_id>/', pedidos_views.eliminar_pedido, name='eliminar_pedido'),
     path('importar/', pedidos_views.importar_y_previsualizar_pedidos, name='importar_y_previsualizar_pedidos'),
+    path('pedidos/detalle/<str:pedido_id>/', pedidos_views.obtener_detalle_pedido, name='detalle_pedido'),
+    path('pedidos/actualizar-estado-articulo/<str:pedido_id>/', pedidos_views.actualizar_estado_articulo, name='actualizar_estado_articulo'),
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),
     path('cronograma/', tracking_views.cronograma, name='cronograma'),
+    path('obtener_detalles_reparto/<str:nro_reparto>/', tracking_views.obtener_detalles_reparto, name='obtener_detalles_reparto'),
 
     # Rutas para Mensajes
     path('ver_mensajes/', mensajes_views.ver_mensajes, name='ver_mensajes'),

@@ -3,58 +3,220 @@
 {% block content %}
 <h2>Cronograma Mensual</h2>
 
-
-
-<div class="container mt-4">
-    <div class="d-flex w-100">
-        <!-- Navegación entre meses -->
-        <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-outline-primary w-50 mx-2 text-center"><i class="fas fa-arrow-alt-circle-left"></i> Mes Anterior</a>
-
-        <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-outline-primary w-50 mx-2 text-center">Mes Siguiente <i class="fas fa-arrow-alt-circle-right"></i></i></a>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-chevron-left"></i> Mes Anterior
+                </a>
+            </div>
+            <h6 class="m-0 font-weight-bold text-primary">{{ nombre_mes }} {{ anio }}</h6>
+            <div>
+                <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-primary btn-sm">
+                    Mes Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
     </div>
-
-    <!-- Estilos específicos para el calendario -->
-    <style>
-        .calendar-container {
-            width: 100%;
-            margin: 0 auto;
-            margin-top: 5px;
-            font-size: 1.3em;
-            color: #b1b3b5;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            color: #9e9fa0;
-            font-weight: bold;
-        }
-
-        td {
-            width: calc(100% / 7);
-            background-color: #ffffff;
-        }
-
-        td:hover {
-            background-color: #e0e2e4;
-            font-weight: bold;
-        }
-
-    </style>
-
-    <div class="calendar-container">
-        {{ calendario_html|safe }}  <!-- Renderiza el calendario en HTML -->
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="calendario">
+                <thead>
+                    <tr>
+                        <th class="text-center">Lunes</th>
+                        <th class="text-center">Martes</th>
+                        <th class="text-center">Miércoles</th>
+                        <th class="text-center">Jueves</th>
+                        <th class="text-center">Viernes</th>
+                        <th class="text-center">Sábado</th>
+                        <th class="text-center">Domingo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for semana in calendario %}
+                    <tr>
+                        {% for dia in semana %}
+                        <td class="{% if dia.hoy %}bg-light{% endif %} position-relative" style="height: 120px; min-width: 150px;">
+                            <div class="d-flex justify-content-between">
+                                <span class="{% if dia.otro_mes %}text-muted{% endif %} font-weight-bold">
+                                    {{ dia.numero }}
+                                </span>
+                                {% if dia.repartos %}
+                                <span class="badge badge-info">
+                                    {{ dia.repartos|length }} reparto{{ dia.repartos|length|pluralize }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if dia.repartos %}
+                            <div class="mt-2" style="max-height: 85px; overflow-y: auto;">
+                                {% for reparto in dia.repartos %}
+                                <div class="small mb-1 p-1 border-left border-{{ reparto.estado_color }} reparto-item" 
+                                     onclick="verDetallesReparto('{{ reparto.nro_reparto|escapejs }}')"
+                                     style="cursor: pointer;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold">#{{ reparto.nro_reparto }}</span>
+                                        <span class="badge badge-{{ reparto.estado_color }}">{{ reparto.estado }}</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-map-marker-alt"></i> {{ reparto.zona }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<style>
+#calendario td {
+    padding: 0.5rem;
+    vertical-align: top;
+}
+
+#calendario td:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+/* Estilo para el scrollbar en celdas con muchos repartos */
+#calendario td div::-webkit-scrollbar {
+    width: 4px;
+}
+
+#calendario td div::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#calendario td div::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 2px;
+}
+
+#calendario td div::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+
+<!-- Modal de Detalles del Reparto -->
+<div class="modal fade" id="modalDetallesReparto" tabindex="-1" role="dialog" aria-labelledby="modalDetallesRepartoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesRepartoLabel">Detalles del Reparto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Nro. Reparto:</strong> <span id="modalNroReparto"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Estado:</strong> <span id="modalEstado"></span>
+                        <strong class="ml-3">Fecha:</strong> <span id="modalFecha"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Chofer:</strong> <span id="modalChofer"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Zona:</strong> <span id="modalZona"></span>
+                        (<span id="modalZonaDescripcion" class="text-muted"></span>)
+                    </div>
+                </div>
+                <hr>
+                <h6 class="font-weight-bold">Pedidos Asignados</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tablaPedidos">
+                        <thead>
+                            <tr>
+                                <th>Nro. Factura</th>
+                                <th>Cliente</th>
+                                <th>Dirección</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPedidosBody">
+                            <!-- Los pedidos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extrajs %}
+<script>
+function verDetallesReparto(nroReparto) {
+    console.log('Número de reparto:', nroReparto); // Debug
+    
+    $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+    $('#modalDetallesReparto').modal('show');
+    
+    // Ajustada la URL para coincidir con la estructura de urls.py
+    fetch(`/obtener_detalles_reparto/${encodeURIComponent(nroReparto)}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+            // Actualizar datos del reparto
+            $('#modalNroReparto').text(data.reparto.nro_reparto);
+            $('#modalEstado').html(`<span class="badge badge-${data.reparto.estado_color}">${data.reparto.estado}</span>`);
+            $('#modalFecha').text(data.reparto.fecha);
+            $('#modalChofer').text(data.reparto.chofer);
+            $('#modalZona').text(data.reparto.zona);
+            $('#modalZonaDescripcion').text(data.reparto.zona_descripcion);
+            
+            // Limpiar y llenar la tabla de pedidos
+            let pedidosHtml = '';
+            if (data.pedidos && data.pedidos.length > 0) {
+                data.pedidos.forEach(pedido => {
+                    pedidosHtml += `
+                        <tr>
+                            <td>${pedido.nro_factura}</td>
+                            <td>${pedido.cliente}</td>
+                            <td>${pedido.direccion}</td>
+                            <td><span class="badge badge-${pedido.estado_color}">${pedido.estado}</span></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                pedidosHtml = '<tr><td colspan="4" class="text-center">No hay pedidos asignados</td></tr>';
+            }
+            $('#tablaPedidosBody').html(pedidosHtml);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center text-danger">Error al cargar los datos</td></tr>');
+        });
+}
+
+// Mejorar la interacción
+$(document).ready(function() {
+    $('.reparto-item').hover(
+        function() { $(this).addClass('bg-light'); },
+        function() { $(this).removeClass('bg-light'); }
+    );
+});
+</script>
+{% endblock %}
+
 {% endblock %}

@@ -4,45 +4,68 @@ from firebase_admin import firestore
 from django.shortcuts import redirect, render
 from django.contrib import messages
 #from NetLogistK.decorators import roles_permitidos
+import pandas as pd
 
 db = firestore.client()
 
 def listar_repartos(request):
-    query = request.GET.get('search', '').strip()
-    estado = request.GET.get('estado', '').strip()  # Obtener el estado del filtro
-    repartos_ref = db.collection('repartos')
-    repartos = []
-
     try:
-        # Construir la consulta de Firestore
-        if query and estado:
-            docs = repartos_ref.where('estado_reparto', '==', estado).stream()
-        elif query:
-            docs = repartos_ref.stream()
-        elif estado:
-            docs = repartos_ref.where('estado_reparto', '==', estado).stream()
-        else:
-            docs = repartos_ref.stream()
+        # Obtener el estado del filtro
+        estado = request.GET.get('estado', '')
+        search_query = request.GET.get('search', '').strip()
 
-        # Filtrar por texto localmente (Firestore no admite "contains" en búsquedas de texto)
-        for doc in docs:
-            data = doc.to_dict()
-            if not query or (
-                query.lower() in str(data.get('nro_reparto', '')).lower() or
-                query.lower() in data.get('chofer', {}).get('nombre', '').lower() or
-                query.lower() in (data.get('acompanante', {}).get('nombre', '') if data.get('acompanante') else '').lower() or
-                query.lower() in data.get('zona', '').lower()):
-                data['id'] = doc.id
-                repartos.append(data)
+        # Consultar repartos
+        repartos_ref = db.collection('repartos')
+        query = repartos_ref
 
-        # Ordenar por número de reparto
-        repartos = sorted(repartos, key=lambda x: int(x['nro_reparto']))
+        if estado:
+            query = query.where('estado_reparto', '==', estado)
+
+        # Ejecutar la consulta
+        repartos = []
+        for doc in query.stream():
+            reparto = doc.to_dict()
+            reparto['id'] = doc.id
+
+            # Obtener y contar pedidos
+            pedidos_ref = doc.reference.collection('pedidos')
+            pedidos = list(pedidos_ref.stream())
+            
+            # Contar totales
+            total_pedidos = len(pedidos)
+            total_entregados = sum(1 for p in pedidos if p.to_dict().get('estado') == 'Entregado')
+            total_incompletos = sum(1 for p in pedidos if p.to_dict().get('estado') != 'Entregado')
+
+            # Agregar contadores al reparto
+            reparto['total_facturas'] = total_pedidos
+            reparto['total_entregas'] = total_entregados
+            reparto['total_incompletos'] = total_incompletos
+
+            # Crear nombre completo del chofer
+            if 'chofer' in reparto and isinstance(reparto['chofer'], dict):
+                nombre = reparto['chofer'].get('nombre', '')
+                apellido = reparto['chofer'].get('apellido', '')
+                reparto['chofer']['nombre_completo'] = f"{nombre} {apellido}".strip()
+
+            # Aplicar filtro de búsqueda si existe
+            if search_query:
+                if not (search_query.lower() in str(reparto.get('nro_reparto', '')).lower() or
+                       search_query.lower() in str(reparto.get('chofer', {}).get('nombre_completo', '')).lower() or
+                       search_query.lower() in str(reparto.get('zona', '')).lower()):
+                    continue
+
+            repartos.append(reparto)
+
+        return render(request, 'repartos/listar_repartos.html', {
+            'repartos': repartos,
+            'estado': estado,
+            'search': search_query
+        })
 
     except Exception as e:
         print("Error al listar repartos:", e)
         messages.error(request, f"Error al listar repartos: {e}")
-
-    return render(request, 'repartos/listar_repartos.html', {'repartos': repartos, 'search': query, 'estado': estado})
+        return render(request, 'repartos/listar_repartos.html', {'repartos': []})
 
 
 def crear_reparto(request):
@@ -241,3 +264,75 @@ def repartos_filtrados(request):
         'estado': estado,
     }
     return render(request, 'repartos/repartos_filtrados.html', context)
+
+
+def importar_repartos(request):
+    try:
+        if request.method == 'POST' and request.FILES['archivo']:
+            archivo = request.FILES['archivo']
+            
+            # Leer el archivo Excel
+            df = pd.read_excel(archivo)
+            
+            # Iniciar transacción de Firestore
+            batch = db.batch()
+            
+            for index, row in df.iterrows():
+                try:
+                    # Obtener datos del chofer
+                    chofer_id = str(row['chofer_id']).strip()
+                    chofer_doc = db.collection('recursos').document(chofer_id).get()
+                    if not chofer_doc.exists:
+                        continue
+                        
+                    chofer_data = chofer_doc.to_dict()
+                    nombre_completo = f"{chofer_data.get('nombre', '')} {chofer_data.get('apellido', '')}"
+                    
+                    # Crear el documento del reparto
+                    reparto_ref = db.collection('repartos').document()
+                    datos_reparto = {
+                        'fecha': row['fecha'].strftime('%d-%m-%Y'),
+                        'fecha_creacion': datetime.now().strftime('%d-%m-%Y'),
+                        'nro_reparto': str(row['nro_reparto']).strip(),
+                        'chofer': {
+                            'id': chofer_id,
+                            'nombre_completo': nombre_completo
+                        },
+                        'sucursal': str(row['sucursal']).strip(),
+                        'zona': str(row['zona']).strip(),
+                        'vehiculo': str(row['vehiculo']).strip(),
+                        'estado_reparto': 'Abierto',
+                        'total_facturas': 0  # Inicializamos el contador
+                    }
+                    
+                    batch.set(reparto_ref, datos_reparto)
+                    
+                    # Obtener pedidos asociados al reparto
+                    pedidos_query = db.collection('pedidos').where('nro_reparto', '==', str(row['nro_reparto']).strip())
+                    total_facturas = 0
+                    
+                    for pedido in pedidos_query.stream():
+                        total_facturas += 1
+                        pedido_ref = db.collection('pedidos').document(pedido.id)
+                        batch.update(pedido_ref, {
+                            'reparto_id': reparto_ref.id,
+                            'estado': 'Asignado'
+                        })
+                    
+                    # Actualizar el total de facturas
+                    batch.update(reparto_ref, {'total_facturas': total_facturas})
+                    
+                except Exception as e:
+                    print(f"Error procesando fila {index + 2}: {e}")
+                    continue
+            
+            # Commit de la transacción
+            batch.commit()
+            messages.success(request, "Repartos importados correctamente")
+            
+        return redirect('listar_repartos')
+        
+    except Exception as e:
+        print("Error al importar repartos:", e)
+        messages.error(request, f"Error al importar repartos: {e}")
+        return redirect('listar_repartos')

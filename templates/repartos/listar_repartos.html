@@ -53,13 +53,12 @@
                         <th>Fecha</th>
                         <th>Nro de Reparto</th>
                         <th>Chofer</th>
-                        <th>Acompañante</th>
                         <th>Sucursal</th>
                         <th>Zona</th>
                         <th>Facturas</th>
-                        <th>Estado</th>
                         <th>Entregas</th>
                         <th>Incompletos</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -69,11 +68,12 @@
                     <tr>
                         <td>{{ reparto.fecha }}</td>
                         <td>{{ reparto.nro_reparto }}</td>
-                        <td>{{ reparto.chofer.nombre }}</td>
-                        <td>{{ reparto.acompanante.nombre }}</td>
+                        <td>{{ reparto.chofer.nombre_completo }}</td>
                         <td>{{ reparto.sucursal }}</td>
                         <td>{{ reparto.zona }}</td>
-                        <td>{{ reparto.facturas }}</td>
+                        <td>{{ reparto.total_facturas }}</td>
+                        <td>{{ reparto.total_entregas }}</td>
+                        <td>{{ reparto.total_incompletos }}</td>
                         <td>
                             <span style="{% if reparto.estado_reparto == 'Finalizado' %}color: green; font-weight: bold;
                             {% elif reparto.estado_reparto == 'Abierto' %}color: blue; font-weight: bold;
@@ -82,8 +82,6 @@
                                 {{ reparto.estado_reparto }}
                             </span>
                         </td>
-                        <td>{{ reparto.entregas }}</td>
-                        <td>{{ reparto.incompletos }}</td>
                         <td>
                             <a href="{% url 'editar_reparto' reparto.id %}" class="btn btn-info btn-sm">Editar</a>
                             <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ reparto.id }}">Eliminar</button>

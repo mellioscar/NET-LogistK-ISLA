@@ -3,13 +3,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 #from django.http import HttpResponse
 import openpyxl
 from firebase_admin import firestore
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.contrib import messages
 import re
 from django.http import JsonResponse
 import pandas as pd
+import io
+import firebase_admin
+from firebase_admin import credentials
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
 
-
+# Inicializar Firestore
 db = firestore.client()
 
 def agregar_pedidos(request):
@@ -153,41 +159,71 @@ def obtener_pedidos(request):
     except Exception as e:
         return JsonResponse({'error': f'Error al obtener pedidos: {str(e)}'}, status=500)
 
+
 def listar_pedidos(request):
-    query = request.GET.get('search', '').strip()
-    pedidos_ref = db.collection('pedidos')
-    pedidos = []
-
     try:
-        # Obtener todos los pedidos
-        docs = pedidos_ref.stream()
+        # Obtener fechas del filtro o usar valores por defecto
+        fecha_hasta = request.GET.get('fecha_hasta', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d'))
+        fecha_desde = request.GET.get('fecha_desde', datetime.now().strftime('%Y-%m-%d'))
+        
+        # Convertir fechas a objetos datetime
+        fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d')
+        fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+        
+        # Obtener todos los repartos
+        repartos_ref = db.collection('repartos').stream()
+        pedidos = []
 
-        for doc in docs:
-            pedido = doc.to_dict()
-            pedido['id'] = doc.id
+        # Iterar sobre cada reparto
+        for reparto in repartos_ref:
+            reparto_data = reparto.to_dict()
+            
+            # Obtener pedidos de la subcolección
+            pedidos_ref = reparto.reference.collection('pedidos').stream()
+            
+            for pedido in pedidos_ref:
+                pedido_data = pedido.to_dict()
+                pedido_data['id'] = pedido.id
+                
+                try:
+                    # Convertir fecha del pedido a objeto datetime
+                    fecha_pedido_str = pedido_data.get('fecha', '')
+                    fecha_pedido_obj = datetime.strptime(fecha_pedido_str, '%d-%m-%Y')
+                    
+                    # Verificar si el pedido está dentro del rango de fechas
+                    if fecha_desde_obj <= fecha_pedido_obj <= fecha_hasta_obj:
+                        # Agregar datos del reparto al pedido
+                        pedido_data['reparto_id'] = reparto.id
+                        pedido_data['nro_reparto'] = reparto_data.get('nro_reparto')
+                        pedidos.append(pedido_data)
+                    else:
+                        print(f"Pedido fuera del rango de fechas")
+                except Exception as e:
+                    print(f"Error procesando fecha del pedido: {e}")
+                    continue
 
-            # Obtener información del reparto relacionado
-            reparto_id = pedido.get('reparto')
-            if reparto_id:
-                reparto_doc = db.collection('repartos').document(reparto_id).get()
-                if reparto_doc.exists:
-                    pedido['nro_reparto'] = reparto_doc.to_dict().get('nro_reparto', 'Desconocido')
-                else:
-                    pedido['nro_reparto'] = 'Desconocido'
-            else:
-                pedido['nro_reparto'] = 'Sin Reparto'
+        # Ordenar pedidos por fecha descendente
+        pedidos.sort(key=lambda x: datetime.strptime(x.get('fecha', '01-01-2000'), '%d-%m-%Y'), reverse=True)
 
-            # Añadir el pedido a la lista
-            pedidos.append(pedido)
+        # Formatear el rango de fechas para mostrar
+        rango_fechas = f"{fecha_desde_obj.strftime('%d-%m-%Y')} al {fecha_hasta_obj.strftime('%d-%m-%Y')}"
+        
+        return render(request, 'pedidos/listar_pedidos.html', {
+            'pedidos': pedidos,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'total_pedidos': len(pedidos),
+            'rango_fechas': rango_fechas
+        })
 
     except Exception as e:
-        print("Error al listar pedidos:", e)
+        print(f"Error al listar pedidos: {e}")
         messages.error(request, f"Error al listar pedidos: {e}")
-
-    return render(request, 'pedidos/listar_pedidos.html', {
-        'pedidos': pedidos,
-        'search': query
-    })
+        return render(request, 'pedidos/listar_pedidos.html', {
+            'pedidos': [],
+            'fecha_desde': fecha_desde if 'fecha_desde' in locals() else '',
+            'fecha_hasta': fecha_hasta if 'fecha_hasta' in locals() else ''
+        })
 
 
 # Validaciones
@@ -202,66 +238,179 @@ def validar_telefono(telefono):
 def importar_y_previsualizar_pedidos(request):
     pedidos_validos = []
     pedidos_invalidos = []
-    
+    errores_log = []
+    datos_reparto = {
+        'numero': '',
+        'vehiculo': '',
+        'fecha_salida': datetime.now().strftime('%Y-%m-%d')  # Fecha por defecto
+    }
+
     if request.method == 'POST':
         if 'archivo' in request.FILES:
             archivo = request.FILES['archivo']
             try:
-                df = pd.read_csv(archivo, delimiter=",", dtype=str)
+                df = pd.read_excel(archivo, sheet_name=0, dtype=str)
+                df.columns = df.columns.str.strip()
                 
-                for idx, row in df.iterrows():
-                    pedido = {
-                        'pedido': row['Pedido'],
-                        'reparto': row['Reparto'],
-                        'cliente': {
-                            'nombre': row['Cliente'],
-                            'direccion': {
-                                'calle': row['Calle y Número'],
-                                'ciudad': row['Ciudad'],
-                                'provincia': row['Provincia/Estado']
-                            },
-                            'email': row['Email'] if validar_email(row['Email']) else "No informado",
-                            'telefono': row['Teléfono (con código de país)'] if validar_telefono(row['Teléfono (con código de país)']) else "No informado"
-                        },
-                        'fecha_salida': row['Fecha Salida'],
-                        'vehiculo': row['Vehículo'],
-                        'estado_pedido': 'Asignado',
-                        'productos': [{
-                            'codigo_producto': row['Código de Producto'],
-                            'descripcion_producto': row['Descripción del Producto'],
-                            'cantidad': row['Cantidad'],
-                            'peso': row['Peso'].replace(".", ",")
-                        }]
+                if len(df) > 0:
+                    fecha_str = str(df.iloc[0]['Fecha Salida']).strip()
+                    try:
+                        fecha_obj = pd.to_datetime(fecha_str)
+                        fecha_formateada = fecha_obj.strftime('%Y-%m-%d')  # Formato para input type="date"
+                    except:
+                        fecha_formateada = datetime.now().strftime('%Y-%m-%d')
+
+                    datos_reparto = {
+                        'numero': str(df.iloc[0]['Reparto']).strip(),
+                        'vehiculo': str(df.iloc[0]['Vehículo']).strip(),
+                        'fecha_salida': fecha_formateada
+                    }
+
+                pedidos_agrupados = {}
+                for index, row in df.iterrows():
+                    try:
+                        nro_factura = str(row['Factura']).strip()
+                        peso = float(str(row['Peso']).replace(',', '.')) if row['Peso'] else 0.0
+                        
+                        if nro_factura not in pedidos_agrupados:
+                            direccion_completa = f"{str(row['Dirección']).strip()}"
+                            if row['Localidad'].strip():
+                                direccion_completa += f" - {str(row['Localidad']).strip()}"
+
+                            pedidos_agrupados[nro_factura] = {
+                                'nro_factura': nro_factura,
+                                'nombre': str(row['Cliente']).strip(),
+                                'direccion': direccion_completa,
+                                'email': str(row['Email']).strip(),
+                                'telefono': str(row['Teléfono (con código de país)']).strip(),
+                                'peso_total': peso,
+                                'fecha': fecha_formateada,
+                                'articulos': []
+                            }
+                        else:
+                            pedidos_agrupados[nro_factura]['peso_total'] += peso
+
+                        articulo = {
+                            'codigo': str(row['Artículo']).strip(),
+                            'descripcion': str(row['Descripción del artículo']).strip(),
+                            'cantidad': str(row['Cantidad']).strip(),
+                            'peso': peso
+                        }
+                        pedidos_agrupados[nro_factura]['articulos'].append(articulo)
+
+                    except Exception as e:
+                        errores_log.append(f"Error en fila {index + 2}: {str(e)}")
+                        pedidos_invalidos.append({
+                            'fila': index + 2,
+                            'errores': [str(e)],
+                            'pedido': row.to_dict()
+                        })
+
+                pedidos_validos = list(pedidos_agrupados.values())
+                request.session['pedidos_temp'] = pedidos_validos
+                request.session['datos_reparto_temp'] = datos_reparto
+                request.session.save()
+
+            except Exception as e:
+                messages.error(request, f"Error al procesar el archivo: {str(e)}")
+                return redirect('importar_y_previsualizar_pedidos')
+
+        elif request.POST.get('confirmar_importacion'):
+            try:
+                chofer_id = request.POST.get('chofer')
+                zona_id = request.POST.get('zona')
+                fecha_salida = request.POST.get('fecha_salida')  # Nueva fecha desde el formulario
+                pedidos_data = request.session.get('pedidos_temp', [])
+                datos_reparto = request.session.get('datos_reparto_temp', {})
+
+                if not chofer_id or not zona_id or not fecha_salida:
+                    messages.error(request, "Debe seleccionar un chofer, una zona y una fecha")
+                    return redirect('importar_y_previsualizar_pedidos')
+
+                # Obtener datos de la zona
+                zona_doc = db.collection('zonas').document(zona_id).get()
+                zona_data = zona_doc.to_dict()
+
+                # Obtener datos del chofer
+                chofer_ref = db.collection('recursos').document(chofer_id)
+                chofer_data = chofer_ref.get().to_dict()
+                nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
+
+                # Convertir fecha a formato DD-MM-YYYY para almacenar
+                fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
+                fecha_formateada = fecha_obj.strftime('%d-%m-%Y')
+
+                # Crear el reparto
+                reparto_data = {
+                    'nro_reparto': datos_reparto['numero'],
+                    'chofer': {
+                        'id': chofer_id,
+                        'nombre': chofer_data['nombre'],
+                        'apellido': chofer_data.get('apellido', ''),
+                        'nombre_completo': nombre_completo  # Agregamos el nombre completo
+                    },
+                    'vehiculo': datos_reparto['vehiculo'],
+                    'zona': zona_data['nombre'],
+                    'fecha': fecha_formateada,
+                    'estado_reparto': 'Abierto',
+                    'sucursal': request.session.get('user_sucursal'),
+                    'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
+                }
+
+                # Crear documento de reparto
+                nuevo_reparto = db.collection('repartos').document()
+                nuevo_reparto.set(reparto_data)
+
+                # Crear pedidos como subcolección del reparto
+                pedidos_ref = nuevo_reparto.collection('pedidos')
+                for pedido in pedidos_data:
+                    pedido_data = {
+                        'nro_factura': pedido['nro_factura'],
+                        'cliente': pedido['nombre'],
+                        'direccion': pedido['direccion'],
+                        'email': pedido['email'],
+                        'telefono': pedido['telefono'],
+                        'peso_total': float(pedido['peso_total']),
+                        'fecha': fecha_formateada,
+                        'estado': 'Asignado',
+                        'articulos': pedido['articulos'],
+                        'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
                     }
                     
-                    errores = []
-                    if row['Peso'] == "0":
-                        errores.append("El peso debe ser mayor a 0.")
-                    
-                    if errores:
-                        pedidos_invalidos.append({'fila': idx + 2, 'errores': errores, 'pedido': pedido})
-                    else:
-                        pedidos_validos.append(pedido)
-            
+                    pedidos_ref.document().set(pedido_data)
+
+                # Limpiar sesión
+                del request.session['pedidos_temp']
+                del request.session['datos_reparto_temp']
+                request.session.save()
+
+                messages.success(request, "Reparto y pedidos creados exitosamente")
+                return redirect('listar_repartos')
+
             except Exception as e:
-                messages.error(request, f"Error al procesar el archivo: {e}")
-                return redirect('importar_pedidos')
-        
-        elif 'guardar_pedidos' in request.POST:
-            pedidos_validos = eval(request.POST.get('pedidos_validos', '[]'))
-            
-            for pedido in pedidos_validos:
-                doc_ref = db.collection('pedidos').add(pedido)
-                for producto in pedido['productos']:
-                    db.collection('pedidos').document(doc_ref[1].id).collection('productos').add(producto)
-            
-            messages.success(request, "Pedidos guardados exitosamente en Firestore.")
-            return redirect('listar_pedidos')
+                messages.error(request, f"Error al procesar la importación: {str(e)}")
+                return redirect('importar_y_previsualizar_pedidos')
+
+    # Consultas para obtener choferes y zonas
+    choferes = db.collection("recursos").where("categoria", "in", ["Chofer", "Chofer Gruista"]).stream()
+    zonas = db.collection("zonas").stream()
     
-    return render(request, 'pedidos/importar_y_previsualizar.html', {
+    context = {
         'pedidos_validos': pedidos_validos,
         'pedidos_invalidos': pedidos_invalidos,
-    })
+        'errores_log': errores_log,
+        'datos_reparto': datos_reparto,
+        'choferes': [{
+            'id': doc.id,
+            'nombre': doc.to_dict()['nombre'],
+            'apellido': doc.to_dict().get('apellido', ''),
+            'nombre_completo': f"{doc.to_dict()['nombre']} {doc.to_dict().get('apellido', '')}"
+        } for doc in choferes],
+        'zonas': [doc.to_dict() | {"id": doc.id} for doc in zonas],
+        'peso_total': round(sum(float(pedido.get('peso_total', 0)) for pedido in pedidos_validos), 2)
+    }
+    
+    return render(request, 'pedidos/importar_y_previsualizar.html', context)
 
 
 def guardar_pedidos(request):
@@ -284,3 +433,89 @@ def eliminar_pedido(request, pedido_id):
             return JsonResponse({"success": False, "message": f"Error eliminando el pedido: {str(e)}"})
     
     return JsonResponse({"success": False, "message": "Método no permitido."}, status=400)
+
+def obtener_detalle_pedido(request, pedido_id):
+    try:
+        # Obtener el pedido
+        pedido_doc = db.collection('pedidos').document(pedido_id).get()
+        
+        if not pedido_doc.exists:
+            return JsonResponse({'error': 'Pedido no encontrado'}, status=404)
+            
+        pedido = pedido_doc.to_dict()
+        pedido['id'] = pedido_doc.id
+        
+        # Obtener información del reparto si existe
+        reparto_id = pedido.get('reparto_id')
+        if reparto_id:
+            reparto_doc = db.collection('repartos').document(reparto_id).get()
+            if reparto_doc.exists:
+                reparto_data = reparto_doc.to_dict()
+                pedido['nro_reparto'] = reparto_data.get('nro_reparto', 'Desconocido')
+                pedido['fecha_reparto'] = pedido.get('fecha')
+        
+        return JsonResponse(pedido)
+        
+    except Exception as e:
+        print("Error al obtener detalles del pedido:", e)
+        return JsonResponse({'error': str(e)}, status=500)
+
+def detalles_pedido(request, pedido_id):
+    try:
+        # Obtener el documento del pedido
+        pedido_doc = db.collection('pedidos').document(pedido_id).get()
+        
+        if not pedido_doc.exists:
+            return JsonResponse({'error': 'Pedido no encontrado'}, status=404)
+        
+        # Obtener los datos del pedido
+        pedido_data = pedido_doc.to_dict()
+        pedido_data['id'] = pedido_doc.id
+        
+        # Obtener información del reparto si existe
+        reparto_id = pedido_data.get('reparto_id')
+        if reparto_id:
+            reparto_doc = db.collection('repartos').document(reparto_id).get()
+            if reparto_doc.exists:
+                reparto_data = reparto_doc.to_dict()
+                pedido_data['nro_reparto'] = reparto_data.get('nro_reparto', 'Desconocido')
+        
+        return JsonResponse(pedido_data)
+        
+    except Exception as e:
+        print("Error al obtener detalles del pedido:", e)
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_protect
+@require_POST
+def actualizar_estado_articulo(request, pedido_id):
+    try:
+        codigo_articulo = request.POST.get('codigo_articulo')
+        nuevo_estado = request.POST.get('estado')
+        
+        # Obtener el pedido
+        pedido_ref = db.collection('pedidos').document(pedido_id)
+        pedido_doc = pedido_ref.get()
+        
+        if not pedido_doc.exists:
+            return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
+            
+        pedido_data = pedido_doc.to_dict()
+        articulos = pedido_data.get('articulos', [])
+        
+        # Actualizar el estado del artículo
+        for articulo in articulos:
+            if articulo['codigo'] == codigo_articulo:
+                articulo['estado'] = nuevo_estado
+                break
+        
+        # Guardar los cambios
+        pedido_ref.update({
+            'articulos': articulos
+        })
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        print("Error al actualizar estado del artículo:", e)
+        return JsonResponse({'success': False, 'error': str(e)})
