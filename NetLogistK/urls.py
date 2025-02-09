@@ -48,7 +48,6 @@ urlpatterns = [
     # Rutas para Pedidos
     path('agregar/', pedidos_views.agregar_pedidos, name='agregar_pedidos'),
     path('listar/', pedidos_views.listar_pedidos, name='listar_pedidos'),
-    #path('agregar_pedidos/', views.obtener_pedidos, name='obtener_pedidos'),
     path('eliminar_pedido/<str:pedido_id>/', pedidos_views.eliminar_pedido, name='eliminar_pedido'),
     path('importar/', pedidos_views.importar_y_previsualizar_pedidos, name='importar_y_previsualizar_pedidos'),
 

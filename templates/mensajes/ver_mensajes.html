@@ -22,8 +22,8 @@
 
                 <tbody>
                     {% for mensaje in mensajes %}
-                        <tr>
-                            <td>{{ mensaje.emisor }}</td> <!-- Asumimos que la vista pasa el nombre del remitente -->
+                        <tr {% if not mensaje.leido %} class="table-warning font-weight-bold" {% endif %}>
+                            <td>{{ mensaje.emisor }}</td>
                             <td>
                                 {% if mensaje.fecha_envio %}
                                     {{ mensaje.fecha_envio|date:"d M Y, H:i" }}

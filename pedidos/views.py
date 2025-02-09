@@ -7,6 +7,7 @@ from datetime import datetime
 from django.contrib import messages
 import re
 from django.http import JsonResponse
+import pandas as pd
 
 
 db = firestore.client()
@@ -201,58 +202,62 @@ def validar_telefono(telefono):
 def importar_y_previsualizar_pedidos(request):
     pedidos_validos = []
     pedidos_invalidos = []
-
+    
     if request.method == 'POST':
         if 'archivo' in request.FILES:
             archivo = request.FILES['archivo']
             try:
-                # Leer el archivo Excel
-                workbook = openpyxl.load_workbook(archivo)
-                sheet = workbook.active  # Seleccionar la primera hoja del archivo
-
-                # Iterar sobre las filas del archivo Excel
-                for idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                df = pd.read_csv(archivo, delimiter=",", dtype=str)
+                
+                for idx, row in df.iterrows():
                     pedido = {
-                        'factura': row[0],  # Columna A
-                        'reparto': row[1],  # Columna B
-                        'peso_kilos': row[2],  # Columna C
+                        'pedido': row['Pedido'],
+                        'reparto': row['Reparto'],
                         'cliente': {
-                            'nombre': row[3],  # Columna D
-                            'direccion': row[4],  # Columna E
-                            'email': row[5],  # Columna F
-                            'telefono': str(row[6]),  # Columna G
+                            'nombre': row['Cliente'],
+                            'direccion': {
+                                'calle': row['Calle y Número'],
+                                'ciudad': row['Ciudad'],
+                                'provincia': row['Provincia/Estado']
+                            },
+                            'email': row['Email'] if validar_email(row['Email']) else "No informado",
+                            'telefono': row['Teléfono (con código de país)'] if validar_telefono(row['Teléfono (con código de país)']) else "No informado"
                         },
-                        'estado': 'Pendiente',
-                        'fecha': datetime.today().strftime('%Y-%m-%d'),
+                        'fecha_salida': row['Fecha Salida'],
+                        'vehiculo': row['Vehículo'],
+                        'estado_pedido': 'Asignado',
+                        'productos': [{
+                            'codigo_producto': row['Código de Producto'],
+                            'descripcion_producto': row['Descripción del Producto'],
+                            'cantidad': row['Cantidad'],
+                            'peso': row['Peso'].replace(".", ",")
+                        }]
                     }
-
-                    # Validar pedido
+                    
                     errores = []
-                    if not validar_email(row[5]):
-                        errores.append("Email inválido.")
-                    if not validar_telefono(row[6]):
-                        errores.append("Teléfono inválido.")
-                    if row[2] <= 0:
-                        errores.append("El peso debe ser un valor positivo.")
-
+                    if row['Peso'] == "0":
+                        errores.append("El peso debe ser mayor a 0.")
+                    
                     if errores:
-                        pedidos_invalidos.append({'fila': idx, 'errores': errores, 'pedido': pedido})
+                        pedidos_invalidos.append({'fila': idx + 2, 'errores': errores, 'pedido': pedido})
                     else:
                         pedidos_validos.append(pedido)
-
+            
             except Exception as e:
-                print("Error al importar pedidos:", e)
-                messages.error(request, f"Ocurrió un error al procesar el archivo: {e}")
-
+                messages.error(request, f"Error al procesar el archivo: {e}")
+                return redirect('importar_pedidos')
+        
         elif 'guardar_pedidos' in request.POST:
-            # Guardar los pedidos válidos en Firebase
             pedidos_validos = eval(request.POST.get('pedidos_validos', '[]'))
+            
             for pedido in pedidos_validos:
-                db.collection('pedidos').add(pedido)
-
-            messages.success(request, "Pedidos guardados exitosamente.")
+                doc_ref = db.collection('pedidos').add(pedido)
+                for producto in pedido['productos']:
+                    db.collection('pedidos').document(doc_ref[1].id).collection('productos').add(producto)
+            
+            messages.success(request, "Pedidos guardados exitosamente en Firestore.")
             return redirect('listar_pedidos')
-
+    
     return render(request, 'pedidos/importar_y_previsualizar.html', {
         'pedidos_validos': pedidos_validos,
         'pedidos_invalidos': pedidos_invalidos,

@@ -2,7 +2,7 @@
 {% block content %}
 <h2>Importar y Previsualizar Pedidos</h2>
 
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" action="{% url 'importar_y_previsualizar_pedidos' %}" enctype="multipart/form-data">
     {% csrf_token %}
     {% if pedidos_validos or pedidos_invalidos %}
         <h3>Pedidos Válidos</h3>
@@ -57,7 +57,7 @@
         <input type="hidden" name="pedidos_validos" value="{{ pedidos_validos|safe }}">
     {% else %}
         <div class="mb-3">
-            <label for="archivo" class="form-label">Archivo Excel:</label>
+            <label for="archivo" class="form-label">Archivo:</label>
             <input type="file" class="form-control" name="archivo" required>
         </div>
         <button type="submit" class="btn btn-primary">Cargar Archivo</button>

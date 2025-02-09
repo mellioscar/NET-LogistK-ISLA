@@ -34,6 +34,9 @@
                             <div class="col-md-3">
                                 <a href="{% url 'eliminar_mensaje' mensaje.id %}" class="btn btn-danger btn-block" onclick="return confirm('¿Estás seguro de eliminar este mensaje?');">Eliminar</a>
                             </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'ver_mensajes' %}" class="btn btn-secondary btn-block">Cancelar</a>
+                            </div>
                         </div>
                     </form>
                 </div>

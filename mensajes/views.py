@@ -6,6 +6,7 @@ from django.contrib import messages  # Para notificaciones en Django
 from django.shortcuts import render, redirect
 from firebase_admin import firestore  # Importar Firestore desde firebase_admin
 
+from NetLogistK.decorators import firebase_login_required
 
 def enviar_mensaje(request):
     if request.method == "POST":
@@ -43,25 +44,31 @@ def enviar_mensaje(request):
 
 def ver_mensajes(request):
     try:
-        uid = request.session.get("firebase_uid")
+        firebase_user = getattr(request, 'firebase_user', None)
+        if not firebase_user:
+            messages.error(request, "No se pudo obtener el usuario autenticado.")
+            return render(request, 'mensajes/ver_mensajes.html', {'mensajes': []})
+
+        uid = firebase_user.get('uid')  # 🔹 Ahora obtenemos el UID como en el dashboard
+
+        # 🔹 Asegurar que los mensajes se ordenan por fecha
         mensajes_query = db.collection('mensajes').where('receptor_uid', '==', uid).stream()
 
         mensajes = []
         for doc in mensajes_query:
             mensaje = doc.to_dict()
             mensaje['id'] = doc.id  # ID del mensaje para URLs
-
-            # Convertir fecha_envio al formato estándar
-            if 'fecha_envio' in mensaje and mensaje['fecha_envio']:
-                fecha_envio = mensaje['fecha_envio']
-                mensaje['fecha_envio'] = fecha_envio.replace(tzinfo=None)  # Eliminar zona horaria si es necesario
+            mensaje['leido'] = mensaje.get('leido', False)
 
             # Obtener el nombre del remitente desde Firestore
             emisor_uid = mensaje.get('emisor_uid')
             if emisor_uid:
                 emisor_doc = db.collection('usuarios').document(emisor_uid).get()
-                emisor_data = emisor_doc.to_dict() if emisor_doc.exists else {}
-                mensaje['emisor'] = emisor_data.get('nombre', 'Desconocido')
+                if emisor_doc.exists:
+                    emisor_data = emisor_doc.to_dict()
+                    mensaje['emisor'] = emisor_data.get('nombre', 'Desconocido')
+                else:
+                    mensaje['emisor'] = 'Desconocido'
             else:
                 mensaje['emisor'] = 'Desconocido'
 
@@ -76,7 +83,7 @@ def ver_mensajes(request):
 
 def leer_mensaje(request, mensaje_id):
     try:
-        # Obtener el mensaje desde Firestore
+        # Obtener la referencia del mensaje desde Firestore
         mensaje_ref = db.collection('mensajes').document(mensaje_id)
         mensaje = mensaje_ref.get().to_dict()
 
@@ -85,6 +92,10 @@ def leer_mensaje(request, mensaje_id):
             return redirect('ver_mensajes')
 
         mensaje['id'] = mensaje_id  # ID del mensaje para URLs
+
+        # Si el mensaje aún no fue leído, actualizar el estado
+        if not mensaje.get('leido', False):
+            mensaje_ref.update({"leido": True})
 
         # Obtener datos del emisor
         emisor_uid = mensaje.get('emisor_uid', '')

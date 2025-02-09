@@ -32,7 +32,7 @@
             <!-- Sidebar - Marca de la aplicación -->
             <a class="sidebar-brand d-flex align-items-center bg-gradient-light justify-content-center" href="{% url 'dashboard' %}" style=" border-radius: 10px;">
                 <div class="sidebar-brand-icon">
-                    <img src="{% static 'img/NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="70" height="50" style="border-radius: 10%; border: 1px solid #ccc;">
+                    <img src="{% static 'img/NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="70" height="50" style="border-radius: 10%; border: 1px solid #ccc;" loading="lazy">
                 </div>
                 <div class="sidebar-brand-text mx-1">
                     <span style="color: rgb(0, 24, 206); font-weight: bold; text-shadow: 1px 1px 4px rgb(48, 147, 239);">NET-LogistK</span> 
@@ -412,11 +412,13 @@
                                                     
                                                     <div class="progress progress-sm mr-2">
                                                         <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: {{ porcentaje_repartos_finalizados|default_if_none:0|floatformat:0|add:'%' }}" 
+                                                            style="width: {{ porcentaje_repartos_finalizados|default_if_none:0|floatformat:0|add:'%' }} " 
                                                             aria-valuenow="{{ porcentaje_repartos_finalizados|default:'0'|floatformat:0 }}" 
-                                                            aria-valuemin="0" aria-valuemax="100">
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100">
                                                         </div>
                                                     </div>
+                                                    
                                                 </div>
                                             </div>
                                         </div>
