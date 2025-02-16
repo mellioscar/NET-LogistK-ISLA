@@ -1,5 +1,4 @@
 # tracking/utils.py
-import calendar
 
 import folium
 from fastkml import kml
@@ -66,34 +65,3 @@ def crear_mapa_tracking():
 
     # Guardar el mapa en un archivo HTML dentro de la carpeta static/tracking
     mapa.save(output_dir / 'tracking_mapa.html')
-
-
-
-# CALENDARIO DE CRONOGRAMA
-
-# Definir la clase personalizada para el calendario
-class CustomHTMLCalendar(calendar.HTMLCalendar):
-    def formatweekday(self, day):
-        # Definir los días de la semana en español
-        weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-        return f'<th class="text-center">{weekdays[day]}</th>'
-
-    def formatmonthname(self, theyear, themonth, withyear=True):
-        # Obtener el nombre del mes en español con la primera letra en mayúscula
-        month_name = calendar.month_name[themonth].capitalize()
-        return f'<tr><th colspan="7" class="text-center">{month_name} {theyear}</th></tr>'
-
-# Función para generar el calendario HTML con el mes y año dados
-def generar_calendario_mes(anio, mes):
-    cal = CustomHTMLCalendar(calendar.MONDAY)
-    # Generar el calendario HTML
-    calendario_html = cal.formatmonth(anio, mes)
-    
-    # Añadir estilos CSS
-    return f"""
-    <div class="custom-calendar">
-        <table class="table table-bordered text-center">
-            {calendario_html}
-        </table>
-    </div>
-    """

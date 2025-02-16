@@ -8,7 +8,9 @@ import pytz
 from firebase_admin import auth
 from firebase import db
 from openpyxl import Workbook
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+import json
 
 from NetLogistK.decorators import firebase_login_required
 
@@ -64,133 +66,196 @@ def exportar_repartos_excel(request):
 
 @firebase_login_required
 def dashboard(request):
-    # Obtener el usuario autenticado desde el decorador
-    firebase_user = getattr(request, 'firebase_user', None)
-    if not firebase_user:
-        return redirect('login')
-
-    uid = firebase_user.get('uid')
-    email = firebase_user.get('email')
-
-    # Zona horaria de Buenos Aires
-    zona_horaria = pytz.timezone('America/Argentina/Buenos_Aires')
-    fecha_str = request.GET.get('fecha')
-    if fecha_str:
-        try:
-            fecha_seleccionada = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-        except ValueError:
-            fecha_seleccionada = timezone.now().astimezone(zona_horaria).date()
-    else:
-        fecha_seleccionada = timezone.now().astimezone(zona_horaria).date()
-
-    # Convertir la fecha seleccionada a string en formato "yyyy-mm-dd"
-    fecha_seleccionada_str = fecha_seleccionada.strftime("%Y-%m-%d")
-
-    # Calcular el total de repartos del día seleccionado
     try:
-        repartos_query = db.collection('repartos').where('fecha', '==', fecha_seleccionada_str).stream()
-        total_repartos_hoy = sum(1 for _ in repartos_query)  # Contar los repartos del día seleccionado
-    except Exception as e:
-        total_repartos_hoy = 0  # Manejo de errores
+        firebase_user = getattr(request, 'firebase_user', None)
+        if not firebase_user:
+            return redirect('login')
 
-    # Calcular el total de repartos finalizados hoy
-    try:
-        repartos_finalizados_query = db.collection('repartos')\
-            .where('fecha', '==', fecha_seleccionada_str)\
-            .where('estado_reparto', '==', 'Finalizado').stream()
-        total_repartos_finalizados_hoy = sum(1 for _ in repartos_finalizados_query)
-    except Exception as e:
-        total_repartos_finalizados_hoy = 0  # Manejo de errores
+        # Configuración de zona horaria y fecha
+        zona_horaria = pytz.timezone('America/Argentina/Buenos_Aires')
+        fecha_actual = timezone.now().astimezone(zona_horaria).date()
+        
+        # Obtener fecha del filtro o usar la fecha actual
+        fecha_str = request.GET.get('fecha')
+        if fecha_str:
+            try:
+                fecha_seleccionada = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            except ValueError:
+                fecha_seleccionada = fecha_actual
+        else:
+            fecha_seleccionada = fecha_actual
 
-    porcentaje_repartos_finalizados = (
-        (total_repartos_finalizados_hoy / total_repartos_hoy) * 100
-        if total_repartos_hoy > 0 else 0
-    )
+        # Formatear fechas para consulta y display
+        fecha_consulta = fecha_seleccionada.strftime("%d-%m-%Y")  # Para Firestore
+        fecha_mostrar = fecha_consulta  # Para mostrar en el template
+        anio_actual = fecha_seleccionada.year
 
-    anio_actual = fecha_seleccionada.year
+        # KPIs del día seleccionado
+        repartos_dia = db.collection('repartos').where('fecha', '==', fecha_consulta).stream()
+        total_repartos_dia = 0
+        total_finalizados_dia = 0
+        estados_repartos = {'Abierto': 0, 'En Curso': 0, 'Finalizado': 0}
 
-    # Inicializar contadores para los meses
-    meses_contadores = {
-        1: 0, 2: 0, 3: 0, 4: 0,
-        5: 0, 6: 0, 7: 0, 8: 0,
-        9: 0, 10: 0, 11: 0, 12: 0
-    }
+        # Convertimos el stream a lista para poder iterarlo múltiples veces
+        repartos_dia = list(repartos_dia)
+        total_repartos_dia = len(repartos_dia)
 
-    # Calcular los repartos finalizados por mes
-    try:
-        # Consultar todos los repartos del año actual con estado "Finalizado"
-        repartos_query = db.collection('repartos').where('estado_reparto', '==', 'Finalizado').stream()
-        for doc in repartos_query:
-            reparto = doc.to_dict()
-            fecha_reparto = reparto.get('fecha')
-            if fecha_reparto:
-                reparto_date = datetime.strptime(fecha_reparto, "%Y-%m-%d").date()
-                if reparto_date.year == anio_actual:
-                    mes = reparto_date.month
-                    # Incrementar el contador del mes correspondiente
-                    if mes in meses_contadores:
-                        meses_contadores[mes] += 1
-    except Exception as e:
-        # Manejo de errores: los contadores se mantendrán en 0
-        pass
+        for reparto in repartos_dia:
+            reparto_data = reparto.to_dict()
+            estado = reparto_data.get('estado_reparto', 'Abierto')
+            if estado in estados_repartos:
+                estados_repartos[estado] += 1
+            if estado == 'Finalizado':
+                total_finalizados_dia += 1
 
+        # Calcular porcentaje de finalizados
+        porcentaje_finalizados = (total_finalizados_dia / total_repartos_dia * 100) if total_repartos_dia > 0 else 0
 
+        # Vehículos disponibles
+        vehiculos_disponibles = db.collection('vehiculos')\
+            .where('tipo', '==', 'Camion')\
+            .where('activo', '==', 'Si')\
+            .stream()
+        total_vehiculos_disponibles = sum(1 for _ in vehiculos_disponibles)
 
-    # Valores predeterminados para evitar consultas
-    total_entregas_incompletas_hoy = 5
-    labels_repartos_mensuales = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-    data_repartos_mensuales = [meses_contadores[1], meses_contadores[2], meses_contadores[3],
-        meses_contadores[4], meses_contadores[5], meses_contadores[6],
-        meses_contadores[7], meses_contadores[8], meses_contadores[9],
-        meses_contadores[10], meses_contadores[11], meses_contadores[12]] * 12
-    labels_estados = []
-    data_estados = []
+        # Repartos mensuales (gráfico de líneas)
+        meses_labels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        datos_mensuales = [0] * 12
 
-    # Calcular el total de vehículos activos de tipo "Camión"
-    try:
-        vehiculos_query = db.collection('vehiculos').where('tipo', '==', 'Camion').where('activo', '==', 'Si').stream()
-        total_vehiculos = sum(1 for _ in vehiculos_query)  # Contar los vehículos que cumplen con el criterio
-    except Exception as e:
-        total_vehiculos = 0  # Manejo de errores
+        repartos_anuales = db.collection('repartos')\
+            .where('fecha', '>=', f"01-01-{anio_actual}")\
+            .where('fecha', '<=', f"31-12-{anio_actual}")\
+            .stream()
 
-    # Mensajes no leídos y recientes
-    try:
-        # Filtrar mensajes no leídos para el usuario actual
-        mensajes_query = db.collection('mensajes').where('receptor_uid', '==', uid).where('leido', '==', False).stream()
-        mensajes_no_leidos = [{'id': doc.id, **doc.to_dict()} for doc in mensajes_query]
+        for reparto in repartos_anuales:
+            try:
+                fecha_str = reparto.get('fecha')
+                fecha_reparto = datetime.strptime(fecha_str, '%d-%m-%Y')
+                if fecha_reparto.year == anio_actual:
+                    datos_mensuales[fecha_reparto.month - 1] += 1
+            except ValueError as e:
+                print(f"Error al procesar fecha: {fecha_str} - {e}")
+                continue
 
-        # Obtener los últimos 5 mensajes no leídos
-        mensajes_recientes = sorted(mensajes_no_leidos, key=lambda x: x['fecha_envio'], reverse=True)[:5]
+        # Datos para el gráfico de torta (estados del día)
+        labels_estados = list(estados_repartos.keys())
+        data_estados = list(estados_repartos.values())
 
-        # Actualizar cantidad de mensajes no leídos
-        cantidad_no_leidos = len(mensajes_no_leidos)
+        # Entregas incompletas del día
+        entregas_incompletas = 0
+        for reparto in repartos_dia:
+            pedidos = reparto.reference.collection('pedidos')\
+                .where('estado', '!=', 'Entregado')\
+                .stream()
+            entregas_incompletas += sum(1 for _ in pedidos)
 
-        # Agregar información del emisor para los mensajes recientes
-        for mensaje in mensajes_recientes:
-            emisor_uid = mensaje.get('emisor_uid')
-            if emisor_uid:
-                emisor_doc = db.collection('usuarios').document(emisor_uid).get()
-                emisor_data = emisor_doc.to_dict() if emisor_doc.exists else {}
-                mensaje['emisor'] = emisor_data.get('nombre', 'Desconocido')
-            else:
-                mensaje['emisor'] = 'Desconocido'
+        return render(request, 'sb_admin2/index.html', {
+            'total_repartos_hoy': total_repartos_dia,
+            'total_repartos_finalizados_hoy': total_finalizados_dia,
+            'porcentaje_repartos_finalizados': round(porcentaje_finalizados, 2),
+            'total_vehiculos_disponibles': total_vehiculos_disponibles,
+            'entregas_incompletas': entregas_incompletas,
+            'fecha_seleccionada': fecha_mostrar,
+            'labels_repartos_mensuales': json.dumps(meses_labels),
+            'data_repartos_mensuales': json.dumps(datos_mensuales),
+            'labels_estados': json.dumps(labels_estados),
+            'data_estados': json.dumps(data_estados)
+        })
 
     except Exception as e:
-        # Manejo de errores
-        mensajes_recientes = []
-        cantidad_no_leidos = 0
+        print(f"Error en el dashboard: {e}")
+        messages.error(request, f"Error al cargar el dashboard: {e}")
+        return render(request, 'sb_admin2/index.html', {
+            'total_repartos_hoy': 0,
+            'total_repartos_finalizados_hoy': 0,
+            'porcentaje_repartos_finalizados': 0,
+            'total_vehiculos_disponibles': 0,
+            'entregas_incompletas': 0,
+            'fecha_seleccionada': fecha_mostrar if 'fecha_mostrar' in locals() else datetime.now().strftime("%d-%m-%Y"),
+            'labels_repartos_mensuales': json.dumps([]),
+            'data_repartos_mensuales': json.dumps([0] * 12),
+            'labels_estados': json.dumps(['Abierto', 'En Curso', 'Finalizado']),
+            'data_estados': json.dumps([0, 0, 0])
+        })
 
-    # Renderizar la plantilla con los datos
-    return render(request, 'sb_admin2/index.html', {
-        'fecha_actual': fecha_seleccionada,
-        'total_repartos_hoy': total_repartos_hoy,
-        'total_vehiculos': total_vehiculos,
-        'porcentaje_repartos_finalizados': porcentaje_repartos_finalizados,
-        'total_entregas_incompletas_hoy': total_entregas_incompletas_hoy,
-        'labels_repartos_mensuales': labels_repartos_mensuales,
-        'data_repartos_mensuales': data_repartos_mensuales,
-        'labels_estados': labels_estados,
-        'data_estados': data_estados,
-        'mensajes_no_leidos': cantidad_no_leidos,  # Número de mensajes no leídos
-        'mensajes_recientes': mensajes_recientes,  # Lista de los mensajes recientes
-    })
+@firebase_login_required
+def obtener_detalles_reparto(request, nro_reparto):
+    try:
+        # Obtener el reparto
+        reparto_ref = db.collection('repartos').where('nro_reparto', '==', nro_reparto).limit(1).get()
+        if not reparto_ref:
+            return JsonResponse({'error': 'Reparto no encontrado'}, status=404)
+            
+        reparto = reparto_ref[0]
+        reparto_data = reparto.to_dict()
+        
+        # Obtener los pedidos del reparto
+        pedidos = []
+        pedidos_ref = reparto.reference.collection('pedidos').stream()
+        
+        for pedido in pedidos_ref:
+            pedido_data = pedido.to_dict()
+            pedidos.append({
+                'nro_factura': pedido_data.get('nro_factura', ''),
+                'cliente': pedido_data.get('cliente', ''),
+                'direccion': pedido_data.get('direccion', ''),
+                'estado': pedido_data.get('estado', ''),
+                'estado_color': 'success' if pedido_data.get('estado') == 'Entregado' else 'warning'
+            })
+        
+        # Preparar la respuesta
+        response_data = {
+            'reparto': {
+                'nro_reparto': reparto_data.get('nro_reparto', ''),
+                'fecha': reparto_data.get('fecha', ''),
+                'estado': reparto_data.get('estado_reparto', ''),
+                'estado_color': 'success' if reparto_data.get('estado_reparto') == 'Finalizado' else 'primary',
+                'chofer': reparto_data.get('chofer', {}).get('nombre', ''),
+                'zona': reparto_data.get('zona', ''),
+                'zona_descripcion': reparto_data.get('zona_descripcion', '')
+            },
+            'pedidos': pedidos
+        }
+        
+        return JsonResponse(response_data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@firebase_login_required
+def ver_detalle_reparto(request, nro_reparto):
+    try:
+        # Obtener el reparto
+        reparto_ref = db.collection('repartos').where('nro_reparto', '==', nro_reparto).limit(1).get()
+        if not reparto_ref:
+            messages.error(request, 'Reparto no encontrado')
+            return redirect('ver_repartos')
+            
+        reparto = reparto_ref[0]
+        reparto_data = reparto.to_dict()
+        
+        # Obtener los pedidos
+        pedidos = []
+        pedidos_ref = reparto.reference.collection('pedidos').stream()
+        
+        for pedido in pedidos_ref:
+            pedido_data = pedido.to_dict()
+            estado = pedido_data.get('estado', '')
+            pedidos.append({
+                'nro_factura': pedido_data.get('nro_factura', ''),
+                'cliente': pedido_data.get('cliente', ''),
+                'direccion': pedido_data.get('direccion', ''),
+                'estado': estado,
+                'peso': pedido_data.get('peso', 0),
+                'estado_color': 'success' if estado == 'Entregado' else 'warning'
+            })
+            
+        context = {
+            'reparto': reparto_data,
+            'pedidos': pedidos
+        }
+        
+        return render(request, 'repartos/detalle_reparto.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error al obtener los detalles: {str(e)}')
+        return redirect('ver_repartos')

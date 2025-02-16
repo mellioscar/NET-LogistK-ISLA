@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'recursos',
     'zonas',
     'pedidos',
+    'cronograma',
 ]
 
 # Middlewares

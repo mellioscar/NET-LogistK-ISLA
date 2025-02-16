@@ -13,8 +13,10 @@ from recursos import views as recursos_views
 from dispositivos import views as dispositivos_views
 from zonas import views as zonas_views
 from pedidos import views as pedidos_views
+from cronograma import views as cronograma_views
 from .views import dashboard
 from . import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -44,9 +46,10 @@ urlpatterns = [
     path('editar_reparto/<str:id>/', repartos_views.editar_reparto, name='editar_reparto'),
     path('eliminar_reparto/<str:reparto_id>/', repartos_views.eliminar_reparto, name='eliminar_reparto'),
     path('repartos_filtrados/', repartos_views.repartos_filtrados, name='repartos_filtrados'),
+    path('ver_detalle_reparto/<str:nro_reparto>/', repartos_views.ver_detalle_reparto, name='ver_detalle_reparto'),
+    path('obtener_detalles_reparto/<str:nro_reparto>/', cronograma_views.obtener_detalles_reparto, name='obtener_detalles_reparto'),
 
     # Rutas para Pedidos
-    path('agregar/', pedidos_views.agregar_pedidos, name='agregar_pedidos'),
     path('listar/', pedidos_views.listar_pedidos, name='listar_pedidos'),
     path('eliminar_pedido/<str:pedido_id>/', pedidos_views.eliminar_pedido, name='eliminar_pedido'),
     path('importar/', pedidos_views.importar_y_previsualizar_pedidos, name='importar_y_previsualizar_pedidos'),
@@ -55,8 +58,11 @@ urlpatterns = [
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),
-    path('cronograma/', tracking_views.cronograma, name='cronograma'),
-    path('obtener_detalles_reparto/<str:nro_reparto>/', tracking_views.obtener_detalles_reparto, name='obtener_detalles_reparto'),
+
+    # Rutas para Cronograma
+    path('cronograma/', cronograma_views.cronograma_mensual, name='cronograma_mensual'),
+    path('cronograma_semanal/', cronograma_views.cronograma_semanal, name='cronograma_semanal'),
+    path('lista_detalle_reparto/<str:nro_reparto>/', cronograma_views.lista_detalle_reparto, name='lista_detalle_reparto'),
 
     # Rutas para Mensajes
     path('ver_mensajes/', mensajes_views.ver_mensajes, name='ver_mensajes'),
@@ -109,4 +115,5 @@ urlpatterns = [
 
     # Ruta para el dashboard
     path('dashboard/', dashboard, name='dashboard'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,7 +3,9 @@ from datetime import datetime
 from firebase_admin import firestore
 from django.shortcuts import redirect, render
 from django.contrib import messages
-#from NetLogistK.decorators import roles_permitidos
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from NetLogistK.decorators import firebase_login_required
 import pandas as pd
 
 db = firestore.client()
@@ -34,7 +36,7 @@ def listar_repartos(request):
             # Contar totales
             total_pedidos = len(pedidos)
             total_entregados = sum(1 for p in pedidos if p.to_dict().get('estado') == 'Entregado')
-            total_incompletos = sum(1 for p in pedidos if p.to_dict().get('estado') != 'Entregado')
+            total_incompletos = sum(1 for p in pedidos if p.to_dict().get('estado') == 'Incompleto')
 
             # Agregar contadores al reparto
             reparto['total_facturas'] = total_pedidos
@@ -336,3 +338,8 @@ def importar_repartos(request):
         print("Error al importar repartos:", e)
         messages.error(request, f"Error al importar repartos: {e}")
         return redirect('listar_repartos')
+
+
+def ver_detalle_reparto(request, nro_reparto):
+    # Por ahora, simplemente redirigimos al nuevo template
+    return render(request, 'repartos/detalle_listado.html')

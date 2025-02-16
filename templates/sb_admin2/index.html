@@ -85,7 +85,6 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Pedidos:</h6>
                         <a class="collapse-item" href="{% url 'listar_pedidos' %}">Listar Pedidos</a>
-                        <a class="collapse-item" href="{% url 'agregar_pedidos' %}">Agregar Pedidos</a>
                         <a class="collapse-item" href="{% url 'importar_y_previsualizar_pedidos' %}">Importar Pedidos</a>
                     </div>
                 </div>
@@ -102,7 +101,22 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de Tracking:</h6>
                         <a class="collapse-item" href="{% url 'mapa_tracking' %}">Mapa Tracking</a>
-                        <a class="collapse-item" href="{% url 'cronograma' %}">Cronograma</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Cronograma con menú desplegable -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCronograma"
+                    aria-expanded="true" aria-controls="collapseRepartos">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Cronograma</span>
+                </a>
+                <div id="collapseCronograma" class="collapse" aria-labelledby="headingCronograma" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de Cronograma:</h6>
+                        <a class="collapse-item" href="{% url 'cronograma_mensual' %}">Cronograma Mensual</a>
+                        <a class="collapse-item" href="{% url 'cronograma_semanal' %}">Cronograma Semanal</a>
                     </div>
                 </div>
             </li>
@@ -335,113 +349,120 @@
                 <!-- Contenido de la página -->
                 <div class="container-fluid">
                     {% block content %}
-                    <!-- Encabezado de la página -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-                    <!-- Botón de Generar Reporte, incluyendo la fecha como parámetro GET -->
-                        <a href="{% url 'exportar_excel' %}?fecha={{ fecha_actual|date:'Y-m-d' }}" 
-                            class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                            <i class="fas fa-download fa-sm text-white-50"></i> Exportar a Excel
-                        </a>
-                    </div>
-                    <!-- Selector de Fecha en el Dashboard -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <form method="get" action="">
-                                <label for="fecha">Seleccionar Fecha:</label>
-                                <input type="date" id="fecha" name="fecha" class="form-control w-50" 
-                                    value="{{ fecha_actual|date:"Y-m-d" }}"
-                                    onchange="this.form.submit()">
+                    <div class="container-fluid">
+                        <!-- Fecha Selector -->
+                        <div class="mb-4">
+                            <form method="get" class="form-inline">
+                                <div class="form-group">
+                                    <label for="fecha">Seleccionar Fecha:</label>
+                                    <input type="date" class="form-control ml-2" id="fecha" name="fecha" value="{{ fecha_seleccionada }}">
+                                    <button type="submit" class="btn btn-primary ml-2">Filtrar</button>
+                                </div>
                             </form>
                         </div>
-                    </div>
 
-                    <!-- Contenido de Tarjetas -->
-                    <div class="row">
-                        <!-- Tarjeta de Total de Repartos -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Total Repartos</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_repartos_hoy }}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tarjeta de Vehículos Disponibles -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Vehículos Disponibles</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_vehiculos }}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-truck fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Tarjeta de Repartos Finalizados (Porcentaje) -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Repartos Finalizados</div>
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
-                                                        {{ porcentaje_repartos_finalizados|default:"0"|floatformat:2 }}%
-                                                    </div>
+                        <!-- Content Row -->
+                        <div class="row">
+                            <!-- Total Repartos Card -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Total Repartos ({{ fecha_seleccionada }})
                                                 </div>
-                                                
-                                                <div class="col">
-                                                    
-                                                    <div class="progress progress-sm mr-2">
-                                                        <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: {{ porcentaje_repartos_finalizados|default_if_none:0|floatformat:0|add:'%' }} " 
-                                                            aria-valuenow="{{ porcentaje_repartos_finalizados|default:'0'|floatformat:0 }}" 
-                                                            aria-valuemin="0" 
-                                                            aria-valuemax="100">
-                                                        </div>
-                                                    </div>
-                                                    
-                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_repartos_hoy }}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
                                             </div>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-clipboard-check fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vehículos Disponibles Card -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-success shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    Vehículos Disponibles</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_vehiculos_disponibles }}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-truck fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Repartos Finalizados Card -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-info shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                    Repartos Finalizados
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ porcentaje_repartos_finalizados }}%</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Entregas Incompletas Card -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-warning shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                    Entregas Incompletas</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ entregas_incompletas }}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Tarjeta de Entregas Incompletas  -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Entregas Incompletas</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_entregas_incompletas_hoy }}</div>
+                        <!-- Content Row -->
+                        <div class="row">
+                            <!-- Area Chart -->
+                            <div class="col-xl-8 col-lg-7">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Repartos Mensuales</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-area">
+                                            <canvas id="myAreaChart"></canvas>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bar Chart -->
+                            <div class="col-xl-4 col-lg-5">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Estados de Repartos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-bar">
+                                            <canvas id="estadosRepartosChart"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -449,56 +470,19 @@
                         </div>
                     </div>
 
-                    <!-- Gráficos -->
-                    <div class="row">
-
-                        <!-- Gráfico de área -->
-                        <div class="col-xl-8 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">REPARTOS MENSUALES</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Gráfico circular -->
-                        <div class="col-xl-4 col-lg-5">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">ESTADISTICAS DE REPARTOS</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="chart-pie">
-                                        <canvas id="myPieChart"></canvas>
-                                    </div>
-                                    <div class="text-center small">
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-primary"></i> Abierto
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-success"></i> Cerrado
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-info"></i> Finalizado
-                                        </span>
-                                    </div>
-                                    <!-- Botón para ver repartos filtrados -->
-                                    <div class="text-center">
-                                        <form method="get" action="{% url 'repartos_filtrados' %}">
-                                            <input type="hidden" name="fecha" value="{{ fecha_actual|date:'Y-m-d' }}">
-                                            <button type="submit" class="btn-icon-split btn-primary btn-sm">VER REPARTOS</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
+                    <!-- Datos JSON para los gráficos (solo una vez) -->
+                    <script type="application/json" id="labelsRepartosMensuales">
+                        {{ labels_repartos_mensuales|safe }}
+                    </script>
+                    <script type="application/json" id="dataRepartosMensuales">
+                        {{ data_repartos_mensuales|safe }}
+                    </script>
+                    <script type="application/json" id="labelsEstados">
+                        {{ labels_estados|safe }}
+                    </script>
+                    <script type="application/json" id="dataEstados">
+                        {{ data_estados|safe }}
+                    </script>
                     {% endblock %}
                 </div>
                 
@@ -548,20 +532,67 @@
         </div>
     </div>
 
-<!-- Scripts para los gráficos -->
-<script type="application/json" id="labelsRepartosMensuales">
-    {{ labels_repartos_mensuales|safe }}
-</script>
-<script type="application/json" id="dataRepartosMensuales">
-    {{ data_repartos_mensuales|safe }}
-</script>
-<script type="application/json" id="labelsEstados">
-    {{ labels_estados|safe }}
-</script>
-<script type="application/json" id="dataEstados">
-    {{ data_estados|safe }}
-</script>
+    <!-- Modal de Detalles del Reparto -->
+    <div class="modal fade" id="modalDetallesReparto" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Reparto</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Información del Reparto -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nro. Reparto:</strong> <span id="modalNroReparto"></span></p>
+                                    <p><strong>Fecha:</strong> <span id="modalFecha"></span></p>
+                                    <p><strong>Estado:</strong> <span id="modalEstado"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Chofer:</strong> <span id="modalChofer"></span></p>
+                                    <p><strong>Zona:</strong> <span id="modalZona"></span></p>
+                                    <p><strong>Descripción Zona:</strong> <span id="modalZonaDescripcion"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Tabla de Pedidos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Pedidos del Reparto</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Nº Factura</th>
+                                            <th>Cliente</th>
+                                            <th>Dirección</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaPedidosBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <!-- Cargar scripts principales -->
 <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
@@ -572,10 +603,24 @@
 <!-- Script de Chart.js -->
 <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
 
-<!-- Script personalizado para cargar el gráfico de repartos mensuales -->
+<!-- Scripts para los gráficos -->
 <script src="{% static 'js/dashboard-charts.js' %}"></script>
-<!-- Scripts para los gráficos circulares -->
-<script src="{% static 'js/dashboard-charts-circular.js' %}"></script>
+<script src="{% static 'js/dashboard-estados.js' %}"></script>
+
+<style>
+.progress {
+    background-color: #eaecf4;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    background-color: #36b9cc;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+}
+</style>
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

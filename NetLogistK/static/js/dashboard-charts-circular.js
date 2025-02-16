@@ -1,24 +1,31 @@
-// dashboard-charts-circular.js
+F// dashboard-charts-circular.js
 document.addEventListener("DOMContentLoaded", function () {
-    function actualizarGraficoCircular() {
+    try {
         var ctxPie = document.getElementById("myPieChart").getContext('2d');
         
-        // Obtener los datos de estado desde el backend
-        var labelsEstados = JSON.parse(document.getElementById("labelsEstados").textContent.replace(/'/g, '"'));
+        // Parsear los datos asegurándonos que son arrays válidos
+        var labelsEstados = JSON.parse(document.getElementById("labelsEstados").textContent);
         var dataEstados = JSON.parse(document.getElementById("dataEstados").textContent);
 
+        // Configurar colores que coincidan con la leyenda
+        var backgroundColors = [
+            '#4e73df',  // text-primary - Abierto
+            '#f6c23e',  // text-warning - En Curso
+            '#1cc88a'   // text-success - Finalizado
+        ];
+
+        // Pie Chart Example
         new Chart(ctxPie, {
             type: 'doughnut',
             data: {
                 labels: labelsEstados,
                 datasets: [{
                     data: dataEstados,
-                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'],
-                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf'],
+                    backgroundColor: backgroundColors,
+                    hoverBackgroundColor: backgroundColors,
                     hoverBorderColor: "rgba(234, 236, 244, 1)",
                 }],
             },
-            
             options: {
                 maintainAspectRatio: false,
                 tooltips: {
@@ -26,18 +33,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     bodyFontColor: "#858796",
                     borderColor: '#dddfeb',
                     borderWidth: 1,
-                    xPadding: 10,
-                    yPadding: 10,
+                    xPadding: 15,
+                    yPadding: 15,
                     displayColors: false,
                     caretPadding: 10,
                 },
                 legend: {
-                    display: false // Ocultar leyenda si no se necesita
+                    display: false  // Ocultamos la leyenda generada por Chart.js
                 },
-                cutoutPercentage: 80, // Hace el gráfico más estilo "donut"
+                cutoutPercentage: 80,
             },
         });
-    }
 
-    actualizarGraficoCircular();
+    } catch (error) {
+        console.error("Error al crear el gráfico circular:", error);
+    }
 });

@@ -1,6 +1,5 @@
 # pedidos/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-#from django.http import HttpResponse
 import openpyxl
 from firebase_admin import firestore
 from datetime import datetime, timedelta
@@ -8,8 +7,6 @@ from django.contrib import messages
 import re
 from django.http import JsonResponse
 import pandas as pd
-import io
-import firebase_admin
 from firebase_admin import credentials
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
@@ -141,7 +138,7 @@ def agregar_pedidos(request):
         return redirect('agregar_pedidos')
 
 
-def obtener_pedidos(request):
+#def obtener_pedidos(request):
     reparto_id = request.GET.get('reparto_id')
 
     if not reparto_id:
@@ -160,70 +157,24 @@ def obtener_pedidos(request):
         return JsonResponse({'error': f'Error al obtener pedidos: {str(e)}'}, status=500)
 
 
+
 def listar_pedidos(request):
     try:
-        # Obtener fechas del filtro o usar valores por defecto
-        fecha_hasta = request.GET.get('fecha_hasta', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d'))
-        fecha_desde = request.GET.get('fecha_desde', datetime.now().strftime('%Y-%m-%d'))
-        
-        # Convertir fechas a objetos datetime
-        fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d')
-        fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d')
-        
-        # Obtener todos los repartos
-        repartos_ref = db.collection('repartos').stream()
         pedidos = []
-
-        # Iterar sobre cada reparto
-        for reparto in repartos_ref:
-            reparto_data = reparto.to_dict()
-            
-            # Obtener pedidos de la subcolección
-            pedidos_ref = reparto.reference.collection('pedidos').stream()
-            
-            for pedido in pedidos_ref:
-                pedido_data = pedido.to_dict()
-                pedido_data['id'] = pedido.id
-                
-                try:
-                    # Convertir fecha del pedido a objeto datetime
-                    fecha_pedido_str = pedido_data.get('fecha', '')
-                    fecha_pedido_obj = datetime.strptime(fecha_pedido_str, '%d-%m-%Y')
-                    
-                    # Verificar si el pedido está dentro del rango de fechas
-                    if fecha_desde_obj <= fecha_pedido_obj <= fecha_hasta_obj:
-                        # Agregar datos del reparto al pedido
-                        pedido_data['reparto_id'] = reparto.id
-                        pedido_data['nro_reparto'] = reparto_data.get('nro_reparto')
-                        pedidos.append(pedido_data)
-                    else:
-                        print(f"Pedido fuera del rango de fechas")
-                except Exception as e:
-                    print(f"Error procesando fecha del pedido: {e}")
-                    continue
-
-        # Ordenar pedidos por fecha descendente
-        pedidos.sort(key=lambda x: datetime.strptime(x.get('fecha', '01-01-2000'), '%d-%m-%Y'), reverse=True)
-
-        # Formatear el rango de fechas para mostrar
-        rango_fechas = f"{fecha_desde_obj.strftime('%d-%m-%Y')} al {fecha_hasta_obj.strftime('%d-%m-%Y')}"
+        repartos_ref = db.collection('repartos')
         
-        return render(request, 'pedidos/listar_pedidos.html', {
-            'pedidos': pedidos,
-            'fecha_desde': fecha_desde,
-            'fecha_hasta': fecha_hasta,
-            'total_pedidos': len(pedidos),
-            'rango_fechas': rango_fechas
-        })
-
+        for reparto in repartos_ref.stream():
+            pedidos_ref = reparto.reference.collection('pedidos')
+            for pedido in pedidos_ref.stream():
+                pedido_data = pedido.to_dict()
+                pedido_data['id'] = pedido.id  # Agregar el ID del documento
+                pedido_data['nro_reparto'] = reparto.get('nro_reparto')
+                pedidos.append(pedido_data)
+        
+        return render(request, 'pedidos/listar_pedidos.html', {'pedidos': pedidos})
     except Exception as e:
-        print(f"Error al listar pedidos: {e}")
-        messages.error(request, f"Error al listar pedidos: {e}")
-        return render(request, 'pedidos/listar_pedidos.html', {
-            'pedidos': [],
-            'fecha_desde': fecha_desde if 'fecha_desde' in locals() else '',
-            'fecha_hasta': fecha_hasta if 'fecha_hasta' in locals() else ''
-        })
+        messages.error(request, f'Error al listar pedidos: {str(e)}')
+        return redirect('dashboard')
 
 
 # Validaciones
@@ -436,25 +387,32 @@ def eliminar_pedido(request, pedido_id):
 
 def obtener_detalle_pedido(request, pedido_id):
     try:
-        # Obtener el pedido
-        pedido_doc = db.collection('pedidos').document(pedido_id).get()
+        # Primero necesitamos encontrar el reparto que contiene este pedido
+        repartos_ref = db.collection('repartos')
+        repartos = repartos_ref.stream()
         
-        if not pedido_doc.exists:
-            return JsonResponse({'error': 'Pedido no encontrado'}, status=404)
+        pedido_data = None
+        reparto_data = None
+        
+        # Buscar en cada reparto
+        for reparto in repartos:
+            # Buscar el pedido en la subcolección de pedidos
+            pedido_doc = reparto.reference.collection('pedidos').document(pedido_id).get()
             
-        pedido = pedido_doc.to_dict()
-        pedido['id'] = pedido_doc.id
+            if pedido_doc.exists:
+                pedido_data = pedido_doc.to_dict()
+                pedido_data['id'] = pedido_doc.id
+                reparto_data = reparto.to_dict()
+                break
         
-        # Obtener información del reparto si existe
-        reparto_id = pedido.get('reparto_id')
-        if reparto_id:
-            reparto_doc = db.collection('repartos').document(reparto_id).get()
-            if reparto_doc.exists:
-                reparto_data = reparto_doc.to_dict()
-                pedido['nro_reparto'] = reparto_data.get('nro_reparto', 'Desconocido')
-                pedido['fecha_reparto'] = pedido.get('fecha')
+        if not pedido_data:
+            return JsonResponse({'error': 'Pedido no encontrado'}, status=404)
         
-        return JsonResponse(pedido)
+        # Agregar información del reparto al pedido
+        pedido_data['nro_reparto'] = reparto_data.get('nro_reparto', 'Sin asignar')
+        pedido_data['fecha_reparto'] = reparto_data.get('fecha', 'Sin fecha')
+        
+        return JsonResponse(pedido_data)
         
     except Exception as e:
         print("Error al obtener detalles del pedido:", e)
