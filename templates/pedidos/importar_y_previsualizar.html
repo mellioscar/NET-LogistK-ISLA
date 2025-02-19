@@ -1,4 +1,46 @@
 {% extends "sb_admin2/index.html" %}
+{% load static %}
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+    .modal-dialog {
+        max-width: 800px;
+    }
+    
+    .modal-content {
+        border-radius: 8px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .map-container {
+        width: 100%;
+        height: 400px;
+        margin-top: 10px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    #verification-map {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Corregir rutas de iconos de Leaflet */
+    .leaflet-default-icon-path {
+        background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png);
+    }
+    
+    .leaflet-default-shadow-path {
+        background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <h2>Importar y Previsualizar Pedidos</h2>
 
@@ -54,7 +96,7 @@
                         <div class="form-group">
                             <label><strong>Fecha de Salida:</strong></label>
                             <input type="date" class="form-control" id="fecha_salida" name="fecha_salida" 
-                                   value="{{ datos_reparto.fecha_salida }}" required>
+                                value="{{ datos_reparto.fecha_salida }}" required>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -112,10 +154,19 @@
                     <tr class="table-info">
                         <td class="small">{{ pedido.nro_factura }}</td>
                         <td class="small">{{ pedido.nombre }}</td>
-                        <td class="small">{{ pedido.direccion }}</td>
+                        <td class="small">
+                            {{ pedido.direccion }}
+                            <div class="coordenadas-info" id="coord-{{ pedido.nro_factura }}" style="color: #666; font-size: 0.85em;">
+                                <span class="lat"></span>
+                                <span class="lng"></span>
+                            </div>
+                            <button type="button" class="btn btn-sm" onclick="verificarUbicacion('{{ pedido.direccion }}', '{{ pedido.nro_factura }}')">
+                                <i class="fas fa-map-marker-alt text-primary"></i> Ver ubicación
+                            </button>                       
+                        </td>
                         <td class="small">{{ pedido.email }}</td>
                         <td class="small">{{ pedido.telefono }}</td>
-                        <td class="small text-right">{{ pedido.peso_total }} kg</td>
+                        <td class="small text-right">{{ pedido.peso_total|floatformat:2 }} kg</td>
                     </tr>
                     {% for articulo in pedido.articulos %}
                         <tr>
@@ -127,7 +178,7 @@
                             </td>
                             <td class="small text-muted">Cantidad: {{ articulo.cantidad }}</td>
                             <td></td>
-                            <td class="small text-muted text-right">Peso: {{ articulo.peso }} kg</td>
+                            <td class="small text-muted text-right">Peso: {{ articulo.peso|floatformat:2 }} kg</td>
                         </tr>
                     {% endfor %}
                 {% endfor %}
@@ -135,4 +186,168 @@
         </table>
     </div>
 {% endif %}
+
+<!-- Modal para verificar ubicación -->
+<div class="modal fade" id="verificarUbicacionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verificar Ubicación</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="pedido-details mb-3">
+                    <div class="detail-row">
+                        <div class="detail-group full-width">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value" id="direccion-texto"></span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <span class="detail-label">Latitud:</span>
+                            <span class="detail-value" id="lat-texto"></span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Longitud:</span>
+                            <span class="detail-value" id="lng-texto"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos generales del modal */
+    .modal-dialog {
+        max-width: 900px;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background-color: #007bff;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 10px;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    /* Contenedor de detalles */
+    .pedido-details {
+        padding: 5px;
+        background-color: #fff;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        border: 1px solid #7c7c7d;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 5px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-label {
+        font-weight: 700;
+        color: #0e2d6b;
+    }
+
+    .detail-value {
+        font-weight: 400;
+        margin-right: 30px;
+        color: #212529;
+    }
+
+    .full-width {
+        width: 100%;
+    }
+
+    /* Tabla de artículos */
+    .table-articles {
+        width: 100%;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table-articles thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        padding: 5px;
+    }
+
+    .table-articles tbody td {
+        padding: 5px;
+        border-bottom: 1px solid #d0d2d4;
+    }
+
+    /* Mapa */
+    .map-container {
+        padding: 10px;
+        font-weight: 600;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    #map {
+        height: 300px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+    }
+</style>
+
+
+<!-- Script para el modal y filtros -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function verificarUbicacion(direccionCompleta, nroFactura) {
+    $('#direccion-texto').text(direccionCompleta);
+    
+    $.get(`{% url 'generar_mapa' %}?direccion=${encodeURIComponent(direccionCompleta)}`, function(response) {
+        if (response.mapa_html) {
+            $('#map').html(response.mapa_html);
+            // Extraer coordenadas del mapa HTML
+            const coordMatch = response.mapa_html.match(/center: \[([-\d.]+), ([-\d.]+)\]/);
+            if (coordMatch) {
+                const lat = coordMatch[1];
+                const lng = coordMatch[2];
+                
+                // Actualizar coordenadas en el modal
+                $('#lat-texto').text(lat);
+                $('#lng-texto').text(lng);
+                
+                // Actualizar coordenadas en la tabla
+                $(`#coord-${nroFactura} .lat`).text(`Lat: ${lat}`);
+                $(`#coord-${nroFactura} .lng`).text(` Lng: ${lng}`);
+            }
+            $('#verificarUbicacionModal').modal('show');
+        } else {
+            console.error('No se pudo generar el mapa');
+        }
+    }).fail(function(error) {
+        console.error('Error al obtener el mapa:', error);
+    });
+}
+</script>
 {% endblock %}

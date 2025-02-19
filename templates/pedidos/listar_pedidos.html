@@ -90,102 +90,119 @@
     </div>
 </div>
 
-<!-- Modal para ver detalles -->
-<div class="modal fade" id="verPedidoModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Modal -->
+<div class="modal fade" id="verPedidoModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detalles del Pedido</h5>
+                <h5 class="modal-title" id="modalLabel">
+                    <i class="fas fa-file-invoice"></i> Detalles del Pedido
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id="pedidoDetalles">
-                <!-- Aquí se cargarán los detalles -->
+            <div class="modal-body">
+                <div id="pedidoDetalles"></div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Estilos generales del modal */
+    .modal-dialog {
+        max-width: 900px;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background-color: #007bff;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 10px;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    /* Contenedor de detalles */
+    .pedido-details {
+        padding: 5px;
+        background-color: #fff;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        border: 1px solid #7c7c7d;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 5px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-label {
+        font-weight: 700;
+        color: #0e2d6b;
+    }
+
+    .detail-value {
+        font-weight: 400;
+        margin-right: 30px;
+        color: #212529;
+    }
+
+    .full-width {
+        width: 100%;
+    }
+
+    /* Tabla de artículos */
+    .table-articles {
+        width: 100%;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table-articles thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        padding: 5px;
+    }
+
+    .table-articles tbody td {
+        padding: 5px;
+        border-bottom: 1px solid #d0d2d4;
+    }
+
+    /* Mapa */
+    .map-container {
+        padding: 10px;
+        font-weight: 600;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    #map {
+        height: 300px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+    }
+</style>
+
 
 <!-- Script para el modal y filtros -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-// Función para ver detalles del pedido (se mantiene igual)
-function verPedido(pedidoId) {
-    $.ajax({
-        url: `/pedidos/detalle/${pedidoId}/`,
-        type: 'GET',
-        success: function(response) {
-            let detallesHTML = `
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <tr>
-                            <th width="20%">Nº Factura:</th>
-                            <td>${response.nro_factura || ''}</td>
-                            <th width="20%">Cliente:</th>
-                            <td>${response.cliente || ''}</td>
-                        </tr>
-                        <tr>
-                            <th>Fecha:</th>
-                            <td>${response.fecha || ''}</td>
-                            <th>Estado:</th>
-                            <td>${response.estado || ''}</td>
-                        </tr>
-                        <tr>
-                            <th>Dirección:</th>
-                            <td colspan="3">${response.direccion || ''}</td>
-                        </tr>
-                        <tr>
-                            <th>Nº Reparto:</th>
-                            <td>${response.nro_reparto || 'Sin asignar'}</td>
-                            <th>Fecha Reparto:</th>
-                            <td>${response.fecha_reparto || 'Sin asignar'}</td>
-                        </tr>
-                    </table>
-                </div>`;
-
-            if (response.articulos && response.articulos.length > 0) {
-                detallesHTML += `
-                    <h6 class="mt-4">Artículos del Pedido</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Descripción</th>
-                                    <th>Cantidad</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${response.articulos.map(art => `
-                                    <tr>
-                                        <td>${art.codigo || ''}</td>
-                                        <td>${art.descripcion || ''}</td>
-                                        <td>${art.cantidad || ''}</td>
-                                        <td>
-                                            <span class="badge badge-${getEstadoColor(art.estado || 'Pendiente')}">
-                                                ${art.estado || 'Pendiente'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
-            }
-
-            $('#pedidoDetalles').html(detallesHTML);
-            $('#verPedidoModal').modal('show');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('Error al obtener los detalles del pedido');
-        }
-    });
-}
-
+// Función para ver detalles del pedido
 function getEstadoColor(estado) {
     switch(estado) {
         case 'Entregado':
@@ -233,3 +250,108 @@ document.querySelectorAll('input[type="date"]').forEach(input => {
 });
 </script>
 {% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+function verPedido(pedidoId) {
+    $.ajax({
+        url: `/pedidos/detalle/${pedidoId}/`,
+        type: 'GET',
+        success: function(response) {
+            let detallesHTML = `
+                <div class="pedido-details">
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <span class="detail-label">Nº Factura:</span>
+                            <span class="detail-value">${response.nro_factura || ''}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Cliente:</span>
+                            <span class="detail-value">${response.cliente || ''}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Fecha:</span>
+                            <span class="detail-value">${response.fecha || ''}</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-group full-width">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">${response.direccion || ''}</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <span class="detail-label">Nº Reparto:</span>
+                            <span class="detail-value">${response.nro_reparto || 'Sin asignar'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Fecha Reparto:</span>
+                            <span class="detail-value">${response.fecha_reparto || 'Sin asignar'}</span>
+                        </div>
+                        <div class="detail-group total-weight">
+                            <span class="detail-label">Peso Total:</span>
+                            <span class="detail-value">${response.peso_total || 0} kg</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Estado:</span>
+                            <span class="detail-value">${response.estado || ''}</span>
+                        </div>
+                    </div>
+                </div>`;
+
+            if (response.articulos && response.articulos.length > 0) {
+                detallesHTML += `
+                    <h6 class="map-title mt-3">Artículos del Pedido</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm table-articles">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${response.articulos.map(art => `
+                                    <tr>
+                                        <td>${art.codigo || ''}</td>
+                                        <td>${art.descripcion || ''}</td>
+                                        <td>${art.cantidad || ''}</td>
+                                        <td>
+                                            <span class="badge badge-${getEstadoColor(art.estado || 'Pendiente')}">
+                                                ${art.estado || 'Pendiente'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+
+            detallesHTML += `
+                <div class="map-container">
+                    <h6 class="map-title">Ubicación del cliente</h6>
+                    <div id="map">${response.mapa_html || 'No se pudo cargar el mapa'}</div>
+                </div>`;
+
+            $('#pedidoDetalles').html(detallesHTML);
+            $('#verPedidoModal').modal('show');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert('Error al obtener los detalles del pedido');
+        }
+    });
+}
+</script>
+{% endblock %}
+

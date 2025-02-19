@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "firebase": "^11.0.2"
+    "firebase": "^11.0.2",
+    "json-schema": "^0.4.0",
+    "minimist": "~1.2.6",
+    "socket.io-parser": "~3.3.3",
+    "xmlhttprequest-ssl": "~1.6.2"
   }
 }

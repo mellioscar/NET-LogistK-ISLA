@@ -11,9 +11,24 @@ from firebase_admin import credentials
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
-
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
+import folium
+import requests
+from opencage.geocoder import OpenCageGeocode
+from geopy.extra.rate_limiter import RateLimiter
+from django.conf import settings
+import os
+import json
 # Inicializar Firestore
 db = firestore.client()
+
+def get_google_api_key():
+    with open('secrets/API KEYS.json') as f:
+        keys = json.load(f)
+        return keys['API_KEY_GOOGLE']
+
+API_KEY_GOOGLE = get_google_api_key()
 
 def agregar_pedidos(request):
     try:
@@ -157,7 +172,6 @@ def agregar_pedidos(request):
         return JsonResponse({'error': f'Error al obtener pedidos: {str(e)}'}, status=500)
 
 
-
 def listar_pedidos(request):
     try:
         pedidos = []
@@ -176,15 +190,16 @@ def listar_pedidos(request):
         messages.error(request, f'Error al listar pedidos: {str(e)}')
         return redirect('dashboard')
 
-
 # Validaciones
 def validar_email(email):
     patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(patron, email) is not None
 
+
 def validar_telefono(telefono):
     patron = r'^\+?\d{10,15}$'
     return re.match(patron, telefono) is not None
+
 
 def importar_y_previsualizar_pedidos(request):
     pedidos_validos = []
@@ -358,7 +373,8 @@ def importar_y_previsualizar_pedidos(request):
             'nombre_completo': f"{doc.to_dict()['nombre']} {doc.to_dict().get('apellido', '')}"
         } for doc in choferes],
         'zonas': [doc.to_dict() | {"id": doc.id} for doc in zonas],
-        'peso_total': round(sum(float(pedido.get('peso_total', 0)) for pedido in pedidos_validos), 2)
+        'peso_total': round(sum(float(pedido.get('peso_total', 0)) for pedido in pedidos_validos), 2),
+        'google_api_key': get_google_api_key()  # Asegurarse de que la API key esté disponible
     }
     
     return render(request, 'pedidos/importar_y_previsualizar.html', context)
@@ -372,6 +388,7 @@ def guardar_pedidos(request):
         messages.success(request, "Pedidos guardados exitosamente.")
         return redirect('listar_pedidos')
 
+
 def eliminar_pedido(request, pedido_id):
     if request.method == "POST":
         try:
@@ -384,6 +401,66 @@ def eliminar_pedido(request, pedido_id):
             return JsonResponse({"success": False, "message": f"Error eliminando el pedido: {str(e)}"})
     
     return JsonResponse({"success": False, "message": "Método no permitido."}, status=400)
+
+
+def geocode_google(direccion):
+    """Obtiene coordenadas precisas desde Google Maps API."""
+    
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={direccion}&key={API_KEY_GOOGLE}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data['results']:
+            location = data['results'][0]['geometry']['location']
+            return location['lat'], location['lng']
+    
+    return None
+
+def generar_mapa(direccion):
+    try:
+        # Formatear la dirección
+        direccion_formateada = f"{direccion}"
+
+        # Obtener coordenadas con Google Maps
+        coordenadas = geocode_google(direccion_formateada)
+
+        # Crear mapa
+        if coordenadas:
+            lat, lon = coordenadas
+
+            # Crear mapa centrado en la ubicación encontrada
+            m = folium.Map(
+                location=[lat, lon],
+                zoom_start=14
+            )
+
+            # Agregar marcador
+            folium.Marker(
+                [lat, lon],
+                popup=direccion,
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+        else:
+            # Si no encuentra la ubicación, mostrar mapa regional
+            print("Ubicación no encontrada, mostrando mapa regional")
+            m = folium.Map(
+                location=[-39.0544, -67.5851],  # Coordenadas de la región de Neuquén y Río Negro
+                zoom_start=10
+            )
+
+        # Configurar el mapa
+        m.fit_bounds(m.get_bounds())
+
+        # Generar HTML del mapa
+        mapa_html = m._repr_html_()
+        return mapa_html
+
+    except Exception as e:
+        print(f"Error al generar mapa: {e}")
+        return None
+
+
 
 def obtener_detalle_pedido(request, pedido_id):
     try:
@@ -412,11 +489,26 @@ def obtener_detalle_pedido(request, pedido_id):
         pedido_data['nro_reparto'] = reparto_data.get('nro_reparto', 'Sin asignar')
         pedido_data['fecha_reparto'] = reparto_data.get('fecha', 'Sin fecha')
         
-        return JsonResponse(pedido_data)
+        if pedido_data:
+            # Agregar peso total
+            pedido_data['peso_total'] = float(pedido_data.get('peso_total', 0))
+            
+            # Agregar coordenadas por defecto de la zona
+            pedido_data['ubicacion'] = {
+                'lat': -39.044,  # Coordenadas de Neuquén
+                'lon': -67.579
+            }
+            
+            # Generar mapa
+            if pedido_data.get('direccion'):
+                mapa_html = generar_mapa(pedido_data['direccion'])
+                pedido_data['mapa_html'] = mapa_html
         
+        return JsonResponse(pedido_data)
     except Exception as e:
-        print("Error al obtener detalles del pedido:", e)
+        print(f"Error al obtener detalles del pedido: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
 
 def detalles_pedido(request, pedido_id):
     try:
@@ -443,6 +535,7 @@ def detalles_pedido(request, pedido_id):
     except Exception as e:
         print("Error al obtener detalles del pedido:", e)
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_protect
 @require_POST
@@ -477,3 +570,17 @@ def actualizar_estado_articulo(request, pedido_id):
     except Exception as e:
         print("Error al actualizar estado del artículo:", e)
         return JsonResponse({'success': False, 'error': str(e)})
+
+def generar_mapa_view(request):
+    direccion = request.GET.get('direccion')
+    if direccion:
+        try:
+            # Usar la función generar_mapa existente
+            mapa_html = generar_mapa(direccion)
+            if mapa_html:
+                return JsonResponse({'mapa_html': mapa_html})
+            return JsonResponse({'error': 'No se pudo generar el mapa'}, status=400)
+        except Exception as e:
+            print(f"Error al generar mapa: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'No se proporcionó dirección'}, status=400)

@@ -55,6 +55,7 @@ urlpatterns = [
     path('importar/', pedidos_views.importar_y_previsualizar_pedidos, name='importar_y_previsualizar_pedidos'),
     path('pedidos/detalle/<str:pedido_id>/', pedidos_views.obtener_detalle_pedido, name='detalle_pedido'),
     path('pedidos/actualizar-estado-articulo/<str:pedido_id>/', pedidos_views.actualizar_estado_articulo, name='actualizar_estado_articulo'),
+    path('generar_mapa/', pedidos_views.generar_mapa_view, name='generar_mapa'),
 
     # Rutas para Tracking
     path('mapa/', tracking_views.mapa_tracking, name='mapa_tracking'),
