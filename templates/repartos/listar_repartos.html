@@ -19,7 +19,7 @@
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>Fecha</th>
+                            <th>Fecha de Salida</th>
                             <th>Nro de Reparto</th>
                             <th>Chofer</th>
                             <th>Zona</th>
@@ -33,7 +33,7 @@
                     <tbody>
                         {% for reparto in repartos %}
                         <tr>
-                            <td>{{ reparto.fecha }}</td>
+                            <td>{{ reparto.fecha_salida }}</td>
                             <td>{{ reparto.nro_reparto }}</td>
                             <td>{{ reparto.chofer.nombre_completo }}</td>
                             <td>{{ reparto.zona }}</td>

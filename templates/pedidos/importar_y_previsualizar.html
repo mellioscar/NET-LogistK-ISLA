@@ -157,12 +157,14 @@
                         <td class="small">
                             {{ pedido.direccion }}
                             <div class="coordenadas-info" id="coord-{{ pedido.nro_factura }}" style="color: #666; font-size: 0.85em;">
-                                <span class="lat"></span>
-                                <span class="lng"></span>
+                                {% if pedido.latitud and pedido.longitud %}
+                                    <span class="lat">Lat: {{ pedido.latitud }}</span>
+                                    <span class="lng"> Lng: {{ pedido.longitud }}</span>
+                                {% endif %}
                             </div>
                             <button type="button" class="btn btn-sm" onclick="verificarUbicacion('{{ pedido.direccion }}', '{{ pedido.nro_factura }}')">
                                 <i class="fas fa-map-marker-alt text-primary"></i> Ver ubicación
-                            </button>                       
+                            </button>
                         </td>
                         <td class="small">{{ pedido.email }}</td>
                         <td class="small">{{ pedido.telefono }}</td>
@@ -214,9 +216,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="map-container">
-                    <div id="map"></div>
-                </div>
+                <div id="verification-map" style="height: 400px; width: 100%;"></div>
+                <small class="text-muted mt-2">* Arrastra el marcador para ajustar la ubicación</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarCoordenadas()">Guardar Ubicación</button>
             </div>
         </div>
     </div>
@@ -305,7 +310,7 @@
     }
 
     #map {
-        height: 300px;
+        height: 250px;
         border: 1px solid #e9ecef;
         border-radius: 8px;
     }
@@ -320,34 +325,70 @@
 {% block extra_js %}
 {{ block.super }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key }}"></script>
 <script>
+let currentMarker = null;
+let currentMap = null;
+let currentNroFactura = null;
+
 function verificarUbicacion(direccionCompleta, nroFactura) {
     $('#direccion-texto').text(direccionCompleta);
+    currentNroFactura = nroFactura;
     
-    $.get(`{% url 'generar_mapa' %}?direccion=${encodeURIComponent(direccionCompleta)}`, function(response) {
-        if (response.mapa_html) {
-            $('#map').html(response.mapa_html);
-            // Extraer coordenadas del mapa HTML
-            const coordMatch = response.mapa_html.match(/center: \[([-\d.]+), ([-\d.]+)\]/);
-            if (coordMatch) {
-                const lat = coordMatch[1];
-                const lng = coordMatch[2];
-                
-                // Actualizar coordenadas en el modal
-                $('#lat-texto').text(lat);
-                $('#lng-texto').text(lng);
-                
-                // Actualizar coordenadas en la tabla
-                $(`#coord-${nroFactura} .lat`).text(`Lat: ${lat}`);
-                $(`#coord-${nroFactura} .lng`).text(` Lng: ${lng}`);
-            }
-            $('#verificarUbicacionModal').modal('show');
+    const lat = parseFloat($(`#coord-${nroFactura} .lat`).text().replace('Lat: ', '').replace(',', '.'));
+    const lng = parseFloat($(`#coord-${nroFactura} .lng`).text().replace('Lng: ', '').replace(',', '.'));
+    
+    if (lat && lng) {
+        const position = { lat: lat, lng: lng };
+        
+        // Inicializar el mapa si no existe
+        if (!currentMap) {
+            currentMap = new google.maps.Map(document.getElementById('verification-map'), {
+                zoom: 15,
+                center: position
+            });
         } else {
-            console.error('No se pudo generar el mapa');
+            currentMap.setCenter(position);
         }
-    }).fail(function(error) {
-        console.error('Error al obtener el mapa:', error);
-    });
+
+        // Eliminar marcador anterior si existe
+        if (currentMarker) {
+            currentMarker.setMap(null);
+        }
+
+        // Crear nuevo marcador arrastrable
+        currentMarker = new google.maps.Marker({
+            position: position,
+            map: currentMap,
+            draggable: true
+        });
+
+        // Actualizar coordenadas cuando se arrastra el marcador
+        google.maps.event.addListener(currentMarker, 'dragend', function() {
+            const pos = currentMarker.getPosition();
+            $('#lat-texto').text(pos.lat().toFixed(6));
+            $('#lng-texto').text(pos.lng().toFixed(6));
+        });
+
+        $('#lat-texto').text(lat.toFixed(6));
+        $('#lng-texto').text(lng.toFixed(6));
+        $('#verificarUbicacionModal').modal('show');
+
+        // Ajustar mapa cuando se muestra el modal
+        $('#verificarUbicacionModal').on('shown.bs.modal', function () {
+            google.maps.event.trigger(currentMap, 'resize');
+            currentMap.setCenter(position);
+        });
+    }
+}
+
+function guardarCoordenadas() {
+    if (currentMarker && currentNroFactura) {
+        const pos = currentMarker.getPosition();
+        $(`#coord-${currentNroFactura} .lat`).text(`Lat: ${pos.lat().toFixed(6)}`);
+        $(`#coord-${currentNroFactura} .lng`).text(` Lng: ${pos.lng().toFixed(6)}`);
+        $('#verificarUbicacionModal').modal('hide');
+    }
 }
 </script>
 {% endblock %}

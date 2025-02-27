@@ -16,12 +16,12 @@
         <input type="hidden" name="sucursal" value="{{ user.sucursal }}">
             {% csrf_token %}
             <div class="col-md-4 mb-3">
-                <label for="fecha" class="form-label">Fecha:</label>
+                <label for="fecha" class="form-label">Fecha de Salida:</label>
                 <input type="date" class="form-control" name="fecha" value="{{ hoy }}" required>
             </div>
             <div class="col-md-4 mb-3">
-                <label for="nro_reparto" class="form-label">Nro. Reparto:</label>
-                <input type="number" class="form-control" name="nro_reparto" required>
+                <label for="nro_reparto"><strong>Nro. Reparto:</strong></label>
+                <input type="text" class="form-control" id="nro_reparto" name="nro_reparto" required>
             </div>
             <div class="col-md-4 mb-3">
                 <label for="chofer" class="form-label">Chofer:</label>
@@ -43,7 +43,7 @@
             </div>            
             <div class="col-md-4 mb-3">
                 <label for="zona" class="form-label">Zona:</label>
-                <select class="form-control" name="zona" required>
+                <select class="form-control" id="zona" name="zona" required>
                     <option value="">Seleccione una Zona</option>
                     {% for zona in zonas %}
                         <option value="{{ zona.id }}">{{ zona.nombre }}</option>
@@ -79,4 +79,32 @@
         </form>
             </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const zonaSelect = document.getElementById('zona');
+    const fechaInput = document.querySelector('input[name="fecha"]');
+    const nroRepartoInput = document.getElementById('nro_reparto');
+
+    function generarNroReparto() {
+        const fecha = new Date(fechaInput.value);
+        if (!fecha || isNaN(fecha)) return;
+
+        const dia = fecha.getDate().toString().padStart(2, '0');
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        
+        const zonaSeleccionada = zonaSelect.options[zonaSelect.selectedIndex];
+        const nombreZona = zonaSeleccionada && zonaSeleccionada.value !== "" ? 
+            zonaSelect.options[zonaSelect.selectedIndex].text : 'Z';
+
+        nroRepartoInput.value = `R:${dia}-${mes} [Z:${nombreZona}]`;
+    }
+
+    zonaSelect.addEventListener('change', generarNroReparto);
+    fechaInput.addEventListener('change', generarNroReparto);
+
+    // Generar número inicial al cargar la página
+    generarNroReparto();
+});
+</script>
 {% endblock %}

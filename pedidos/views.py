@@ -211,151 +211,155 @@ def importar_y_previsualizar_pedidos(request):
         'fecha_salida': datetime.now().strftime('%Y-%m-%d')  # Fecha por defecto
     }
 
-    if request.method == 'POST':
-        if 'archivo' in request.FILES:
+    if request.method == 'POST' and request.FILES.get('archivo'):
+        try:
             archivo = request.FILES['archivo']
-            try:
-                df = pd.read_excel(archivo, sheet_name=0, dtype=str)
-                df.columns = df.columns.str.strip()
-                
-                if len(df) > 0:
-                    fecha_str = str(df.iloc[0]['Fecha Salida']).strip()
-                    try:
-                        fecha_obj = pd.to_datetime(fecha_str)
-                        fecha_formateada = fecha_obj.strftime('%Y-%m-%d')  # Formato para input type="date"
-                    except:
-                        fecha_formateada = datetime.now().strftime('%Y-%m-%d')
+            df = pd.read_excel(archivo, sheet_name=0, dtype=str)
+            df.columns = df.columns.str.strip()
+            
+            if len(df) > 0:
+                fecha_str = str(df.iloc[0]['Fecha Salida']).strip()
+                try:
+                    fecha_obj = pd.to_datetime(fecha_str)
+                    fecha_formateada = fecha_obj.strftime('%Y-%m-%d')  # Formato para input type="date"
+                except:
+                    fecha_formateada = datetime.now().strftime('%Y-%m-%d')
 
-                    datos_reparto = {
-                        'numero': str(df.iloc[0]['Reparto']).strip(),
-                        'vehiculo': str(df.iloc[0]['Vehículo']).strip(),
-                        'fecha_salida': fecha_formateada
-                    }
-
-                pedidos_agrupados = {}
-                for index, row in df.iterrows():
-                    try:
-                        nro_factura = str(row['Factura']).strip()
-                        peso = float(str(row['Peso']).replace(',', '.')) if row['Peso'] else 0.0
-                        
-                        if nro_factura not in pedidos_agrupados:
-                            direccion_completa = f"{str(row['Dirección']).strip()}"
-                            if row['Localidad'].strip():
-                                direccion_completa += f" - {str(row['Localidad']).strip()}"
-
-                            pedidos_agrupados[nro_factura] = {
-                                'nro_factura': nro_factura,
-                                'nombre': str(row['Cliente']).strip(),
-                                'direccion': direccion_completa,
-                                'email': str(row['Email']).strip(),
-                                'telefono': str(row['Teléfono (con código de país)']).strip(),
-                                'peso_total': peso,
-                                'fecha': fecha_formateada,
-                                'articulos': []
-                            }
-                        else:
-                            pedidos_agrupados[nro_factura]['peso_total'] += peso
-
-                        articulo = {
-                            'codigo': str(row['Artículo']).strip(),
-                            'descripcion': str(row['Descripción del artículo']).strip(),
-                            'cantidad': str(row['Cantidad']).strip(),
-                            'peso': peso
-                        }
-                        pedidos_agrupados[nro_factura]['articulos'].append(articulo)
-
-                    except Exception as e:
-                        errores_log.append(f"Error en fila {index + 2}: {str(e)}")
-                        pedidos_invalidos.append({
-                            'fila': index + 2,
-                            'errores': [str(e)],
-                            'pedido': row.to_dict()
-                        })
-
-                pedidos_validos = list(pedidos_agrupados.values())
-                request.session['pedidos_temp'] = pedidos_validos
-                request.session['datos_reparto_temp'] = datos_reparto
-                request.session.save()
-
-            except Exception as e:
-                messages.error(request, f"Error al procesar el archivo: {str(e)}")
-                return redirect('importar_y_previsualizar_pedidos')
-
-        elif request.POST.get('confirmar_importacion'):
-            try:
-                chofer_id = request.POST.get('chofer')
-                zona_id = request.POST.get('zona')
-                fecha_salida = request.POST.get('fecha_salida')  # Nueva fecha desde el formulario
-                pedidos_data = request.session.get('pedidos_temp', [])
-                datos_reparto = request.session.get('datos_reparto_temp', {})
-
-                if not chofer_id or not zona_id or not fecha_salida:
-                    messages.error(request, "Debe seleccionar un chofer, una zona y una fecha")
-                    return redirect('importar_y_previsualizar_pedidos')
-
-                # Obtener datos de la zona
-                zona_doc = db.collection('zonas').document(zona_id).get()
-                zona_data = zona_doc.to_dict()
-
-                # Obtener datos del chofer
-                chofer_ref = db.collection('recursos').document(chofer_id)
-                chofer_data = chofer_ref.get().to_dict()
-                nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
-
-                # Convertir fecha a formato DD-MM-YYYY para almacenar
-                fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
-                fecha_formateada = fecha_obj.strftime('%d-%m-%Y')
-
-                # Crear el reparto
-                reparto_data = {
-                    'nro_reparto': datos_reparto['numero'],
-                    'chofer': {
-                        'id': chofer_id,
-                        'nombre': chofer_data['nombre'],
-                        'apellido': chofer_data.get('apellido', ''),
-                        'nombre_completo': nombre_completo  # Agregamos el nombre completo
-                    },
-                    'vehiculo': datos_reparto['vehiculo'],
-                    'zona': zona_data['nombre'],
-                    'fecha': fecha_formateada,
-                    'estado_reparto': 'Abierto',
-                    'sucursal': request.session.get('user_sucursal'),
-                    'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
+                datos_reparto = {
+                    'numero': str(df.iloc[0]['Reparto']).strip(),
+                    'vehiculo': str(df.iloc[0]['Vehículo']).strip(),
+                    'fecha_salida': fecha_formateada
                 }
 
-                # Crear documento de reparto
-                nuevo_reparto = db.collection('repartos').document()
-                nuevo_reparto.set(reparto_data)
-
-                # Crear pedidos como subcolección del reparto
-                pedidos_ref = nuevo_reparto.collection('pedidos')
-                for pedido in pedidos_data:
-                    pedido_data = {
-                        'nro_factura': pedido['nro_factura'],
-                        'cliente': pedido['nombre'],
-                        'direccion': pedido['direccion'],
-                        'email': pedido['email'],
-                        'telefono': pedido['telefono'],
-                        'peso_total': float(pedido['peso_total']),
-                        'fecha': fecha_formateada,
-                        'estado': 'Asignado',
-                        'articulos': pedido['articulos'],
-                        'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
-                    }
+            pedidos_agrupados = {}
+            for index, row in df.iterrows():
+                try:
+                    nro_factura = str(row['Factura']).strip()
+                    peso = float(str(row['Peso']).replace(',', '.')) if row['Peso'] else 0.0
                     
-                    pedidos_ref.document().set(pedido_data)
+                    if nro_factura not in pedidos_agrupados:
+                        direccion_completa = f"{str(row['Dirección']).strip()}"
+                        if row['Localidad'].strip():
+                            direccion_completa += f" - {str(row['Localidad']).strip()}"
+                        
+                        # Obtener coordenadas usando la función existente
+                        coordenadas = geocode_google(direccion_completa)
+                        
+                        pedidos_agrupados[nro_factura] = {
+                            'nro_factura': nro_factura,
+                            'nombre': str(row['Cliente']).strip(),
+                            'direccion': direccion_completa,
+                            'email': str(row['Email']).strip(),
+                            'telefono': str(row['Teléfono (con código de país)']).strip(),
+                            'peso_total': peso,
+                            'fecha': fecha_formateada,
+                            'latitud': coordenadas[0] if coordenadas else None,
+                            'longitud': coordenadas[1] if coordenadas else None,
+                            'articulos': []
+                        }
+                    else:
+                        pedidos_agrupados[nro_factura]['peso_total'] += peso
 
-                # Limpiar sesión
-                del request.session['pedidos_temp']
-                del request.session['datos_reparto_temp']
-                request.session.save()
+                    articulo = {
+                        'codigo': str(row['Artículo']).strip(),
+                        'descripcion': str(row['Descripción del artículo']).strip(),
+                        'cantidad': str(row['Cantidad']).strip(),
+                        'peso': peso
+                    }
+                    pedidos_agrupados[nro_factura]['articulos'].append(articulo)
 
-                messages.success(request, "Reparto y pedidos creados exitosamente")
-                return redirect('listar_repartos')
+                except Exception as e:
+                    errores_log.append(f"Error en fila {index + 2}: {str(e)}")
+                    pedidos_invalidos.append({
+                        'fila': index + 2,
+                        'errores': [str(e)],
+                        'pedido': row.to_dict()
+                    })
 
-            except Exception as e:
-                messages.error(request, f"Error al procesar la importación: {str(e)}")
+            pedidos_validos = list(pedidos_agrupados.values())
+            request.session['pedidos_temp'] = pedidos_validos
+            request.session['datos_reparto_temp'] = datos_reparto
+            request.session.save()
+
+        except Exception as e:
+            messages.error(request, f"Error al procesar el archivo: {str(e)}")
+            return redirect('importar_y_previsualizar_pedidos')
+
+    elif request.POST.get('confirmar_importacion'):
+        try:
+            chofer_id = request.POST.get('chofer')
+            zona_id = request.POST.get('zona')
+            fecha_salida = request.POST.get('fecha_salida')
+            pedidos_data = request.session.get('pedidos_temp', [])
+            datos_reparto = request.session.get('datos_reparto_temp', {})
+
+            if not chofer_id or not zona_id or not fecha_salida:
+                messages.error(request, "Debe seleccionar un chofer, una zona y una fecha")
                 return redirect('importar_y_previsualizar_pedidos')
+
+            # Obtener datos de la zona
+            zona_doc = db.collection('zonas').document(zona_id).get()
+            zona_data = zona_doc.to_dict()
+
+            # Obtener datos del chofer
+            chofer_ref = db.collection('recursos').document(chofer_id)
+            chofer_data = chofer_ref.get().to_dict()
+            nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
+
+            # Convertir fecha a formato DD-MM-YYYY para almacenar
+            fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
+            fecha_formateada = fecha_obj.strftime('%d-%m-%Y')
+
+            # Crear el reparto
+            reparto_data = {
+                'nro_reparto': datos_reparto['numero'],
+                'fecha_salida': datetime.combine(fecha_obj.date(), datetime.min.time()),
+                'fecha_creacion': datetime.now(),
+                'chofer': {
+                    'id': chofer_id,
+                    'nombre': chofer_data['nombre'],
+                    'apellido': chofer_data.get('apellido', ''),
+                    'nombre_completo': nombre_completo
+                },
+                'vehiculo': datos_reparto['vehiculo'],
+                'zona': zona_data['nombre'],
+                'estado_reparto': 'Abierto',
+                'sucursal': request.session.get('user_sucursal')
+            }
+
+            # Crear documento de reparto
+            nuevo_reparto = db.collection('repartos').document()
+            nuevo_reparto.set(reparto_data)
+
+            # Crear pedidos como subcolección del reparto
+            pedidos_ref = nuevo_reparto.collection('pedidos')
+            for pedido in pedidos_data:
+                pedido_data = {
+                    'nro_factura': pedido['nro_factura'],
+                    'cliente': pedido['nombre'],
+                    'direccion': pedido['direccion'],
+                    'email': pedido['email'],
+                    'telefono': pedido['telefono'],
+                    'peso_total': float(pedido['peso_total']),
+                    'fecha': fecha_formateada,
+                    'estado': 'Asignado',
+                    'articulos': pedido['articulos'],
+                    'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
+                }
+                
+                pedidos_ref.document().set(pedido_data)
+
+            # Limpiar sesión
+            del request.session['pedidos_temp']
+            del request.session['datos_reparto_temp']
+            request.session.save()
+
+            messages.success(request, "Reparto y pedidos creados exitosamente")
+            return redirect('listar_repartos')
+
+        except Exception as e:
+            messages.error(request, f"Error al procesar la importación: {str(e)}")
+            return redirect('importar_y_previsualizar_pedidos')
 
     # Consultas para obtener choferes y zonas
     choferes = db.collection("recursos").where("categoria", "in", ["Chofer", "Chofer Gruista"]).stream()
@@ -374,13 +378,13 @@ def importar_y_previsualizar_pedidos(request):
         } for doc in choferes],
         'zonas': [doc.to_dict() | {"id": doc.id} for doc in zonas],
         'peso_total': round(sum(float(pedido.get('peso_total', 0)) for pedido in pedidos_validos), 2),
-        'google_api_key': get_google_api_key()  # Asegurarse de que la API key esté disponible
+        'google_api_key': API_KEY_GOOGLE  # Asegurarse de que la API key esté disponible
     }
     
     return render(request, 'pedidos/importar_y_previsualizar.html', context)
 
 
-def guardar_pedidos(request):
+#def guardar_pedidos(request):
     if request.method == 'POST':
         pedidos = request.POST.getlist('pedidos')
         for pedido in pedidos:
@@ -417,37 +421,33 @@ def geocode_google(direccion):
     
     return None
 
-def generar_mapa(direccion):
+def generar_mapa(direccion, coordenadas=None):
     try:
-        # Formatear la dirección
-        direccion_formateada = f"{direccion}"
-
-        # Obtener coordenadas con Google Maps
-        coordenadas = geocode_google(direccion_formateada)
-
-        # Crear mapa
+        # Si se proporcionan coordenadas, usarlas directamente
         if coordenadas:
             lat, lon = coordenadas
-
-            # Crear mapa centrado en la ubicación encontrada
-            m = folium.Map(
-                location=[lat, lon],
-                zoom_start=14
-            )
-
-            # Agregar marcador
-            folium.Marker(
-                [lat, lon],
-                popup=direccion,
-                icon=folium.Icon(color='red', icon='info-sign')
-            ).add_to(m)
         else:
-            # Si no encuentra la ubicación, mostrar mapa regional
-            print("Ubicación no encontrada, mostrando mapa regional")
-            m = folium.Map(
-                location=[-39.0544, -67.5851],  # Coordenadas de la región de Neuquén y Río Negro
-                zoom_start=10
-            )
+            # Si no, obtenerlas con geocoding
+            coordenadas = geocode_google(direccion)
+            if coordenadas:
+                lat, lon = coordenadas
+            else:
+                # Si no encuentra la ubicación, mostrar mapa regional
+                print("Ubicación no encontrada, mostrando mapa regional")
+                return None
+
+        # Crear mapa centrado en la ubicación
+        m = folium.Map(
+            location=[lat, lon],
+            zoom_start=14
+        )
+
+        # Agregar marcador
+        folium.Marker(
+            [lat, lon],
+            popup=direccion,
+            icon=folium.Icon(color='red', icon='info-sign')
+        ).add_to(m)
 
         # Configurar el mapa
         m.fit_bounds(m.get_bounds())
@@ -459,7 +459,6 @@ def generar_mapa(direccion):
     except Exception as e:
         print(f"Error al generar mapa: {e}")
         return None
-
 
 
 def obtener_detalle_pedido(request, pedido_id):
@@ -573,14 +572,21 @@ def actualizar_estado_articulo(request, pedido_id):
 
 def generar_mapa_view(request):
     direccion = request.GET.get('direccion')
-    if direccion:
+    lat = request.GET.get('lat')
+    lng = request.GET.get('lng')
+    
+    if direccion and lat and lng:
         try:
-            # Usar la función generar_mapa existente
-            mapa_html = generar_mapa(direccion)
+            # Convertir las coordenadas reemplazando coma por punto
+            lat = float(lat.replace(',', '.'))
+            lng = float(lng.replace(',', '.'))
+            
+            # Usar las coordenadas proporcionadas
+            mapa_html = generar_mapa(direccion, coordenadas=(lat, lng))
             if mapa_html:
                 return JsonResponse({'mapa_html': mapa_html})
-            return JsonResponse({'error': 'No se pudo generar el mapa'}, status=400)
         except Exception as e:
             print(f"Error al generar mapa: {e}")
             return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'No se proporcionó dirección'}, status=400)
+    
+    return JsonResponse({'error': 'Faltan parámetros'}, status=400)

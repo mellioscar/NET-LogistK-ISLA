@@ -30,45 +30,44 @@ def cronograma_mensual(request):
         # Obtener repartos del mes
         db = firestore.client()
         
-        # Formatear fechas para la consulta
-        fecha_inicio = f"01-{mes:02d}-{anio}"
+        # Crear fechas inicio y fin del mes como datetime
+        fecha_inicio = datetime(anio, mes, 1)
         if mes == 12:
-            fecha_fin = f"01-01-{anio + 1}"
+            fecha_fin = datetime(anio + 1, 1, 1)
         else:
-            fecha_fin = f"01-{(mes + 1):02d}-{anio}"
+            fecha_fin = datetime(anio, mes + 1, 1)
         
-        # Obtener todos los repartos y filtrar por fecha
-        repartos_ref = db.collection('repartos').stream()
+        # Consultar repartos del mes
+        repartos_ref = db.collection('repartos')\
+            .where('fecha_salida', '>=', fecha_inicio)\
+            .where('fecha_salida', '<', fecha_fin)\
+            .stream()
         
         repartos = {}
+        
         for reparto in repartos_ref:
             data = reparto.to_dict()
-            fecha_reparto = data.get('fecha', '')
+            fecha_salida = data.get('fecha_salida')
             
-            # Verificar si la fecha está en el mes actual
-            try:
-                fecha = datetime.strptime(fecha_reparto, '%d-%m-%Y')
-                if fecha.month == mes and fecha.year == anio:
-                    dia = fecha.day
-                    
-                    if dia not in repartos:
-                        repartos[dia] = []
-                    
-                    estado_color = {
-                        'Abierto': 'primary',
-                        'Cerrado': 'danger',
-                        'Finalizado': 'success',
-                        'Cancelado': 'secondary'
-                    }.get(data.get('estado_reparto', ''), 'secondary')
-                    
-                    repartos[dia].append({
-                        'nro_reparto': data.get('nro_reparto', ''),
-                        'zona': data.get('zona', 'Sin zona'),
-                        'estado': data.get('estado_reparto', 'Sin estado'),
-                        'estado_color': estado_color
-                    })
-            except Exception:
-                continue
+            if fecha_salida:
+                dia = fecha_salida.day
+                
+                if dia not in repartos:
+                    repartos[dia] = []
+                
+                estado_color = {
+                    'Abierto': 'primary',
+                    'Cerrado': 'danger',
+                    'Finalizado': 'success',
+                    'Cancelado': 'secondary'
+                }.get(data.get('estado_reparto', ''), 'secondary')
+                
+                repartos[dia].append({
+                    'nro_reparto': data.get('nro_reparto', ''),
+                    'zona': data.get('zona', 'Sin zona'),
+                    'estado': data.get('estado_reparto', 'Sin estado'),
+                    'estado_color': estado_color
+                })
         
         # Generar calendario
         cal = calendar.monthcalendar(anio, mes)
@@ -172,7 +171,6 @@ def cronograma_semanal(request):
     try:
         db = firestore.client()
         
-        # Obtener la fecha de la URL o usar la fecha actual
         fecha_str = request.GET.get('fecha')
         
         if fecha_str:
@@ -180,36 +178,53 @@ def cronograma_semanal(request):
         else:
             fecha_actual = datetime.now()
         
-        # Obtener las fechas de la semana en formato `dd-mm-yyyy`
+        # Obtener las fechas de la semana
         fechas_semana = get_week_dates(fecha_actual)
-
-        # Filtrar los repartos en Firestore por rango de fechas
-        repartos_ref = db.collection('repartos').where('fecha', 'in', fechas_semana).stream()
         
+        # Convertir fechas_semana a datetime para comparar
+        fecha_inicio = datetime.strptime(fechas_semana[0], '%d-%m-%Y')
+        fecha_fin = datetime.strptime(fechas_semana[-1], '%d-%m-%Y')
+        
+        # Ajustar las horas para cubrir todo el día
+        fecha_inicio = datetime.combine(fecha_inicio.date(), datetime.min.time())
+        fecha_fin = datetime.combine(fecha_fin.date(), datetime.max.time())
+
+        # Consultar repartos
+        repartos_ref = db.collection('repartos')\
+            .where('fecha_salida', '>=', fecha_inicio)\
+            .where('fecha_salida', '<=', fecha_fin)\
+            .stream()
+
+        # Inicializar diccionario para agrupar repartos por día
         repartos_por_dia = {fecha: [] for fecha in fechas_semana}
 
+        # Agrupar repartos por día
         for reparto in repartos_ref:
             reparto_data = reparto.to_dict()
-            fecha_reparto = reparto_data.get('fecha')
+            fecha_salida = reparto_data.get('fecha_salida')
+            
+            if fecha_salida:
+                # Convertir fecha_salida a string en formato dd-mm-yyyy
+                fecha_str = fecha_salida.strftime('%d-%m-%Y')
+                
+                if fecha_str in repartos_por_dia:
+                    estado_color = {
+                        'Abierto': 'success',
+                        'Cerrado': 'danger',
+                        'Finalizado': 'primary',
+                        'En curso': 'primary',
+                        'Sin Reparto': 'secondary',
+                        'Abierto Parcial - Solo Metalúrgico': 'warning',
+                        'Abierto Parcial - Solo Paletizado': 'warning'
+                    }.get(reparto_data.get('estado_reparto', ''), 'light')
 
-            if fecha_reparto in repartos_por_dia:
-                estado_color = {
-                    'Abierto': 'success',
-                    'Cerrado': 'danger',
-                    'Finalizado': 'primary',
-                    'En curso': 'primary',
-                    'Sin Reparto': 'secondary',
-                    'Abierto Parcial - Solo Metalúrgico': 'warning',
-                    'Abierto Parcial - Solo Paletizado': 'warning'
-                }.get(reparto_data.get('estado_reparto', ''), 'light')
-
-                repartos_por_dia[fecha_reparto].append({
-                    'nro_reparto': reparto_data.get('nro_reparto', ''),
-                    'zona': reparto_data.get('zona', ''),
-                    'estado': reparto_data.get('estado_reparto', 'Sin estado'),
-                    'estado_color': estado_color,
-                    'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer')
-                })
+                    repartos_por_dia[fecha_str].append({
+                        'nro_reparto': reparto_data.get('nro_reparto', ''),
+                        'zona': reparto_data.get('zona', ''),
+                        'estado': reparto_data.get('estado_reparto', 'Sin estado'),
+                        'estado_color': estado_color,
+                        'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer')
+                    })
         
         # Construir la respuesta con los datos organizados
         dias_semana = []
@@ -232,7 +247,6 @@ def cronograma_semanal(request):
         return render(request, 'cronograma/cronograma_semanal.html', {
             'error': f"Error al cargar el cronograma: {str(e)}"
         })
-
 
 
 def lista_detalle_reparto(request, nro_reparto):

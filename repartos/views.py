@@ -12,22 +12,25 @@ db = firestore.client()
 
 def listar_repartos(request):
     try:
-        # Obtener el estado del filtro
         estado = request.GET.get('estado', '')
         search_query = request.GET.get('search', '').strip()
 
         # Consultar repartos
         repartos_ref = db.collection('repartos')
-        query = repartos_ref
+        query = repartos_ref.order_by('fecha_salida', direction=firestore.Query.DESCENDING)
 
         if estado:
             query = query.where('estado_reparto', '==', estado)
 
-        # Ejecutar la consulta
         repartos = []
         for doc in query.stream():
             reparto = doc.to_dict()
             reparto['id'] = doc.id
+
+            # Convertir timestamp a string para mostrar
+            fecha_salida = reparto.get('fecha_salida')
+            if fecha_salida:
+                reparto['fecha_salida'] = fecha_salida.strftime('%d/%m/%Y')
 
             # Obtener y contar pedidos
             pedidos_ref = doc.reference.collection('pedidos')
@@ -42,12 +45,6 @@ def listar_repartos(request):
             reparto['total_facturas'] = total_pedidos
             reparto['total_entregas'] = total_entregados
             reparto['total_incompletos'] = total_incompletos
-
-            # Crear nombre completo del chofer
-            if 'chofer' in reparto and isinstance(reparto['chofer'], dict):
-                nombre = reparto['chofer'].get('nombre', '')
-                apellido = reparto['chofer'].get('apellido', '')
-                reparto['chofer']['nombre_completo'] = f"{nombre} {apellido}".strip()
 
             # Aplicar filtro de búsqueda si existe
             if search_query:
@@ -69,60 +66,77 @@ def listar_repartos(request):
         messages.error(request, f"Error al listar repartos: {e}")
         return render(request, 'repartos/listar_repartos.html', {'repartos': []})
 
-
+#VERIFICAR QUE SEA IGUAL AL DE IMPORTAR PEDIDOS - HAY DIFERENCIAS
 def crear_reparto(request):
     sucursal_operario = request.session.get("user_sucursal")
 
     if request.method == "POST":
         try:
             # Obtener datos del formulario
-            sucursal_id = request.POST.get("sucursal", "").strip()
             chofer_id = request.POST.get("chofer", "").strip()
-            acompanante_id = request.POST.get("acompanante", "").strip()  # Puede estar vacío
+            acompanante_id = request.POST.get("acompanante", "").strip()
             zona_id = request.POST.get("zona", "").strip()
             vehiculo_id = request.POST.get("vehiculo", "").strip()
+            fecha_salida = request.POST.get("fecha")
+            nro_reparto = request.POST.get("nro_reparto")  # Ya viene formateado del frontend
 
-            # Validar campos obligatorios
-            if not chofer_id:
-                messages.error(request, "Debe seleccionar un chofer.")
-                return redirect("crear_reparto")
-            if not zona_id:
-                messages.error(request, "Debe seleccionar una zona.")
-                return redirect("crear_reparto")
-            if not vehiculo_id:
-                messages.error(request, "Debe seleccionar un vehículo.")
+            # Validaciones...
+            if not all([chofer_id, zona_id, vehiculo_id, fecha_salida, nro_reparto]):
+                messages.error(request, "Todos los campos obligatorios deben estar completos.")
                 return redirect("crear_reparto")
 
-            # Resolver datos clave desde Firestore
+            # Obtener datos relacionados
             chofer_doc = db.collection("recursos").document(chofer_id).get()
             zona_doc = db.collection("zonas").document(zona_id).get()
             vehiculo_doc = db.collection("vehiculos").document(vehiculo_id).get()
 
-            chofer_nombre = f"{chofer_doc.to_dict().get('nombre')} {chofer_doc.to_dict().get('apellido')}" if chofer_doc.exists else "Desconocido"
-            zona_nombre = zona_doc.to_dict().get("nombre", "Desconocida") if zona_doc.exists else "Desconocida"
-            vehiculo_dominio = vehiculo_doc.to_dict().get("dominio", "Desconocido") if vehiculo_doc.exists else "Desconocido"
+            chofer_data = chofer_doc.to_dict()
+            nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
 
-            # Acompañante puede estar vacío
-            acompanante_nombre = ""
+            # Convertir fecha_salida a timestamp
+            fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
+            fecha_salida_timestamp = datetime.combine(fecha_obj.date(), datetime.min.time())
+
+            # Preparar datos del reparto
+            data = {
+                'nro_reparto': nro_reparto,
+                'fecha_salida': fecha_salida_timestamp,
+                'fecha_creacion': datetime.now(),
+                'chofer': {
+                    'id': chofer_id,
+                    'nombre': chofer_data['nombre'],
+                    'apellido': chofer_data.get('apellido', ''),
+                    'nombre_completo': nombre_completo
+                },
+                'vehiculo': vehiculo_doc.to_dict().get('dominio'),
+                'zona': zona_doc.to_dict().get('nombre'),
+                'estado_reparto': 'Abierto',
+                'sucursal': sucursal_operario,
+            }
+
+            # Si hay acompañante, agregarlo
             if acompanante_id:
                 acompanante_doc = db.collection("recursos").document(acompanante_id).get()
                 if acompanante_doc.exists:
-                    acompanante_nombre = f"{acompanante_doc.to_dict().get('nombre')} {acompanante_doc.to_dict().get('apellido')}"
+                    acompanante_data = acompanante_doc.to_dict()
+                    data['acompanante'] = {
+                        'id': acompanante_id,
+                        'nombre': acompanante_data['nombre'],
+                        'apellido': acompanante_data.get('apellido', '')
+                    }
 
-            # Preparar datos para guardar
-            data = {
-                "fecha": request.POST.get("fecha", datetime.today().strftime("%Y-%m-%d")),
-                "nro_reparto": request.POST["nro_reparto"],
-                "chofer": {"id": chofer_id, "nombre": chofer_nombre},
-                "acompanante": {"nombre": acompanante_nombre} if acompanante_id else None,  # Solo el nombre
-                "zona": zona_nombre,  # Solo el nombre de la zona
-                "vehiculo": vehiculo_dominio,  # Solo el dominio del vehículo
-                "estado_reparto": request.POST.get("estado", "Pendiente"),
-                "sucursal": sucursal_operario,
-            }
+            # Crear documento de reparto
+            nuevo_reparto = db.collection("repartos").document()
+            nuevo_reparto.set(data)
 
-            # Guardar en Firestore
-            db.collection("repartos").add(data)
+            # Crear colección de pedidos vacía
+            pedidos_ref = nuevo_reparto.collection('pedidos')
+            # Crear un documento inicial vacío en la colección de pedidos
+            pedidos_ref.document().set({
+                'fecha_creacion': datetime.now().strftime('%d-%m-%Y'),
+                'estado': 'Pendiente'
+            })
+
             messages.success(request, "Reparto creado exitosamente.")
             return redirect("listar_repartos")
 
@@ -186,7 +200,7 @@ def editar_reparto(request, id):
 
             # Preparar datos actualizados
             updated_data = {
-                "fecha": request.POST.get("fecha", reparto.get("fecha", datetime.today().strftime("%Y-%m-%d"))),
+                "fecha": request.POST.get("fecha", reparto.get("fecha", datetime.today().strftime("%d-%m-%Y"))),
                 "nro_reparto": request.POST["nro_reparto"],
                 "chofer": {"id": chofer_id, "nombre": chofer_nombre},
                 "acompanante": {"nombre": acompanante_nombre} if acompanante_id else None,  # Solo el nombre
@@ -272,29 +286,32 @@ def importar_repartos(request):
     try:
         if request.method == 'POST' and request.FILES['archivo']:
             archivo = request.FILES['archivo']
-            
-            # Leer el archivo Excel
             df = pd.read_excel(archivo)
-            
-            # Iniciar transacción de Firestore
             batch = db.batch()
             
             for index, row in df.iterrows():
                 try:
-                    # Obtener datos del chofer
                     chofer_id = str(row['chofer_id']).strip()
                     chofer_doc = db.collection('recursos').document(chofer_id).get()
+                    
                     if not chofer_doc.exists:
                         continue
                         
                     chofer_data = chofer_doc.to_dict()
                     nombre_completo = f"{chofer_data.get('nombre', '')} {chofer_data.get('apellido', '')}"
                     
-                    # Crear el documento del reparto
-                    reparto_ref = db.collection('repartos').document()
+                    # Convertir fecha del excel a timestamp
+                    fecha_excel = row['fecha']
+                    if isinstance(fecha_excel, str):
+                        fecha_obj = datetime.strptime(fecha_excel, '%d-%m-%Y')
+                    else:
+                        fecha_obj = fecha_excel
+                    
+                    fecha_salida = datetime.combine(fecha_obj.date(), datetime.min.time())
+                    
                     datos_reparto = {
-                        'fecha': row['fecha'].strftime('%d-%m-%Y'),
-                        'fecha_creacion': datetime.now().strftime('%d-%m-%Y'),
+                        'fecha_salida': fecha_salida,
+                        'fecha_creacion': datetime.now(),
                         'nro_reparto': str(row['nro_reparto']).strip(),
                         'chofer': {
                             'id': chofer_id,
@@ -304,9 +321,10 @@ def importar_repartos(request):
                         'zona': str(row['zona']).strip(),
                         'vehiculo': str(row['vehiculo']).strip(),
                         'estado_reparto': 'Abierto',
-                        'total_facturas': 0  # Inicializamos el contador
+                        'total_facturas': 0
                     }
                     
+                    reparto_ref = db.collection('repartos').document()
                     batch.set(reparto_ref, datos_reparto)
                     
                     # Obtener pedidos asociados al reparto
@@ -341,5 +359,76 @@ def importar_repartos(request):
 
 
 def ver_detalle_reparto(request, nro_reparto):
-    # Por ahora, simplemente redirigimos al nuevo template
-    return render(request, 'repartos/detalle_listado.html')
+    try:
+        db = firestore.client()
+        reparto_ref = db.collection('repartos').where('nro_reparto', '==', nro_reparto).limit(1).stream()
+        reparto_data = None
+        
+        for doc in reparto_ref:
+            reparto_data = doc.to_dict()
+            break
+            
+        if not reparto_data:
+            messages.error(request, 'Reparto no encontrado')
+            return redirect('cronograma_semanal')
+            
+        # Obtener pedidos y sus artículos
+        pedidos_ref = doc.reference.collection('pedidos').stream()
+        pedidos = []
+        peso_total = 0
+        
+        for pedido in pedidos_ref:
+            pedido_data = pedido.to_dict()
+            
+            # Obtener artículos del array dentro del pedido
+            articulos = []
+            for articulo in pedido_data.get('articulos', []):
+                articulos.append({
+                    'cantidad': articulo.get('cantidad', '0'),
+                    'codigo': articulo.get('codigo', ''),
+                    'descripcion': articulo.get('descripcion', ''),
+                    'peso': float(articulo.get('peso', 0))
+                })
+            
+            # Calcular peso total del pedido
+            peso_pedido = sum(float(art.get('peso', 0)) for art in pedido_data.get('articulos', []))
+            peso_total += peso_pedido
+            
+            estado_color = {
+                'Asignado': 'primary',
+                'Entregado': 'success',
+                'Pendiente': 'warning',
+                'Cancelado': 'danger'
+            }.get(pedido_data.get('estado', ''), 'secondary')
+            
+            pedidos.append({
+                'nro_factura': pedido_data.get('nro_factura', ''),
+                'cliente': pedido_data.get('cliente', ''),
+                'direccion': pedido_data.get('direccion', ''),
+                'estado': pedido_data.get('estado', 'Sin estado'),
+                'estado_color': estado_color,
+                'peso': peso_pedido,
+                'articulos': articulos
+            })
+        
+        context = {
+            'reparto': {
+                'nro_reparto': reparto_data.get('nro_reparto', ''),
+                'fecha': reparto_data.get('fecha', ''),
+                'estado': reparto_data.get('estado_reparto', 'Sin estado'),
+                'estado_color': estado_color,
+                'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer'),
+                'zona': reparto_data.get('zona', 'Sin zona'),
+                'sucursal': reparto_data.get('sucursal', 'Sin sucursal'),
+                'total_facturas': len(pedidos),
+                'peso_total': peso_total
+            },
+            'pedidos': pedidos,
+            'fecha_actual': request.GET.get('fecha', '')
+        }
+        
+        return render(request, 'repartos/detalle_listado.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error al cargar los detalles del reparto: {str(e)}')
+        return redirect('listar_repartos')
