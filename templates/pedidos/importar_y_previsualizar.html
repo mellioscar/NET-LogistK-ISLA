@@ -87,7 +87,7 @@
                     </div>
                     <div class="col-md-3">
                         <strong>Peso Total:</strong><br>
-                        {{ peso_total }} kg
+                        {{ peso_total|floatformat:2 }} kg
                     </div>
                 </div>
                 
@@ -130,7 +130,7 @@
                         </button>
                     </div>
                     <div class="col-md-6">
-                        <a href="{% url 'importar_y_previsualizar_pedidos' %}" class="btn btn-danger btn-block">Cancelar</a>
+                        <a href="{% url 'importar_y_previsualizar_pedidos' %}?action=cancel" class="btn btn-danger btn-block">Cancelar</a>
                     </div>
                 </div>
             </div>
@@ -153,7 +153,7 @@
                 {% for pedido in pedidos_validos %}
                     <tr class="table-info">
                         <td class="small">{{ pedido.nro_factura }}</td>
-                        <td class="small">{{ pedido.nombre }}</td>
+                        <td class="small">{{ pedido.cliente }}</td>
                         <td class="small">
                             {{ pedido.direccion }}
                             <div class="coordenadas-info" id="coord-{{ pedido.nro_factura }}" style="color: #666; font-size: 0.85em;">

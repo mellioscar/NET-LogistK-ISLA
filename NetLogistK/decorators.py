@@ -11,9 +11,6 @@ def firebase_login_required(view_func):
         firebase_token = request.session.get("firebase_id_token")
         refresh_token = request.session.get("firebase_refresh_token")
 
-        #print("Token ID:", firebase_token)
-        #print("Refresh Token:", refresh_token)
-
         if not firebase_token:
             messages.error(request, "Debe iniciar sesión.")
             return redirect('login')

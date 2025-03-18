@@ -20,7 +20,7 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('exportar-excel/', views.exportar_repartos_excel, name='exportar_excel'),
+    #path('exportar-excel/', views.exportar_repartos_excel, name='exportar_excel'),
 
     # Rutas para Vehículos
     path('editar_vehiculo/<str:vehiculo_id>/', vehiculos_views.editar_vehiculo, name='editar_vehiculo'),

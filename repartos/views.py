@@ -35,22 +35,23 @@ def listar_repartos(request):
             # Obtener y contar pedidos
             pedidos_ref = doc.reference.collection('pedidos')
             pedidos = list(pedidos_ref.stream())
-            
+
             # Contar totales
             total_pedidos = len(pedidos)
+            total_facturas = sum(1 for p in pedidos if p.to_dict().get('nro_factura') and p.to_dict()['nro_factura'].strip())
             total_entregados = sum(1 for p in pedidos if p.to_dict().get('estado') == 'Entregado')
             total_incompletos = sum(1 for p in pedidos if p.to_dict().get('estado') == 'Incompleto')
 
             # Agregar contadores al reparto
-            reparto['total_facturas'] = total_pedidos
+            reparto['total_facturas'] = total_facturas  # Se cuenta solo si tiene nro_factura válido
             reparto['total_entregas'] = total_entregados
             reparto['total_incompletos'] = total_incompletos
 
             # Aplicar filtro de búsqueda si existe
             if search_query:
                 if not (search_query.lower() in str(reparto.get('nro_reparto', '')).lower() or
-                       search_query.lower() in str(reparto.get('chofer', {}).get('nombre_completo', '')).lower() or
-                       search_query.lower() in str(reparto.get('zona', '')).lower()):
+                    search_query.lower() in str(reparto.get('chofer', {}).get('nombre_completo', '')).lower() or
+                    search_query.lower() in str(reparto.get('zona', '')).lower()):
                     continue
 
             repartos.append(reparto)
@@ -62,11 +63,10 @@ def listar_repartos(request):
         })
 
     except Exception as e:
-        print("Error al listar repartos:", e)
         messages.error(request, f"Error al listar repartos: {e}")
         return render(request, 'repartos/listar_repartos.html', {'repartos': []})
 
-#VERIFICAR QUE SEA IGUAL AL DE IMPORTAR PEDIDOS - HAY DIFERENCIAS
+
 def crear_reparto(request):
     sucursal_operario = request.session.get("user_sucursal")
 
@@ -376,10 +376,15 @@ def ver_detalle_reparto(request, nro_reparto):
         pedidos_ref = doc.reference.collection('pedidos').stream()
         pedidos = []
         peso_total = 0
+        estado_color = ''
         
         for pedido in pedidos_ref:
             pedido_data = pedido.to_dict()
             
+            # Verificar si 'nro_factura' existe y no está vacío
+            if not pedido_data.get('nro_factura') or not pedido_data['nro_factura'].strip():
+                continue  # Saltar este pedido si no tiene factura válida
+
             # Obtener artículos del array dentro del pedido
             articulos = []
             for articulo in pedido_data.get('articulos', []):
@@ -410,11 +415,11 @@ def ver_detalle_reparto(request, nro_reparto):
                 'peso': peso_pedido,
                 'articulos': articulos
             })
-        
+
         context = {
             'reparto': {
                 'nro_reparto': reparto_data.get('nro_reparto', ''),
-                'fecha': reparto_data.get('fecha', ''),
+                'fecha': reparto_data.get('fecha_salida', '').strftime('%d/%m/%Y'),
                 'estado': reparto_data.get('estado_reparto', 'Sin estado'),
                 'estado_color': estado_color,
                 'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer'),

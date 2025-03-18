@@ -11,12 +11,12 @@ from firebase_admin import credentials
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
+#from geopy.geocoders import Nominatim
+#from geopy.exc import GeocoderTimedOut
 import folium
 import requests
-from opencage.geocoder import OpenCageGeocode
-from geopy.extra.rate_limiter import RateLimiter
+#from opencage.geocoder import OpenCageGeocode
+#from geopy.extra.rate_limiter import RateLimiter
 from django.conf import settings
 import os
 import json
@@ -181,14 +181,24 @@ def listar_pedidos(request):
             pedidos_ref = reparto.reference.collection('pedidos')
             for pedido in pedidos_ref.stream():
                 pedido_data = pedido.to_dict()
-                pedido_data['id'] = pedido.id  # Agregar el ID del documento
+                
+                # Verificar si 'nro_factura' existe y no está vacío
+                if not pedido_data.get('nro_factura') or not pedido_data['nro_factura'].strip():
+                    continue  # Saltar este pedido si no tiene nro_factura válida
+                
+                # Agregar datos relevantes al pedido
+                pedido_data['id'] = pedido.id
                 pedido_data['nro_reparto'] = reparto.get('nro_reparto')
+                
+                # Agregar pedido válido a la lista
                 pedidos.append(pedido_data)
-        
+
         return render(request, 'pedidos/listar_pedidos.html', {'pedidos': pedidos})
+    
     except Exception as e:
         messages.error(request, f'Error al listar pedidos: {str(e)}')
         return redirect('dashboard')
+
 
 # Validaciones
 def validar_email(email):
@@ -202,6 +212,20 @@ def validar_telefono(telefono):
 
 
 def importar_y_previsualizar_pedidos(request):
+    
+    # Verificar si se está cancelando la importación
+    if request.GET.get('action') == 'cancel':
+        # Limpiar datos temporales de la sesión
+        if 'pedidos_temp' in request.session:
+            del request.session['pedidos_temp']
+        if 'datos_reparto_temp' in request.session:
+            del request.session['datos_reparto_temp']
+        if 'peso_total_temp' in request.session:
+            del request.session['peso_total_temp']
+        request.session.save()
+        messages.info(request, "Importación cancelada")
+        return redirect('importar_y_previsualizar_pedidos')
+
     pedidos_validos = []
     pedidos_invalidos = []
     errores_log = []
@@ -210,23 +234,44 @@ def importar_y_previsualizar_pedidos(request):
         'vehiculo': '',
         'fecha_salida': datetime.now().strftime('%Y-%m-%d')  # Fecha por defecto
     }
+    peso_total = 0  # Inicializamos el peso total
+
+    # Cargar el archivo de provincias
+    with open(settings.BASE_DIR / "NetLogistK/provincias.json", "r", encoding="utf-8") as f:
+        provincias_data = json.load(f)
+        provincias_dict = {prov["Estado"]: prov["Descripción"] for prov in provincias_data["provincias"]}
+
+    # Obtener choferes y zonas desde Firestore
+    choferes = db.collection("recursos").where("categoria", "in", ["Chofer", "Chofer Gruista"]).stream()
+    zonas = db.collection("zonas").stream()
+
+    choferes_lista = [
+        {
+            'id': doc.id,
+            'nombre': doc.to_dict().get('nombre', ''),
+            'apellido': doc.to_dict().get('apellido', ''),
+            'nombre_completo': f"{doc.to_dict().get('nombre', '')} {doc.to_dict().get('apellido', '')}".strip()
+        } for doc in choferes
+    ]
+
+    zonas_lista = [doc.to_dict() | {"id": doc.id} for doc in zonas]
 
     if request.method == 'POST' and request.FILES.get('archivo'):
         try:
             archivo = request.FILES['archivo']
             df = pd.read_excel(archivo, sheet_name=0, dtype=str)
             df.columns = df.columns.str.strip()
-            
+
             if len(df) > 0:
-                fecha_str = str(df.iloc[0]['Fecha Salida']).strip()
+                fecha_str = str(df.iloc[0]['Fecha de salida']).strip()
                 try:
-                    fecha_obj = pd.to_datetime(fecha_str)
-                    fecha_formateada = fecha_obj.strftime('%Y-%m-%d')  # Formato para input type="date"
+                    fecha_obj = pd.to_datetime(fecha_str, dayfirst=True)
+                    fecha_formateada = fecha_obj.strftime('%Y-%m-%d')
                 except:
                     fecha_formateada = datetime.now().strftime('%Y-%m-%d')
 
                 datos_reparto = {
-                    'numero': str(df.iloc[0]['Reparto']).strip(),
+                    'numero': str(df.iloc[0]['Número de reparto']).strip(),
                     'vehiculo': str(df.iloc[0]['Vehículo']).strip(),
                     'fecha_salida': fecha_formateada
                 }
@@ -234,25 +279,33 @@ def importar_y_previsualizar_pedidos(request):
             pedidos_agrupados = {}
             for index, row in df.iterrows():
                 try:
-                    nro_factura = str(row['Factura']).strip()
-                    peso = float(str(row['Peso']).replace(',', '.')) if row['Peso'] else 0.0
-                    
+                    nro_factura = str(row['Número de pedido']).strip()
+                    peso = float(str(row['Kilos']).replace(',', '.')) if row['Kilos'] else 0.0
+                    peso_total += peso  # Sumamos al peso total
+
+                    # Obtener la provincia a partir del código de Estado
+                    codigo_estado = str(row['Estado']).strip()
+                    provincia = provincias_dict.get(codigo_estado, "")
+
+                    direccion_completa = f"{str(row['Dirección']).strip()}"
+                    if row['Ciudad'].strip():
+                        direccion_completa += f" - {str(row['Ciudad']).strip()}"
+                    if provincia:
+                        direccion_completa += f" - {provincia}"
+                    direccion_completa += " - Argentina"
+
+                    coordenadas = geocode_google(direccion_completa)
+
                     if nro_factura not in pedidos_agrupados:
-                        direccion_completa = f"{str(row['Dirección']).strip()}"
-                        if row['Localidad'].strip():
-                            direccion_completa += f" - {str(row['Localidad']).strip()}"
-                        
-                        # Obtener coordenadas usando la función existente
-                        coordenadas = geocode_google(direccion_completa)
-                        
                         pedidos_agrupados[nro_factura] = {
                             'nro_factura': nro_factura,
-                            'nombre': str(row['Cliente']).strip(),
+                            'cliente': str(row['Nombre']).strip(),
                             'direccion': direccion_completa,
-                            'email': str(row['Email']).strip(),
-                            'telefono': str(row['Teléfono (con código de país)']).strip(),
+                            'email': str(row['Correo electrónico']).strip(),
+                            'telefono': str(row['Teléfono']).strip(),
                             'peso_total': peso,
                             'fecha': fecha_formateada,
+                            'estado': 'Asignado',
                             'latitud': coordenadas[0] if coordenadas else None,
                             'longitud': coordenadas[1] if coordenadas else None,
                             'articulos': []
@@ -261,8 +314,8 @@ def importar_y_previsualizar_pedidos(request):
                         pedidos_agrupados[nro_factura]['peso_total'] += peso
 
                     articulo = {
-                        'codigo': str(row['Artículo']).strip(),
-                        'descripcion': str(row['Descripción del artículo']).strip(),
+                        'codigo': str(row['Código de artículo']).strip(),
+                        'descripcion': str(row['Nombre del producto']).strip(),
                         'cantidad': str(row['Cantidad']).strip(),
                         'peso': peso
                     }
@@ -279,79 +332,48 @@ def importar_y_previsualizar_pedidos(request):
             pedidos_validos = list(pedidos_agrupados.values())
             request.session['pedidos_temp'] = pedidos_validos
             request.session['datos_reparto_temp'] = datos_reparto
+            request.session['peso_total_temp'] = peso_total  # Guardamos el peso total en la sesión
             request.session.save()
 
         except Exception as e:
             messages.error(request, f"Error al procesar el archivo: {str(e)}")
             return redirect('importar_y_previsualizar_pedidos')
-
-    elif request.POST.get('confirmar_importacion'):
+    
+    elif request.method == 'POST' and request.POST.get('confirmar_importacion'):
         try:
             chofer_id = request.POST.get('chofer')
             zona_id = request.POST.get('zona')
             fecha_salida = request.POST.get('fecha_salida')
             pedidos_data = request.session.get('pedidos_temp', [])
             datos_reparto = request.session.get('datos_reparto_temp', {})
+            peso_total = request.session.get('peso_total_temp', 0)  # Recuperamos el peso total
 
             if not chofer_id or not zona_id or not fecha_salida:
                 messages.error(request, "Debe seleccionar un chofer, una zona y una fecha")
                 return redirect('importar_y_previsualizar_pedidos')
 
-            # Obtener datos de la zona
-            zona_doc = db.collection('zonas').document(zona_id).get()
-            zona_data = zona_doc.to_dict()
-
-            # Obtener datos del chofer
-            chofer_ref = db.collection('recursos').document(chofer_id)
-            chofer_data = chofer_ref.get().to_dict()
-            nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
-
-            # Convertir fecha a formato DD-MM-YYYY para almacenar
-            fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
-            fecha_formateada = fecha_obj.strftime('%d-%m-%Y')
-
-            # Crear el reparto
             reparto_data = {
                 'nro_reparto': datos_reparto['numero'],
-                'fecha_salida': datetime.combine(fecha_obj.date(), datetime.min.time()),
+                'fecha_salida': datetime.strptime(fecha_salida, '%Y-%m-%d'),
                 'fecha_creacion': datetime.now(),
-                'chofer': {
-                    'id': chofer_id,
-                    'nombre': chofer_data['nombre'],
-                    'apellido': chofer_data.get('apellido', ''),
-                    'nombre_completo': nombre_completo
-                },
                 'vehiculo': datos_reparto['vehiculo'],
-                'zona': zona_data['nombre'],
                 'estado_reparto': 'Abierto',
-                'sucursal': request.session.get('user_sucursal')
+                'sucursal': request.session.get('user_sucursal'),
+                'zona': next((z['nombre'] for z in zonas_lista if z['id'] == zona_id), zona_id),
+                'chofer': next((ch for ch in choferes_lista if ch['id'] == chofer_id), {}),
+                'peso_total': peso_total  # Añadimos el peso total al reparto
             }
 
-            # Crear documento de reparto
             nuevo_reparto = db.collection('repartos').document()
             nuevo_reparto.set(reparto_data)
-
-            # Crear pedidos como subcolección del reparto
             pedidos_ref = nuevo_reparto.collection('pedidos')
-            for pedido in pedidos_data:
-                pedido_data = {
-                    'nro_factura': pedido['nro_factura'],
-                    'cliente': pedido['nombre'],
-                    'direccion': pedido['direccion'],
-                    'email': pedido['email'],
-                    'telefono': pedido['telefono'],
-                    'peso_total': float(pedido['peso_total']),
-                    'fecha': fecha_formateada,
-                    'estado': 'Asignado',
-                    'articulos': pedido['articulos'],
-                    'fecha_creacion': datetime.now().strftime('%d-%m-%Y')
-                }
-                
-                pedidos_ref.document().set(pedido_data)
 
-            # Limpiar sesión
+            for pedido in pedidos_data:
+                pedidos_ref.document().set(pedido)
+
             del request.session['pedidos_temp']
             del request.session['datos_reparto_temp']
+            del request.session['peso_total_temp']  # Limpiamos el peso total de la sesión
             request.session.save()
 
             messages.success(request, "Reparto y pedidos creados exitosamente")
@@ -360,31 +382,25 @@ def importar_y_previsualizar_pedidos(request):
         except Exception as e:
             messages.error(request, f"Error al procesar la importación: {str(e)}")
             return redirect('importar_y_previsualizar_pedidos')
-
-    # Consultas para obtener choferes y zonas
-    choferes = db.collection("recursos").where("categoria", "in", ["Chofer", "Chofer Gruista"]).stream()
-    zonas = db.collection("zonas").stream()
     
-    context = {
+    # Si hay pedidos en la sesión temporal, recuperarlos junto con el peso total
+    if 'pedidos_temp' in request.session:
+        pedidos_validos = request.session['pedidos_temp']
+        datos_reparto = request.session.get('datos_reparto_temp', datos_reparto)
+        peso_total = request.session.get('peso_total_temp', 0)
+
+    return render(request, 'pedidos/importar_y_previsualizar.html', {
         'pedidos_validos': pedidos_validos,
         'pedidos_invalidos': pedidos_invalidos,
         'errores_log': errores_log,
         'datos_reparto': datos_reparto,
-        'choferes': [{
-            'id': doc.id,
-            'nombre': doc.to_dict()['nombre'],
-            'apellido': doc.to_dict().get('apellido', ''),
-            'nombre_completo': f"{doc.to_dict()['nombre']} {doc.to_dict().get('apellido', '')}"
-        } for doc in choferes],
-        'zonas': [doc.to_dict() | {"id": doc.id} for doc in zonas],
-        'peso_total': round(sum(float(pedido.get('peso_total', 0)) for pedido in pedidos_validos), 2),
-        'google_api_key': API_KEY_GOOGLE  # Asegurarse de que la API key esté disponible
-    }
-    
-    return render(request, 'pedidos/importar_y_previsualizar.html', context)
+        'choferes': choferes_lista,
+        'zonas': zonas_lista,
+        'peso_total': peso_total,  # Pasamos el peso total al template
+    })
 
 
-#def guardar_pedidos(request):
+# def guardar_pedidos(request):
     if request.method == 'POST':
         pedidos = request.POST.getlist('pedidos')
         for pedido in pedidos:

@@ -107,6 +107,7 @@ def crear_vehiculo(request):
     })
 
 
+
 def editar_vehiculo(request, vehiculo_id):
     vehiculo_ref = db.collection('vehiculos').document(vehiculo_id)
     vehiculo_data = vehiculo_ref.get().to_dict()

@@ -12,36 +12,18 @@
 
 <div class="card">
     <div class="card-body shadow animated--grow-in">
-        <form method="POST" class="row g-3">
-        <input type="hidden" name="sucursal" value="{{ user.sucursal }}">
+        <form method="POST" class="row g-4">
+            <input type="hidden" name="sucursal" value="{{ user.sucursal }}">
             {% csrf_token %}
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label for="fecha" class="form-label">Fecha de Salida:</label>
                 <input type="date" class="form-control" name="fecha" value="{{ hoy }}" required>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label for="nro_reparto"><strong>Nro. Reparto:</strong></label>
                 <input type="text" class="form-control" id="nro_reparto" name="nro_reparto" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="chofer" class="form-label">Chofer:</label>
-                <select class="form-control" name="chofer" required>
-                    <option value="">Seleccione un Chofer</option>
-                    {% for chofer in choferes %}
-                        <option value="{{ chofer.id }}">{{ chofer.nombre }} {{ chofer.apellido }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="acompanante" class="form-label">Acompañante:</label>
-                <select class="form-control" name="acompanante">
-                    <option value="">Sin acompañante</option>
-                    {% for acompanante in acompanantes %}
-                        <option value="{{ acompanante.id }}">{{ acompanante.nombre }} {{ acompanante.apellido }}</option>
-                    {% endfor %}
-                </select>
-            </div>            
-            <div class="col-md-4 mb-3">
+            </div>        
+            <div class="col-md-3 mb-3">
                 <label for="zona" class="form-label">Zona:</label>
                 <select class="form-control" id="zona" name="zona" required>
                     <option value="">Seleccione una Zona</option>
@@ -50,16 +32,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-4 mb-3">
-                <label for="vehiculo" class="form-label">Vehículo:</label>
-                <select class="form-control" name="vehiculo" required>
-                    <option value="">Seleccione un Vehiculo</option>
-                    {% for vehiculo in vehiculos %}
-                        <option value="{{ vehiculo.id }}">{{ vehiculo.dominio }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label for="estado" class="form-label">Estado:</label>
                 <select class="form-control" name="estado" required>
                     <option value="Abierto">Abierto</option>
@@ -68,11 +41,11 @@
                     <option value="Finalizado">Finalizado</option>
                 </select>
             </div>
-            <div class="col-12 row justify-content-center">
-                <div class="col-md-3">
+            <div class="col-md-12 row g-2">
+                <div class="col-md-3 mb-3">
                     <button type="submit" class="btn btn-primary btn-block">Guardar</button>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 mb-3">
                     <a href="{% url 'listar_repartos' %}" class="btn btn-danger btn-block">Cancelar</a>
                 </div>
             </div>

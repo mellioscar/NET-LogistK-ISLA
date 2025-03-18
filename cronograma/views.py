@@ -129,6 +129,12 @@ def obtener_detalles_reparto(request, nro_reparto):
         
         for pedido in pedidos_ref:
             pedido_data = pedido.to_dict()
+            
+            # Validar si 'nro_factura' existe y no está vacío
+            if not pedido_data.get('nro_factura') or not pedido_data['nro_factura'].strip():
+                continue  # Saltar este pedido si no tiene factura válida
+            
+            # Agregar pedido válido a la lista
             pedidos.append({
                 'nro_factura': pedido_data.get('nro_factura', ''),
                 'cliente': pedido_data.get('cliente', ''),
@@ -142,12 +148,12 @@ def obtener_detalles_reparto(request, nro_reparto):
                     'Asignado': 'info'
                 }.get(pedido_data.get('estado', ''), 'secondary')
             })
-        
+
         response_data = {
             'reparto': {
                 'nro_reparto': reparto_data.get('nro_reparto', ''),
                 'estado': reparto_data.get('estado_reparto', ''),
-                'fecha': reparto_data.get('fecha', ''),
+                'fecha': reparto_data.get('fecha_salida', '').strftime('%d/%m/%Y'),
                 'estado_color': {
                     'Abierto': 'primary',
                     'Cerrado': 'danger',
@@ -254,44 +260,50 @@ def lista_detalle_reparto(request, nro_reparto):
         db = firestore.client()
         reparto_ref = db.collection('repartos').where('nro_reparto', '==', nro_reparto).limit(1).stream()
         reparto_data = None
-        
+
         for doc in reparto_ref:
             reparto_data = doc.to_dict()
             break
-            
+
         if not reparto_data:
             messages.error(request, 'Reparto no encontrado')
             return redirect('cronograma_semanal')
-            
+
         # Obtener pedidos y sus artículos
         pedidos_ref = doc.reference.collection('pedidos').stream()
         pedidos = []
         peso_total = 0
-        
+        estado_color = ''
+
         for pedido in pedidos_ref:
             pedido_data = pedido.to_dict()
-            
+
+            # Verificar si 'nro_factura' existe y no está vacío
+            if not pedido_data.get('nro_factura') or not pedido_data['nro_factura'].strip():
+                continue  # Saltar este pedido si no tiene factura válida
+
             # Obtener artículos del array dentro del pedido
-            articulos = []
-            for articulo in pedido_data.get('articulos', []):
-                articulos.append({
+            articulos = [
+                {
                     'cantidad': articulo.get('cantidad', '0'),
                     'codigo': articulo.get('codigo', ''),
                     'descripcion': articulo.get('descripcion', ''),
                     'peso': float(articulo.get('peso', 0))
-                })
-            
+                }
+                for articulo in pedido_data.get('articulos', [])
+            ]
+
             # Calcular peso total del pedido
             peso_pedido = sum(float(art.get('peso', 0)) for art in pedido_data.get('articulos', []))
             peso_total += peso_pedido
-            
+
             estado_color = {
                 'Asignado': 'primary',
                 'Entregado': 'success',
                 'Pendiente': 'warning',
                 'Cancelado': 'danger'
             }.get(pedido_data.get('estado', ''), 'secondary')
-            
+
             pedidos.append({
                 'nro_factura': pedido_data.get('nro_factura', ''),
                 'cliente': pedido_data.get('cliente', ''),
@@ -301,26 +313,26 @@ def lista_detalle_reparto(request, nro_reparto):
                 'peso': peso_pedido,
                 'articulos': articulos
             })
-        
+            print(f"Pedido incluido: {pedido.id} - nro_factura: {pedido_data['nro_factura']}")
+
         context = {
             'reparto': {
                 'nro_reparto': reparto_data.get('nro_reparto', ''),
-                'fecha': reparto_data.get('fecha', ''),
+                'fecha': reparto_data.get('fecha_salida', '').strftime('%d/%m/%Y'),
                 'estado': reparto_data.get('estado_reparto', 'Sin estado'),
                 'estado_color': estado_color,
                 'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer'),
                 'zona': reparto_data.get('zona', 'Sin zona'),
                 'sucursal': reparto_data.get('sucursal', 'Sin sucursal'),
-                'total_facturas': len(pedidos),
+                'total_facturas': len(pedidos),  # Se actualiza con pedidos filtrados
                 'peso_total': peso_total
             },
             'pedidos': pedidos,
             'fecha_actual': request.GET.get('fecha', '')
         }
-        
+
         return render(request, 'cronograma/lista_detalle_reparto.html', context)
-        
+
     except Exception as e:
         messages.error(request, f'Error al cargar los detalles del reparto: {str(e)}')
         return redirect('cronograma_semanal')
-

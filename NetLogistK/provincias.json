@@ -1,0 +1,100 @@
+{
+  "provincias": [
+    {
+      "Estado": "901",
+      "Descripción": "Ciudad Autónoma de Buenos Aires"
+    },
+    {
+      "Estado": "902",
+      "Descripción": "Buenos Aires"
+    },
+    {
+      "Estado": "903",
+      "Descripción": "Catamarca"
+    },
+    {
+      "Estado": "904",
+      "Descripción": "Córdoba"
+    },
+    {
+      "Estado": "905",
+      "Descripción": "Corrientes"
+    },
+    {
+      "Estado": "906",
+      "Descripción": "Chaco"
+    },
+    {
+      "Estado": "907",
+      "Descripción": "Chubut"
+    },
+    {
+      "Estado": "908",
+      "Descripción": "Entre Rios"
+    },
+    {
+      "Estado": "909",
+      "Descripción": "Formosa"
+    },
+    {
+      "Estado": "910",
+      "Descripción": "Jujuy"
+    },
+    {
+      "Estado": "911",
+      "Descripción": "La Pampa"
+    },
+    {
+      "Estado": "912",
+      "Descripción": "La Rioja"
+    },
+    {
+      "Estado": "913",
+      "Descripción": "Mendoza"
+    },
+    {
+      "Estado": "914",
+      "Descripción": "Misiones"
+    },
+    {
+      "Estado": "915",
+      "Descripción": "Neuquén"
+    },
+    {
+      "Estado": "916",
+      "Descripción": "Rio Negro"
+    },
+    {
+      "Estado": "917",
+      "Descripción": "Salta"
+    },
+    {
+      "Estado": "918",
+      "Descripción": "San Juan"
+    },
+    {
+      "Estado": "919",
+      "Descripción": "San Luis"
+    },
+    {
+      "Estado": "920",
+      "Descripción": "Santa Cruz"
+    },
+    {
+      "Estado": "921",
+      "Descripción": "Santa Fé"
+    },
+    {
+      "Estado": "922",
+      "Descripción": "Santiago del Estero"
+    },
+    {
+      "Estado": "923",
+      "Descripción": "Tierra del Fuego"
+    },
+    {
+      "Estado": "924",
+      "Descripción": "Tucumán"
+    }
+  ]
+}
