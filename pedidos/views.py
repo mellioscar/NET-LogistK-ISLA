@@ -11,12 +11,8 @@ from firebase_admin import credentials
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
-#from geopy.geocoders import Nominatim
-#from geopy.exc import GeocoderTimedOut
 import folium
 import requests
-#from opencage.geocoder import OpenCageGeocode
-#from geopy.extra.rate_limiter import RateLimiter
 from django.conf import settings
 import os
 import json
@@ -398,15 +394,6 @@ def importar_y_previsualizar_pedidos(request):
         'zonas': zonas_lista,
         'peso_total': peso_total,  # Pasamos el peso total al template
     })
-
-
-# def guardar_pedidos(request):
-    if request.method == 'POST':
-        pedidos = request.POST.getlist('pedidos')
-        for pedido in pedidos:
-            db.collection('pedidos').add(pedido)
-        messages.success(request, "Pedidos guardados exitosamente.")
-        return redirect('listar_pedidos')
 
 
 def eliminar_pedido(request, pedido_id):

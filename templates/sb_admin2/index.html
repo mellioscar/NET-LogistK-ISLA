@@ -600,25 +600,9 @@
 <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
 <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
-<!-- Script de Chart.js -->
-<script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
-
-<!-- Scripts para los gráficos -->
-<script src="{% static 'js/dashboard-charts.js' %}"></script>
-<script src="{% static 'js/dashboard-estados.js' %}"></script>
-
-<style>
-.progress {
-    background-color: #eaecf4;
-    border-radius: 5px;
-}
-
-.progress-bar {
-    background-color: #36b9cc;
-    border-radius: 5px;
-    transition: width 1s ease-in-out;
-}
-</style>
+{% block dashboard_scripts %}
+<!-- Los scripts específicos del dashboard irán aquí -->
+{% endblock %}
 
 {% block extra_js %}{% endblock %}
 

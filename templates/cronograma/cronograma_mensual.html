@@ -1,19 +1,45 @@
 {% extends "sb_admin2/index.html" %}
 
+{% block extrahead %}
+<!-- Cargar jQuery y Select2 en el head -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <h2>Cronograma Mensual</h2>
+
+<!-- Filtro de Zonas -->
+<div class="mb-4">
+    <form method="get" class="d-flex align-items-center">
+        <select name="zona" class="form-control" style="width: 300px;">
+            <option value="">Todas las zonas</option>
+            {% for zona in zonas %}
+                <option value="{{ zona.nombre }}" {% if zona_seleccionada == zona.nombre %}selected{% endif %}>
+                    {{ zona.display }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="anio" value="{{ anio }}">
+        <button type="submit" class="btn btn-primary ml-2">Filtrar</button>
+    </form>
+</div>
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-primary btn-sm">
+                <a href="{{ prev_url }}{% if zona_seleccionada %}?zona={{ zona_seleccionada }}{% endif %}" class="btn btn-primary btn-sm">
                     <i class="fas fa-chevron-left"></i> Mes Anterior
                 </a>
             </div>
+
             <h6 class="m-0 font-weight-bold text-primary">{{ nombre_mes }} {{ anio }}</h6>
+            
             <div>
-                <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-primary btn-sm">
+                <a href="{{ next_url }}{% if zona_seleccionada %}?zona={{ zona_seleccionada }}{% endif %}" class="btn btn-primary btn-sm">
                     Mes Siguiente <i class="fas fa-chevron-right"></i>
                 </a>
             </div>
@@ -54,6 +80,7 @@
                                 {% for reparto in dia.repartos %}
                                 <div class="small mb-1 p-1 border-left border-{{ reparto.estado_color }} reparto-item" 
                                     onclick="verDetallesReparto('{{ reparto.nro_reparto|escapejs }}')"
+                                    data-zona="{{ reparto.zona }}"
                                     style="cursor: pointer;">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="font-weight-bold">#{{ reparto.nro_reparto }}</span>
@@ -162,11 +189,9 @@
 {% block extrajs %}
 <script>
 function verDetallesReparto(nroReparto) {
-
     $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
     $('#modalDetallesReparto').modal('show');
     
-    // Ajustada la URL para coincidir con la estructura de urls.py
     fetch(`/obtener_detalles_reparto/${encodeURIComponent(nroReparto)}/`)
         .then(response => {
             if (!response.ok) {
@@ -175,7 +200,6 @@ function verDetallesReparto(nroReparto) {
             return response.json();
         })
         .then(data => {
-            // Actualizar datos del reparto
             $('#modalNroReparto').text(data.reparto.nro_reparto);
             $('#modalEstado').html(`<span class="badge badge-${data.reparto.estado_color}">${data.reparto.estado}</span>`);
             $('#modalFecha').text(data.reparto.fecha);
@@ -183,7 +207,6 @@ function verDetallesReparto(nroReparto) {
             $('#modalZona').text(data.reparto.zona);
             $('#modalZonaDescripcion').text(data.reparto.zona_descripcion);
             
-            // Limpiar y llenar la tabla de pedidos
             let pedidosHtml = '';
             if (data.pedidos && data.pedidos.length > 0) {
                 data.pedidos.forEach(pedido => {
@@ -206,15 +229,48 @@ function verDetallesReparto(nroReparto) {
             $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center text-danger">Error al cargar los datos</td></tr>');
         });
 }
-
-// Mejorar la interacción
-$(document).ready(function() {
-    $('.reparto-item').hover(
-        function() { $(this).addClass('bg-light'); },
-        function() { $(this).removeClass('bg-light'); }
-    );
-});
 </script>
+
+<style>
+    /* Personalización de Select2 */
+    .select2-container--default .select2-selection--single {
+        background-color: #f8f9fc;
+        border: 1px solid #d1d3e2;
+        height: 38px;
+        line-height: 38px;
+        border-radius: 4px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px;
+        padding-left: 15px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #d1d3e2;
+    }
+
+    .select2-search__field {
+        padding: 8px !important;
+    }
+
+    .select2-results__option {
+        padding: 8px 15px;
+    }
+
+    /* Asegurar que los repartos filtrados sean visibles */
+    .reparto-item {
+        display: block;
+    }
+
+    .reparto-item.hidden {
+        display: none;
+    }
+</style>
 {% endblock %}
 
 {% endblock %}

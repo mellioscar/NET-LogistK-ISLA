@@ -105,7 +105,7 @@ def dashboard(request):
                 .stream()
             entregas_incompletas += sum(1 for _ in pedidos)
 
-        return render(request, 'sb_admin2/index.html', {
+        return render(request, 'dashboard.html', {
             'total_repartos_hoy': total_repartos_dia,
             'total_repartos_finalizados_hoy': total_finalizados_dia,
             'porcentaje_repartos_finalizados': round(porcentaje_finalizados, 2),
@@ -121,7 +121,7 @@ def dashboard(request):
     except Exception as e:
         print(f"Error en el dashboard: {e}")
         messages.error(request, f"Error al cargar el dashboard: {e}")
-        return render(request, 'sb_admin2/index.html', {
+        return render(request, 'dashboard.html', {
             'total_repartos_hoy': 0,
             'total_repartos_finalizados_hoy': 0,
             'porcentaje_repartos_finalizados': 0,

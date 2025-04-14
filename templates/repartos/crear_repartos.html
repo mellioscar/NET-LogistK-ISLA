@@ -56,25 +56,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const zonaSelect = document.getElementById('zona');
-    const fechaInput = document.querySelector('input[name="fecha"]');
     const nroRepartoInput = document.getElementById('nro_reparto');
 
     function generarNroReparto() {
-        const fecha = new Date(fechaInput.value);
-        if (!fecha || isNaN(fecha)) return;
-
-        const dia = fecha.getDate().toString().padStart(2, '0');
-        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-        
         const zonaSeleccionada = zonaSelect.options[zonaSelect.selectedIndex];
         const nombreZona = zonaSeleccionada && zonaSeleccionada.value !== "" ? 
             zonaSelect.options[zonaSelect.selectedIndex].text : 'Z';
 
-        nroRepartoInput.value = `R:${dia}-${mes} [Z:${nombreZona}]`;
+        nroRepartoInput.value = `Zona ${nombreZona}`;
     }
 
     zonaSelect.addEventListener('change', generarNroReparto);
-    fechaInput.addEventListener('change', generarNroReparto);
 
     // Generar número inicial al cargar la página
     generarNroReparto();

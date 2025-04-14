@@ -73,25 +73,13 @@ def crear_reparto(request):
     if request.method == "POST":
         try:
             # Obtener datos del formulario
-            chofer_id = request.POST.get("chofer", "").strip()
-            acompanante_id = request.POST.get("acompanante", "").strip()
             zona_id = request.POST.get("zona", "").strip()
-            vehiculo_id = request.POST.get("vehiculo", "").strip()
             fecha_salida = request.POST.get("fecha")
             nro_reparto = request.POST.get("nro_reparto")  # Ya viene formateado del frontend
 
             # Validaciones...
-            if not all([chofer_id, zona_id, vehiculo_id, fecha_salida, nro_reparto]):
-                messages.error(request, "Todos los campos obligatorios deben estar completos.")
-                return redirect("crear_reparto")
-
             # Obtener datos relacionados
-            chofer_doc = db.collection("recursos").document(chofer_id).get()
             zona_doc = db.collection("zonas").document(zona_id).get()
-            vehiculo_doc = db.collection("vehiculos").document(vehiculo_id).get()
-
-            chofer_data = chofer_doc.to_dict()
-            nombre_completo = f"{chofer_data['nombre']} {chofer_data.get('apellido', '')}"
 
             # Convertir fecha_salida a timestamp
             fecha_obj = datetime.strptime(fecha_salida, '%Y-%m-%d')
@@ -102,28 +90,10 @@ def crear_reparto(request):
                 'nro_reparto': nro_reparto,
                 'fecha_salida': fecha_salida_timestamp,
                 'fecha_creacion': datetime.now(),
-                'chofer': {
-                    'id': chofer_id,
-                    'nombre': chofer_data['nombre'],
-                    'apellido': chofer_data.get('apellido', ''),
-                    'nombre_completo': nombre_completo
-                },
-                'vehiculo': vehiculo_doc.to_dict().get('dominio'),
                 'zona': zona_doc.to_dict().get('nombre'),
                 'estado_reparto': 'Abierto',
                 'sucursal': sucursal_operario,
             }
-
-            # Si hay acompañante, agregarlo
-            if acompanante_id:
-                acompanante_doc = db.collection("recursos").document(acompanante_id).get()
-                if acompanante_doc.exists:
-                    acompanante_data = acompanante_doc.to_dict()
-                    data['acompanante'] = {
-                        'id': acompanante_id,
-                        'nombre': acompanante_data['nombre'],
-                        'apellido': acompanante_data.get('apellido', '')
-                    }
 
             # Crear documento de reparto
             nuevo_reparto = db.collection("repartos").document()
@@ -147,16 +117,10 @@ def crear_reparto(request):
 
     # Consultas para obtener sucursales, choferes, acompañantes, vehículos y zonas
     sucursales = db.collection("sucursales").stream()
-    choferes = db.collection("recursos").where("categoria", "in", ["Chofer", "Chofer Gruista"]).stream()
-    acompanantes = db.collection("recursos").where("categoria", "==", "Acompañante").stream()
-    vehiculos = db.collection("vehiculos").where("tipo", "==", "Camion").stream()
     zonas = db.collection("zonas").stream()
 
     return render(request, "repartos/crear_repartos.html", {
         "sucursales": [doc.to_dict() | {"id": doc.id} for doc in sucursales],
-        "choferes": [doc.to_dict() | {"id": doc.id} for doc in choferes],
-        "acompanantes": [doc.to_dict() | {"id": doc.id} for doc in acompanantes],
-        "vehiculos": [doc.to_dict() | {"id": doc.id} for doc in vehiculos],
         "zonas": [doc.to_dict() | {"id": doc.id} for doc in zonas],
         "hoy": datetime.today().strftime("%Y-%m-%d"),
     })

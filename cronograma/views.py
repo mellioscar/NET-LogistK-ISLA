@@ -7,6 +7,7 @@ from firebase_admin import firestore
 import calendar
 from django.http import JsonResponse
 from django.contrib import messages
+from django.urls import reverse
 
 
 def cronograma_mensual(request):
@@ -15,8 +16,11 @@ def cronograma_mensual(request):
         locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')
         
         # Obtener el mes y el año actual o de la URL
-        mes = int(request.GET.get('month', datetime.now().month))
-        anio = int(request.GET.get('year', datetime.now().year))
+        mes = int(request.GET.get('mes', datetime.now().month))
+        anio = int(request.GET.get('anio', datetime.now().year))
+        
+        # Obtener la zona seleccionada de los parámetros de la URL
+        zona_seleccionada = request.GET.get('zona', '')
         
         # Obtener el nombre del mes en español
         nombre_mes = datetime(anio, mes, 1).strftime('%B').capitalize()
@@ -30,6 +34,22 @@ def cronograma_mensual(request):
         # Obtener repartos del mes
         db = firestore.client()
         
+        # Obtener todas las zonas ordenadas alfabéticamente
+        zonas_ref = db.collection('zonas').order_by('nombre')
+        zonas = []
+        for zona_doc in zonas_ref.stream():
+            zona_data = zona_doc.to_dict()
+            zonas.append({
+                'nombre': zona_data.get('nombre', ''),
+                'descripcion': zona_data.get('descripcion', ''),
+                'display': f"{zona_data.get('nombre', '')} - {zona_data.get('descripcion', '')}"
+            })
+        
+        if zona_seleccionada:
+            zona_encontrada = zona_seleccionada in [z['nombre'] for z in zonas]
+            if not zona_encontrada:
+                print("ADVERTENCIA: La zona seleccionada no existe en la lista de zonas")
+        
         # Crear fechas inicio y fin del mes como datetime
         fecha_inicio = datetime(anio, mes, 1)
         if mes == 12:
@@ -37,19 +57,25 @@ def cronograma_mensual(request):
         else:
             fecha_fin = datetime(anio, mes + 1, 1)
         
-        # Consultar repartos del mes
+        
+        # Consultar repartos del mes (solo por fecha)
         repartos_ref = db.collection('repartos')\
             .where('fecha_salida', '>=', fecha_inicio)\
             .where('fecha_salida', '<', fecha_fin)\
             .stream()
         
         repartos = {}
+        total_repartos = 0
         
         for reparto in repartos_ref:
             data = reparto.to_dict()
             fecha_salida = data.get('fecha_salida')
             
             if fecha_salida:
+                # Filtrar por zona si está seleccionada
+                if zona_seleccionada and data.get('zona') != zona_seleccionada:
+                    continue
+                
                 dia = fecha_salida.day
                 
                 if dia not in repartos:
@@ -68,7 +94,8 @@ def cronograma_mensual(request):
                     'estado': data.get('estado_reparto', 'Sin estado'),
                     'estado_color': estado_color
                 })
-        
+                total_repartos += 1
+                
         # Generar calendario
         cal = calendar.monthcalendar(anio, mes)
         hoy = datetime.now()
@@ -94,17 +121,33 @@ def cronograma_mensual(request):
                 semana_formato.append(dia_data)
             calendario.append(semana_formato)
         
-        return render(request, 'cronograma/cronograma_mensual.html', {
+        # Construir URLs de navegación preservando la zona seleccionada
+        prev_url = f"{reverse('cronograma_mensual')}?mes={prev_month}&anio={prev_year}"
+        next_url = f"{reverse('cronograma_mensual')}?mes={next_month}&anio={next_year}"
+        
+        if zona_seleccionada:
+            prev_url += f"&zona={zona_seleccionada}"
+            next_url += f"&zona={zona_seleccionada}"
+        
+        context = {
             'calendario': calendario,
             'nombre_mes': nombre_mes,
             'anio': anio,
+            'mes': mes,  # Agregar mes al contexto
             'prev_month': prev_month,
             'next_month': next_month,
             'prev_year': prev_year,
             'next_year': next_year,
-        })
+            'prev_url': prev_url,
+            'next_url': next_url,
+            'zonas': zonas,
+            'zona_seleccionada': zona_seleccionada
+        }
+        
+        return render(request, 'cronograma/cronograma_mensual.html', context)
         
     except Exception as e:
+        print(f"Error en cronograma_mensual: {str(e)}")
         return render(request, 'cronograma/cronograma_mensual.html', {
             'error': f"Error al cargar el cronograma: {str(e)}"
         })
@@ -229,7 +272,7 @@ def cronograma_semanal(request):
                         'zona': reparto_data.get('zona', ''),
                         'estado': reparto_data.get('estado_reparto', 'Sin estado'),
                         'estado_color': estado_color,
-                        'chofer': reparto_data.get('chofer', {}).get('nombre_completo', 'Sin chofer')
+                        'fecha_creacion': reparto_data.get('fecha_creacion', '').strftime('%d-%m-%y (%H:%M)')
                     })
         
         # Construir la respuesta con los datos organizados
@@ -313,7 +356,6 @@ def lista_detalle_reparto(request, nro_reparto):
                 'peso': peso_pedido,
                 'articulos': articulos
             })
-            print(f"Pedido incluido: {pedido.id} - nro_factura: {pedido_data['nro_factura']}")
 
         context = {
             'reparto': {
