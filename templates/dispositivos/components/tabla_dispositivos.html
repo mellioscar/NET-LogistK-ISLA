@@ -1,0 +1,60 @@
+<!-- Componente de Tabla de Dispositivos -->
+<div class="table-responsive">
+    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>IMEI</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Vinculación</th>
+                <th>Frecuencia (min)</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dispositivo in dispositivos %}
+            <tr>
+                <td>{{ dispositivo.imei }}</td>
+                <td>{{ dispositivo.nombre }}</td>
+                <td>
+                    <span class="badge badge-{% if dispositivo.estado == 'Con Señal' %}success{% else %}danger{% endif %}">
+                        {{ dispositivo.estado }}
+                    </span>
+                </td>
+                <td>{{ dispositivo.marca }}</td>
+                <td>{{ dispositivo.modelo }}</td>
+                <td>{{ dispositivo.vinculacion }}</td>
+                <td>{{ dispositivo.frecuencia_actualizacion }}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm" 
+                                onclick="confirmarEliminacion('{{ dispositivo.id }}', '{{ dispositivo.nombre }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No hay dispositivos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- DataTables -->
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json'
+            }
+        });
+    });
+</script> 

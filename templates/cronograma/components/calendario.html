@@ -1,0 +1,113 @@
+<!-- Componente de Calendario -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            {% if vista_mensual %}Cronograma Mensual{% else %}Cronograma Semanal{% endif %}
+        </h6>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnAnterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnHoy">Hoy</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnSiguiente">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Selector de Vista -->
+        <div class="mb-3 text-right">
+            <div class="btn-group" role="group">
+                <a href="{% url 'cronograma_mensual' %}" class="btn btn-{% if vista_mensual %}primary{% else %}secondary{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> Mensual
+                </a>
+                <a href="{% url 'cronograma_semanal' %}" class="btn btn-{% if not vista_mensual %}primary{% else %}secondary{% endif %}">
+                    <i class="fas fa-calendar-week"></i> Semanal
+                </a>
+            </div>
+        </div>
+
+        <!-- Calendario -->
+        <div id="calendario"></div>
+    </div>
+</div>
+
+<!-- Scripts del Calendario -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendario');
+    // Depuración: mostrar los eventos en consola
+    var eventos = {{ eventos|default:'[]'|safe }};
+    console.log("EVENTOS FULLCALENDAR:", eventos);
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'es',
+        initialView: '{% if vista_mensual %}dayGridMonth{% else %}dayGridWeek{% endif %}',
+        headerToolbar: {
+            left: '',
+            center: 'title',
+            right: ''
+        },
+        height: 'auto',
+        selectable: true,
+        editable: true,
+        events: eventos,
+        eventClick: function(info) {
+            mostrarDetalleReparto(info.event.id);
+        },
+        dateClick: function(info) {
+            window.location.href = `/repartos/crear/?fecha=${info.dateStr}`;
+        },
+        eventContent: function(arg) {
+            return {
+                html: `
+                    <div class="fc-content">
+                        <div class="fc-title">
+                            <strong>${arg.event.title}</strong>
+                        </div>
+                        <div class="fc-description small">
+                            ${arg.event.extendedProps.descripcion || ''}
+                        </div>
+                    </div>
+                `
+            };
+        }
+    });
+
+    calendar.render();
+
+    // Botones de navegación
+    document.getElementById('btnAnterior').addEventListener('click', function() {
+        calendar.prev();
+    });
+
+    document.getElementById('btnHoy').addEventListener('click', function() {
+        calendar.today();
+    });
+
+    document.getElementById('btnSiguiente').addEventListener('click', function() {
+        calendar.next();
+    });
+});
+</script>
+
+<!-- Estilos personalizados -->
+<style>
+.fc-event {
+    cursor: pointer;
+    padding: 2px;
+}
+
+.fc-event:hover {
+    filter: brightness(90%);
+}
+
+.fc-day-today {
+    background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+.fc-description {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style> 

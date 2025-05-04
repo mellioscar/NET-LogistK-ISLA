@@ -1,9 +1,15 @@
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
+import os
+from dotenv import load_dotenv
+import sys
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Agregar el directorio 'apps' al PYTHONPATH
+sys.path.insert(0, str(BASE_DIR / 'apps'))
 
 # Inicialización de Firebase
 FIREBASE_CREDENTIALS_PATH = BASE_DIR / 'secrets/firebase.json'
@@ -50,13 +56,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',  
+    #'NetLogistK.middleware.rate_limit.RateLimitMiddleware',  # Comentado temporalmente
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Activa sesiones si las necesitas para Firebase
-    'NetLogistK.middleware.FirebaseAuthenticationMiddleware',
+    'NetLogistK.middleware.auth.FirebaseAuthenticationMiddleware',
 ]
 
 # Configuración de mensajes
@@ -130,7 +137,10 @@ USE_TZ = True
 
 # Archivos estáticos
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'NetLogistK' / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'NetLogistK' / 'static',
+    BASE_DIR / 'static',
+]
 
 # Clave primaria por defecto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -144,4 +154,31 @@ ROLE_ICONS = {
     "Gerente": "fas fa-user-tie",
     "Logística": "fas fa-truck-moving",
     "Ventas": "fas fa-user",
+}
+
+load_dotenv()
+
+# Configuración de Redis
+REDIS_CONFIG = {
+    'host': os.getenv('REDIS_HOST', 'localhost'),
+    'port': int(os.getenv('REDIS_PORT', 6379)),
+    'db': int(os.getenv('REDIS_DB', 0))
+}
+
+# Configuración de Firebase
+FIREBASE_CONFIG = {
+    'apiKey': 'AIzaSyCkj3ZWSU_UdlDoyfonJTexHkcF7JLV4m4',  # Tu API Key
+    'authDomain': 'net-logistk-isla.firebaseapp.com',
+    'projectId': 'net-logistk-isla',
+    'storageBucket': 'net-logistk-isla.appspot.com',
+    'messagingSenderId': '103980156985793532248',
+    'appId': '1:103980156985793532248:web:XXXXXXXXXXXXX'  # Tu App ID
+}
+
+# Configuración de caché
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
 }

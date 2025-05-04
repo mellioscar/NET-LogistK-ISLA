@@ -3,19 +3,18 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from vehiculos import views as vehiculos_views
-from usuarios import views as usuarios_views
-from repartos import views as repartos_views
-from tracking import views as tracking_views
-from mensajes import views as mensajes_views
-from parametros import views as parametros_views
-from recursos import views as recursos_views
-from dispositivos import views as dispositivos_views
-from zonas import views as zonas_views
-from pedidos import views as pedidos_views
-from cronograma import views as cronograma_views
-from .views import dashboard
-from . import views
+from apps.vehiculos import views as vehiculos_views
+from apps.usuarios import views as usuarios_views
+from apps.repartos import views as repartos_views
+from apps.tracking import views as tracking_views
+from apps.mensajes import views as mensajes_views
+from apps.parametros import views as parametros_views
+from apps.recursos import views as recursos_views
+from apps.dispositivos import views as dispositivos_views
+from apps.zonas import views as zonas_views
+from apps.pedidos import views as pedidos_views
+from apps.cronograma import views as cronograma_views
+from .views import dashboard as dashboard_views
 
 
 urlpatterns = [
@@ -115,6 +114,6 @@ urlpatterns = [
     path('zonas/eliminar/<str:zona_id>/', zonas_views.eliminar_zona, name='eliminar_zona'),
 
     # Ruta para el dashboard
-    path('dashboard/', dashboard, name='dashboard'),
+    path('dashboard/', dashboard_views.dashboard_view, name='dashboard'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

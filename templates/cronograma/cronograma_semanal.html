@@ -1,197 +1,33 @@
-{% extends "sb_admin2/index.html" %}
+{% extends 'base/layouts/base.html' %}
 {% load static %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker.min.css" rel="stylesheet">
-<style>
-    .calendar-widget {
-        max-width: 300px;
-        margin-bottom: 20px;
-    }
-    
-    .reparto-item {
-        background-color: #fff;
-        border-radius: 3px;
-        margin-bottom: 5px;
-        padding: 5px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .reparto-item:hover {
-        background-color: #f8f9fa;
-    }
-
-    /* Nuevos estilos para la tabla */
-    .table-calendar {
-        table-layout: fixed;
-        width: 100%;
-    }
-
-    .table-calendar th {
-        width: 14.28%;
-        padding: 8px 4px;
-        font-size: 0.9rem;
-    }
-
-    .table-calendar td {
-        width: 14.28%;
-        height: 150px;
-        min-width: auto !important;
-        padding: 5px;
-        vertical-align: top;
-    }
-
-    .reparto-container {
-        max-height: 135px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    .reparto-item {
-        font-size: 0.8rem;
-        padding: 4px;
-        margin-bottom: 3px;
-    }
-</style>
+<!-- FullCalendar CSS desde CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Encabezado con navegación -->
+    <!-- Encabezado de página -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Cronograma Semanal</h1>
-        <div class="d-flex align-items-center">
-            <button class="btn btn-outline-primary mr-2" id="prevWeek">
-                <i class="fas fa-chevron-left"></i> Semana Anterior
-            </button>
-            <input type="text" class="form-control text-center" id="weekPicker" value="{{ fecha_actual }}" style="width: 120px;">
-            <button class="btn btn-outline-primary ml-2" id="nextWeek">
-                Siguiente Semana <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
+        <h1 class="h3 mb-0 text-gray-800">Cronograma</h1>
+        <a href="{% url 'crear_reparto' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Reparto
+        </a>
     </div>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-
-    <!-- Tabla del Cronograma -->
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-calendar">
-                    <thead>
-                        <tr>
-                            {% for dia in dias_semana %}
-                            <th class="text-center">
-                                {{ dia.nombre_dia }}<br>
-                                <small class="text-muted">{{ dia.fecha }}</small>
-                            </th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            {% for dia in dias_semana %}
-                            <td>
-                                {% if dia.repartos %}
-                                <div class="reparto-container mt-2">
-                                    {% for reparto in dia.repartos %}
-                                    <a href="{% url 'lista_detalle_reparto' reparto.nro_reparto %}" class="text-decoration-none">
-                                        <div class="small mb-1 p-1 border-left border-{{ reparto.estado_color }} reparto-item">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="font-weight-bold">#{{ reparto.nro_reparto }} ({{ reparto.zona }})</span>
-                                                <span class="badge badge-{{ reparto.estado_color }}">{{ reparto.estado }}</span>
-                                            </div>
-                                            <div class="text-muted small">
-                                                <i class="fas fa-calendar-day mr-1"></i>Creado: {{ reparto.fecha_creacion }}<br>
-                                                <!-- <i class="fas fa-map-marker-alt mr-1"></i> {{ reparto.zona }} -->
-                                            </div>
-                                        </div>
-                                    </a>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                <div class="text-center font-weight-bold text-warning small mt-3">
-                                    <i class="fas fa-calendar-day mb-2"></i><br>
-                                    Sin repartos
-                                </div>
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <!-- Calendario -->
+    {% with vista_mensual=False %}
+        {% include "cronograma/components/calendario.html" %}
+    {% endwith %}
 </div>
+
+<!-- Modal de Detalle -->
+{% include "cronograma/components/detalle_reparto.html" %}
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/locales/bootstrap-datepicker.es.min.js"></script>
-
-<script>
-    console.log("Script cargado correctamente.");
-
-    window.cambiarSemana = function(direccion) {  
-        console.log("Intentando cambiar de semana, dirección:", direccion);
-
-        var fechaActual = $('#weekPicker').val();
-        console.log("Fecha actual del input:", fechaActual);
-
-        if (!fechaActual) {
-            console.error("ERROR: No se pudo obtener la fecha del input.");
-            return;
-        }
-
-        var [dia, mes, anio] = fechaActual.split('-').map(Number);
-        console.log(`Fecha descompuesta: Día=${dia}, Mes=${mes}, Año=${anio}`);
-
-        var fecha = new Date(anio, mes - 1, dia);
-        console.log("Fecha antes de ajuste:", fecha);
-
-        var diaSemana = fecha.getDay();
-        if (diaSemana === 0) diaSemana = 7; // Convertir domingo en 7
-        fecha.setDate(fecha.getDate() - diaSemana + 1 + (direccion * 7));
-
-        var nuevoDia = ('0' + fecha.getDate()).slice(-2);
-        var nuevoMes = ('0' + (fecha.getMonth() + 1)).slice(-2);
-        var nuevoAnio = fecha.getFullYear();
-        var nuevaFecha = `${nuevoDia}-${nuevoMes}-${nuevoAnio}`;
-        console.log("Nueva fecha calculada:", nuevaFecha);
-
-        $('#weekPicker').val(nuevaFecha);
-        window.location.href = '?fecha=' + nuevaFecha;
-        console.log("Redirigiendo a:", window.location.href);
-    };
-
-    $(document).ready(function() {
-        console.log("Documento cargado y listo.");
-
-        $('#weekPicker').datepicker({
-            format: 'dd-mm-yyyy',
-            language: 'es',
-            autoclose: true
-        });
-
-        $('#prevWeek').click(function() {
-            console.log("Botón Semana Anterior presionado");
-            cambiarSemana(-1);
-        });
-
-        $('#nextWeek').click(function() {
-            console.log("Botón Siguiente Semana presionado");
-            cambiarSemana(1);
-        });
-
-        $('#weekPicker').on('changeDate', function(e) {
-            var fecha = e.format('dd-mm-yyyy');
-            console.log("Nueva fecha seleccionada en datepicker:", fecha);
-            window.location.href = '?fecha=' + fecha;
-        });
-    });
-</script>
+<!-- FullCalendar JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js"></script>
 {% endblock %}

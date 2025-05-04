@@ -1,0 +1,210 @@
+{% load static %}
+
+<form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Información del Vehículo -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información del Vehículo</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="placa">Placa*</label>
+                        <input type="text" class="form-control" id="placa" name="placa" 
+                               value="{{ form.placa.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese la placa del vehículo
+                        </div>
+                        {% if form.placa.errors %}
+                            <div class="text-danger">
+                                {{ form.placa.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marca">Marca*</label>
+                        <select class="form-control" id="marca" name="marca" required>
+                            <option value="">Seleccione una marca</option>
+                            {% for marca_id, marca_nombre in form.fields.marca.choices %}
+                                <option value="{{ marca_id }}" {% if form.marca.value == marca_id %}selected{% endif %}>
+                                    {{ marca_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor seleccione la marca del vehículo
+                        </div>
+                        {% if form.marca.errors %}
+                            <div class="text-danger">
+                                {{ form.marca.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelo">Modelo*</label>
+                        <select class="form-control" id="modelo" name="modelo" required>
+                            <option value="">Seleccione un modelo</option>
+                            {% for modelo_id, modelo_nombre in form.fields.modelo.choices %}
+                                <option value="{{ modelo_id }}" {% if form.modelo.value == modelo_id %}selected{% endif %}>
+                                    {{ modelo_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor seleccione el modelo del vehículo
+                        </div>
+                        {% if form.modelo.errors %}
+                            <div class="text-danger">
+                                {{ form.modelo.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="anio">Año*</label>
+                        <input type="number" class="form-control" id="anio" name="anio" 
+                               value="{{ form.anio.value|default:'' }}" required min="1900" max="2100">
+                        <div class="invalid-feedback">
+                            Por favor ingrese el año del vehículo
+                        </div>
+                        {% if form.anio.errors %}
+                            <div class="text-danger">
+                                {{ form.anio.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalles Adicionales -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalles Adicionales</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad (kg)*</label>
+                        <input type="number" class="form-control" id="capacidad" name="capacidad" 
+                               value="{{ form.capacidad.value|default:'' }}" required min="0" step="0.01">
+                        <div class="invalid-feedback">
+                            Por favor ingrese la capacidad del vehículo
+                        </div>
+                        {% if form.capacidad.errors %}
+                            <div class="text-danger">
+                                {{ form.capacidad.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="conductor">Conductor Asignado</label>
+                        <select class="form-control" id="conductor" name="conductor">
+                            <option value="">Sin conductor asignado</option>
+                            {% for conductor_id, conductor_nombre in form.fields.conductor.choices %}
+                                <option value="{{ conductor_id }}" {% if form.conductor.value == conductor_id %}selected{% endif %}>
+                                    {{ conductor_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.conductor.errors %}
+                            <div class="text-danger">
+                                {{ form.conductor.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dispositivo">Dispositivo GPS</label>
+                        <select class="form-control" id="dispositivo" name="dispositivo">
+                            <option value="">Sin dispositivo asignado</option>
+                            {% for dispositivo_id, dispositivo_nombre in form.fields.dispositivo.choices %}
+                                <option value="{{ dispositivo_id }}" {% if form.dispositivo.value == dispositivo_id %}selected{% endif %}>
+                                    {{ dispositivo_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.dispositivo.errors %}
+                            <div class="text-danger">
+                                {{ form.dispositivo.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="observaciones">Observaciones</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3">{{ form.observaciones.value|default:'' }}</textarea>
+                        {% if form.observaciones.errors %}
+                            <div class="text-danger">
+                                {{ form.observaciones.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save fa-sm text-white-50"></i>
+                        Guardar
+                    </button>
+                    <a href="{% url 'vehiculos:lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times fa-sm text-white-50"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+// Validación del formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Actualizar modelos cuando cambia la marca
+$('#marca').change(function() {
+    var marcaId = $(this).val();
+    if (marcaId) {
+        $.ajax({
+            url: `/parametros/modelos/por-marca/${marcaId}/`,
+            type: 'GET',
+            success: function(data) {
+                var modeloSelect = $('#modelo');
+                modeloSelect.empty();
+                modeloSelect.append('<option value="">Seleccione un modelo</option>');
+                data.forEach(function(modelo) {
+                    modeloSelect.append(`<option value="${modelo.id}">${modelo.nombre}</option>`);
+                });
+            }
+        });
+    } else {
+        $('#modelo').empty().append('<option value="">Seleccione un modelo</option>');
+    }
+});
+</script> 

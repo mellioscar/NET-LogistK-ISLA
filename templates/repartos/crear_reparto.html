@@ -1,0 +1,61 @@
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Crear Reparto - NET-LogistK ISLA{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Crear Reparto</h1>
+    </div>
+
+    <!-- Tarjeta del Formulario -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Datos del Reparto</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="formReparto">
+                {% csrf_token %}
+                {% include "repartos/components/formulario_reparto.html" %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<!-- Select2 -->
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<!-- Select2 -->
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 para los selectores
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+
+    // Inicializar DataTables para la tabla de pedidos
+    $('#tablaPedidos').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/es_ES.json' %}"
+        },
+        pageLength: 10,
+        order: [[0, 'asc']]
+    });
+});
+</script>
+{% endblock %} 

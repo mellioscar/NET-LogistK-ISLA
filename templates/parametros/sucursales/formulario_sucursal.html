@@ -1,0 +1,49 @@
+{% extends "sb_admin2/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if sucursal %}Editar{% else %}Nueva{% endif %} Sucursal
+        </h1>
+    </div>
+
+    <!-- Formulario de Sucursal -->
+    {% include "parametros/components/formulario_parametro.html" with 
+        nombre_singular="Sucursal"
+        formulario=formulario
+        objeto=sucursal
+        url_cancelar="listar_sucursales"
+    %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Google Maps API para autocompletar dirección -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script>
+$(document).ready(function() {
+    // Inicializar autocompletado de dirección
+    var input = document.getElementById('id_direccion');
+    var autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['address']
+    });
+
+    // Al seleccionar una dirección
+    autocomplete.addListener('place_changed', function() {
+        var place = autocomplete.getPlace();
+        if (!place.geometry) {
+            return;
+        }
+
+        // Actualizar campos de latitud y longitud si existen
+        if ($('#id_latitud').length && $('#id_longitud').length) {
+            $('#id_latitud').val(place.geometry.location.lat());
+            $('#id_longitud').val(place.geometry.location.lng());
+        }
+    });
+});
+</script>
+{% endblock %} 

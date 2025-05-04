@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "repartos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "fecha_salida", "order": "ASCENDING" },
+        { "fieldPath": "zona", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}

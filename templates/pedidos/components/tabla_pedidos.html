@@ -1,0 +1,325 @@
+{% load static %}
+
+<!-- Componente de Tabla de Pedidos -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <div class="btn-group">
+            {% if mostrar_importar %}
+            <a href="{% url 'importar_y_previsualizar_pedidos' %}" class="btn btn-success btn-sm mr-2">
+                <i class="fas fa-file-excel"></i> Importar Pedidos
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm" id="tablaPedidos" width="100%" cellspacing="0" style="font-size: 0.72rem;">
+                <thead>
+                    <tr>
+                        <th>Nº Factura</th>
+                        <th>Cliente</th>
+                        <th>Dirección</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Peso Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>{{ pedido.nro_factura }}</td>
+                        <td>{{ pedido.cliente }}</td>
+                        <td>{{ pedido.direccion }}</td>
+                        <td>{{ pedido.fecha|default:'-' }}</td>
+                        <td>
+                            <span class="badge badge-{{ pedido.estado_color|default:'secondary' }}">
+                                {{ pedido.estado|default:'-' }}
+                            </span>
+                        </td>
+                        <td>{{ pedido.peso_total|default:"-" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary btn-sm" 
+                                        onclick="verDetallePedido('{{ pedido.id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if pedido.estado == 'pendiente' %}
+                                <button type="button" class="btn btn-danger btn-sm" 
+                                        onclick="confirmarCancelacion('{{ pedido.id }}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalle de Pedido -->
+<div class="modal fade" id="modalDetallePedido" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle del Pedido</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nº Factura:</strong> <span id="modalNroFactura"></span></p>
+                        <p><strong>Cliente:</strong> <span id="modalCliente"></span></p>
+                        <p><strong>Dirección:</strong> <span id="modalDireccion"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="modalTelefono"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Fecha:</strong> <span id="modalFecha"></span></p>
+                        <p><strong>Estado:</strong> <span id="modalEstado"></span></p>
+                        <p><strong>Zona:</strong> <span id="modalZona"></span></p>
+                        <p><strong>Reparto:</strong> <span id="modalReparto"></span></p>
+                    </div>
+                </div>
+                <!-- Tabla de Artículos -->
+                <hr>
+                <h6 class="font-weight-bold">Artículos del Pedido</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Peso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalArticulos">
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if mostrar_historial %}
+                <hr>
+                <h6 class="font-weight-bold">Historial de Estados</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalHistorial">
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Cancelación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Cancelación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea cancelar este pedido?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+                
+                <div class="form-group">
+                    <label for="observaciones">Observaciones</label>
+                    <textarea class="form-control" id="observaciones" rows="3" 
+                              placeholder="Ingrese el motivo de la cancelación..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-danger" onclick="cancelarPedido()">Cancelar Pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+let pedidoIdSeleccionado = null;
+
+$(document).ready(function() {
+    $('#tablaPedidos').DataTable({
+        language: {
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando 0 a 0 de 0 registros",
+            "sInfoFiltered":   "(filtrado de _MAX_ registros en total)",
+            "sInfoPostFix":    "",
+            "sSearch":         "Buscar:",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending":  ": activar para ordenar la columna ascendente",
+                "sSortDescending": ": activar para ordenar la columna descendente"
+            }
+        },
+        order: [[3, 'desc']],
+        pageLength: 25
+    });
+});
+
+function verDetallePedido(pedidoId) {
+    $.ajax({
+        url: `/pedidos/detalle/${pedidoId}/`,
+        method: 'GET',
+        success: function(data) {
+            $('#modalNroFactura').text(data.nro_factura);
+            $('#modalCliente').text(data.cliente);
+            $('#modalDireccion').text(data.direccion);
+            $('#modalTelefono').text(data.telefono || '-');
+            $('#modalFecha').text(data.fecha);
+            $('#modalEstado').html(`<span class="badge badge-${data.estado_color}">${data.estado}</span>`);
+            $('#modalZona').text(data.zona || '-');
+            $('#modalReparto').text(data.reparto || '-');
+
+            if (data.historial) {
+                let historialHtml = '';
+                data.historial.forEach(function(h) {
+                    historialHtml += `
+                        <tr>
+                            <td>${h.fecha}</td>
+                            <td><span class="badge badge-${h.estado_color}">${h.estado}</span></td>
+                            <td>${h.observaciones || '-'}</td>
+                        </tr>
+                    `;
+                });
+                $('#modalHistorial').html(historialHtml);
+            }
+
+            // Artículos
+            if (data.articulos) {
+                let articulosHtml = '';
+                data.articulos.forEach(function(a) {
+                    articulosHtml += `
+                        <tr>
+                            <td>${a.codigo || '-'}</td>
+                            <td>${a.descripcion || '-'}</td>
+                            <td>${a.cantidad || '-'}</td>
+                            <td>${a.peso || '-'}</td>
+                        </tr>
+                    `;
+                });
+                $('#modalArticulos').html(articulosHtml);
+            } else {
+                $('#modalArticulos').html('<tr><td colspan="4">Sin artículos</td></tr>');
+            }
+
+            $('#modalDetallePedido').modal('show');
+        },
+        error: function() {
+            alert('Error al cargar los detalles del pedido');
+        }
+    });
+}
+
+function confirmarCancelacion(pedidoId) {
+    pedidoIdSeleccionado = pedidoId;
+    $('#observaciones').val('');
+    $('#modalConfirmacion').modal('show');
+}
+
+function cancelarPedido() {
+    if (!pedidoIdSeleccionado) return;
+
+    $.ajax({
+        url: `/pedidos/cancelar/${pedidoIdSeleccionado}/`,
+        method: 'POST',
+        data: {
+            observaciones: $('#observaciones').val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function() {
+            location.reload();
+        },
+        error: function() {
+            alert('Error al cancelar el pedido');
+        }
+    });
+}
+</script>
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar DataTables igual que en repartos
+    $('#tablaPedidos').DataTable({
+        language: {
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando 0 a 0 de 0 registros",
+            "sInfoFiltered":   "(filtrado de _MAX_ registros en total)",
+            "sInfoPostFix":    "",
+            "sSearch":         "Buscar:",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending":  ": activar para ordenar la columna ascendente",
+                "sSortDescending": ": activar para ordenar la columna descendente"
+            }
+        },
+        order: [[3, 'desc']], // Ordenar por fecha descendente
+        pageLength: 25
+    });
+});
+</script>
+{% endblock %} 

@@ -1,91 +1,39 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Dispositivos - NET-LogistK ISLA{% endblock %}
+
 {% block content %}
-<h2>Listado de Dispositivos</h2>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dispositivos</h1>
+        <a href="{% url 'crear_dispositivo' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Agregar Dispositivo
+        </a>
+    </div>
 
-<!-- Barra de búsqueda -->
-<form class="form-inline my-2" method="GET">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar Dispositivo..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i>
-            </button>
-            <a href="{% url 'listar_dispositivos' %}" class="btn btn-danger">
-                <i class="fas fa-times fa-sm"></i>
-            </a>
+    <!-- Tarjeta de Dispositivos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Dispositivos</h6>
         </div>
-    </div>
-</form>
-
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Dispositivos Registrados</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>IMEI</th>
-                        <th>Nombre</th>
-                        <th>Estado</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Frecuencia Actualización (min)</th>
-                        <th>Última Ubicación</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dispositivo in dispositivos %}
-                    <tr>
-                        <td>{{ dispositivo.imei }}</td>
-                        <td>{{ dispositivo.nombre }}</td>
-                        <td>{{ dispositivo.estado }}</td>
-                        <td>{{ dispositivo.marca }}</td>
-                        <td>{{ dispositivo.modelo }}</td>
-                        <td>{{ dispositivo.frecuencia_actualizacion }}</td>
-                        <td>
-                            {% if dispositivo.ultima_ubicacion %}
-                                {{ dispositivo.ultima_ubicacion.latitude }}, {{ dispositivo.ultima_ubicacion.longitude }}
-                            {% else %}
-                                Sin Ubicación
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-info btn-sm">Editar</a>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ dispositivo.id }}">Eliminar</button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal de confirmación de eliminación -->
-                    <div class="modal fade" id="deleteModal{{ dispositivo.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ dispositivo.id }}" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel{{ dispositivo.id }}">Confirmar Eliminación</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    ¿Estás seguro que deseas eliminar el dispositivo <strong>{{ dispositivo.nombre }}</strong> con IMEI <strong>{{ dispositivo.imei }}</strong>?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                                    <form method="POST" action="{% url 'eliminar_dispositivo' dispositivo.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            {% include "dispositivos/components/tabla_dispositivos.html" %}
         </div>
     </div>
 </div>
 
+{% include "dispositivos/components/modal_eliminar.html" %}
+{% endblock %}
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 {% endblock %}

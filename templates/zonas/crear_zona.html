@@ -1,37 +1,34 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Crear Zona - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Crear Nueva Zona</h2>
-<form method="POST">
-    {% csrf_token %}
-    <div class="form-group">
-        <label for="nombre">Nombre</label>
-        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre de la zona" required>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Crear Zona</h1>
     </div>
-    <div class="form-group">
-        <label for="descripcion">Descripción</label>
-        <input type="text" class="form-control" id="descripcion" name="descripcion" placeholder="Ingrese una breve descripción">
-    </div>
-    <div class="form-group">
-        <label for="sucursal">Sucursal</label>
-        <select class="form-control" id="sucursal" name="sucursal" required>
-            <option value="">Seleccione una sucursal</option>
-            {% for sucursal in sucursales %}
-                <option value="{{ sucursal.nombre }}">{{ sucursal.nombre }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="info">Información Adicional</label>
-        <textarea class="form-control" id="info" name="info" rows="3" placeholder="Ingrese información adicional sobre la zona"></textarea>
-    </div>
-    <div class="form-group">
-        <label for="coordenadas">Coordenadas</label>
-        <textarea class="form-control" id="coordenadas" name="coordenadas" placeholder="Ingrese las coordenadas (formato KML)" rows="3"></textarea>
-    </div>
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a href="{% url 'listar_zonas' %}" class="btn btn-danger">Cancelar</a>
-    </div>
-</form>
+
+    {% include 'zonas/components/formulario_zona.html' %}
+</div>
+{% endblock %}
+
+{% block css %}
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 para el campo de supervisor
+    $('#supervisor').select2({
+        theme: 'bootstrap4',
+        placeholder: 'Seleccione un supervisor',
+        allowClear: true
+    });
+});
+</script>
 {% endblock %}

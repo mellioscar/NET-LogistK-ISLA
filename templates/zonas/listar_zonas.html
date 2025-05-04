@@ -1,31 +1,129 @@
-{% extends "sb_admin2/index.html" %}
+{% extends 'base/layouts/base.html' %}
+{% load static %}
+
+{% block title %}Zonas - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Listado de Zonas</h2>
-<a href="{% url 'crear_zona' %}" class="btn btn-primary mb-3">Crear Nueva Zona</a>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Sucursal</th>
-            <th>Info</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for zona in zonas %}
-        <tr>
-            <td>{{ zona.nombre }}</td>
-            <td>{{ zona.descripcion }}</td>
-            <td>{{ zona.sucursal }}</td>
-            <td>{{ zona.info }}</td>
-            <td>
-                <a href="{% url 'editar_zona' zona.id %}" class="btn btn-info btn-sm">Editar</a>
-                <a href="{% url 'eliminar_zona' zona.id %}" class="btn btn-danger btn-sm">Eliminar</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Zonas</h1>
+        <a href="{% url 'zonas:crear' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Crear Zona
+        </a>
+    </div>
+
+    <!-- Tarjeta de Zonas -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Zonas</h6>
+        </div>
+        <div class="card-body">
+            {% include 'zonas/components/tabla_zonas.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar esta zona?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Desactivación -->
+<div class="modal fade" id="modalDesactivar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Desactivación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea desactivar esta zona?</p>
+                <p>La zona no podrá ser asignada a repartos hasta que sea reactivada.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formDesactivar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Desactivar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Activación -->
+<div class="modal fade" id="modalActivar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Activación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea activar esta zona?</p>
+                <p>La zona podrá ser asignada nuevamente a repartos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formActivar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Activar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block javascript %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+function confirmarDesactivacion(zonaId) {
+    $('#formDesactivar').attr('action', `/zonas/${zonaId}/desactivar/`);
+    $('#modalDesactivar').modal('show');
+}
+
+function confirmarActivacion(zonaId) {
+    $('#formActivar').attr('action', `/zonas/${zonaId}/activar/`);
+    $('#modalActivar').modal('show');
+}
+
+function confirmarEliminacion(zonaId) {
+    $('#formEliminar').attr('action', `/zonas/${zonaId}/eliminar/`);
+    $('#modalEliminar').modal('show');
+}
+</script>
 {% endblock %}

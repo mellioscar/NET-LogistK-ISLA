@@ -1,0 +1,112 @@
+<!-- Panel de Información -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Información de Repartos</h6>
+    </div>
+    <div class="card-body">
+        <!-- Resumen de Repartos -->
+        <div class="mb-4">
+            <h6 class="font-weight-bold">Resumen del Día</h6>
+            <div class="small mb-2">{{ fecha_actual|date:"d/m/Y" }}</div>
+            
+            <!-- Total Repartos -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Total Repartos:</span>
+                    <span class="font-weight-bold">{{ total_repartos }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- En Curso -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>En Curso:</span>
+                    <span class="font-weight-bold">{{ repartos_en_curso }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                        style="width: {{ porcentaje_en_curso }}%"></div>
+                </div>
+            </div>
+
+            <!-- Completados -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Completados:</span>
+                    <span class="font-weight-bold">{{ repartos_completados }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentaje_completados }}%"></div>
+                </div>
+            </div>
+
+            <!-- Pendientes -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Pendientes:</span>
+                    <span class="font-weight-bold">{{ repartos_pendientes }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ porcentaje_pendientes }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Repartos Activos -->
+        <div>
+            <h6 class="font-weight-bold mb-3">Repartos Activos</h6>
+            <div class="repartos-activos">
+                {% for reparto in repartos_activos %}
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ reparto.chofer }}</h6>
+                                <div class="small text-muted">
+                                    Zona: {{ reparto.zona }}
+                                </div>
+                            </div>
+                            <span class="badge badge-info">
+                                {{ reparto.pedidos_completados }}/{{ reparto.total_pedidos }}
+                            </span>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px;">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ reparto.porcentaje_completado }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted">
+                    <i class="fas fa-truck fa-2x mb-2"></i>
+                    <p>No hay repartos activos en este momento</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.repartos-activos {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.repartos-activos::-webkit-scrollbar {
+    width: 6px;
+}
+.repartos-activos::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.repartos-activos::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+.repartos-activos::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style> 

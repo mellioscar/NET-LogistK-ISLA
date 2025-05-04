@@ -1,0 +1,55 @@
+<!-- Componente de Lista de Mensajes -->
+<div class="table-responsive">
+    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Estado</th>
+                <th>Emisor</th>
+                <th>Asunto</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mensaje in mensajes %}
+            <tr class="{% if not mensaje.leido %}font-weight-bold{% endif %}">
+                <td>
+                    <span class="badge badge-{% if mensaje.leido %}secondary{% else %}primary{% endif %}">
+                        {% if mensaje.leido %}Leído{% else %}No leído{% endif %}
+                    </span>
+                </td>
+                <td>{{ mensaje.emisor.nombre }} {{ mensaje.emisor.apellido }}</td>
+                <td>{{ mensaje.asunto }}</td>
+                <td>{{ mensaje.fecha_envio|date:"d/m/Y H:i" }}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'leer_mensaje' mensaje.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-envelope-open-text"></i> Leer
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm" 
+                                onclick="confirmarEliminacion('{{ mensaje.id }}', '{{ mensaje.asunto }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No hay mensajes</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- DataTables -->
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json'
+            },
+            order: [[3, 'desc']] // Ordenar por fecha de envío descendente
+        });
+    });
+</script> 

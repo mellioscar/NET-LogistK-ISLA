@@ -1,0 +1,21 @@
+{% extends "sb_admin2/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if marca %}Editar{% else %}Nueva{% endif %} Marca
+        </h1>
+    </div>
+
+    <!-- Formulario de Marca -->
+    {% include "parametros/components/formulario_parametro.html" with 
+        nombre_singular="Marca"
+        formulario=formulario
+        objeto=marca
+        url_cancelar="listar_marcas"
+    %}
+</div>
+{% endblock %} 

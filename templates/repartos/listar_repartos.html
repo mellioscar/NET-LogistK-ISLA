@@ -1,70 +1,103 @@
 <!-- listar_repartos.html -->
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
 {% load static %}
+
+{% block title %}Repartos - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Encabezado -->
+    <!-- Encabezado de página -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Listado de Repartos</h1>
-        <a href="{% url 'crear_reparto' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Crear Reparto
+        <h1 class="h3 mb-0 text-gray-800">Repartos</h1>
+        <a href="{% url 'crear_reparto' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Crear Reparto
         </a>
     </div>
 
-    <!-- Tabla de Repartos -->
+    <!-- Tarjeta de Repartos -->
     <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Repartos</h6>
+            <!-- Filtros -->
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter fa-sm fa-fw text-gray-800"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                    aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Filtrar por:</div>
+                    <a class="dropdown-item" href="?estado=Abierto">Abiertos</a>
+                    <a class="dropdown-item" href="?estado=En Curso">En Curso</a>
+                    <a class="dropdown-item" href="?estado=Cerrado">Cerrado</a>
+                    <a class="dropdown-item" href="?estado=Finalizado">Finalizados</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'listar_repartos' %}">Ver Todos</a>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered" id="tablaRepartos" width="100%" cellspacing="0">
                     <thead>
                         <tr>
+                            <th>Nro. Reparto</th>
                             <th>Fecha de Salida</th>
-                            <th>Nro de Reparto</th>
                             <th>Chofer</th>
                             <th>Zona</th>
-                            <th>Facturas</th>
-                            <th>Entregas</th>
-                            <th>Incompletos</th>
                             <th>Estado</th>
+                            <th>Pedidos</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for reparto in repartos %}
                         <tr>
-                            <td>{{ reparto.fecha_salida }}</td>
                             <td>{{ reparto.nro_reparto }}</td>
-                            <td>{{ reparto.chofer.nombre_completo }}</td>
+                            <td>{{ reparto.fecha_salida }}</td>
+                            <td>{{ reparto.chofer.nombre|default:"-" }}</td>
                             <td>{{ reparto.zona }}</td>
-                            <td>{{ reparto.total_facturas }}</td>
-                            <td>{{ reparto.total_entregas }}</td>
-                            <td>{{ reparto.total_incompletos }}</td>
                             <td>
-                                <span class="badge 
-                                    {% if reparto.estado_reparto == 'Abierto' %}badge-success
-                                    {% elif reparto.estado_reparto == 'Cerrado' %}badge-danger
-                                    {% elif reparto.estado_reparto == 'Sin Reparto' %}badge-secondary
-                                    {% elif reparto.estado_reparto == 'Abierto Parcial - Solo Metalúrgico' %}badge-warning
-                                    {% elif reparto.estado_reparto == 'Abierto Parcial - Solo Paletizado' %}badge-warning
-                                    {% elif reparto.estado_reparto == 'En curso' %}badge-primary
-                                    {% elif reparto.estado_reparto == 'Finalizado' %}badge-primary
-                                    {% else %}badge-light
-                                    {% endif %}">
-                                    {{ reparto.estado_reparto }}
-                                </span>
+                                {% if reparto.estado_reparto == 'Abierto' %}
+                                    <span class="badge badge-warning">{{ reparto.estado_reparto }}</span>
+                                {% elif reparto.estado_reparto == 'En Curso' %}
+                                    <span class="badge badge-info">{{ reparto.estado_reparto }}</span>
+                                {% elif reparto.estado_reparto == 'Finalizado' %}
+                                    <span class="badge badge-success">{{ reparto.estado_reparto }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ reparto.estado_reparto }}</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'ver_detalle_reparto' reparto.nro_reparto %}" class="btn btn-info btn-sm" title="Ver Detalles">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{% url 'editar_reparto' reparto.id %}" class="btn btn-warning btn-sm" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ reparto.id }}" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <span class="badge badge-primary" title="Total pedidos: {{ reparto.total_facturas }}">{{ reparto.total_facturas }}</span>
+                                {% if reparto.total_entregas > 0 %}
+                                    <span class="badge badge-success" title="Entregados: {{ reparto.total_entregas }}">{{ reparto.total_entregas }}</span>
+                                {% endif %}
+                                {% if reparto.total_facturas|add:'-reparto.total_entregas'|add:'-reparto.total_incompletos' > 0 %}
+                                    <span class="badge badge-secondary" title="Pendientes: {{ reparto.total_facturas|add:'-reparto.total_entregas'|add:'-reparto.total_incompletos' }}">{{ reparto.total_facturas|add:'-reparto.total_entregas'|add:'-reparto.total_incompletos' }}</span>
+                                {% endif %}
+                                {% if reparto.total_incompletos > 0 %}
+                                    <span class="badge badge-danger" title="Incompletos: {{ reparto.total_incompletos }}">{{ reparto.total_incompletos }}</span>
+                                {% endif %}
                             </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'ver_detalle_reparto' reparto.nro_reparto %}" class="btn btn-info btn-sm" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'editar_reparto' reparto.id %}" class="btn btn-primary btn-sm" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm" 
+                                            onclick="confirmarEliminacion('{% url 'eliminar_reparto' reparto.id %}', '{{ reparto.nro_reparto }}')" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay repartos disponibles</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -74,23 +107,23 @@
     </div>
 </div>
 
-<!-- Modales de eliminación -->
-{% for reparto in repartos %}
-<div class="modal fade" id="deleteModal{{ reparto.id }}" tabindex="-1" role="dialog">
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar eliminación</h5>
+                <h5 class="modal-title">Confirmar Eliminación</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>¿Está seguro que desea eliminar el reparto {{ reparto.nro_reparto }}?</p>
+                <p>¿Está seguro que desea eliminar el reparto <span id="nroRepartoEliminar" class="font-weight-bold text-primary"></span>?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <form method="POST" action="{% url 'eliminar_reparto' reparto.id %}">
+                <form id="formEliminar" method="POST" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
@@ -98,13 +131,55 @@
         </div>
     </div>
 </div>
-{% endfor %}
 {% endblock %}
 
-{% block extrajs %}
+{% block extra_css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
 <script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable();
+$(document).ready(function() {
+    // Inicializar DataTables
+    $('#tablaRepartos').DataTable({
+        language: {
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando 0 a 0 de 0 registros",
+            "sInfoFiltered":   "(filtrado de _MAX_ registros en total)",
+            "sInfoPostFix":    "",
+            "sSearch":         "Buscar:",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending":  ": activar para ordenar la columna ascendente",
+                "sSortDescending": ": activar para ordenar la columna descendente"
+            }
+        },
+        order: [[1, 'desc']], // Ordenar por fecha descendente
+        pageLength: 25
     });
+});
+
+function confirmarEliminacion(url, nroReparto) {
+    $('#formEliminar').attr('action', url);
+    $('#nroRepartoEliminar').text(nroReparto);
+    $('#modalEliminar').modal('show');
+}
 </script>
 {% endblock %}

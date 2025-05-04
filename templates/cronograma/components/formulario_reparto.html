@@ -1,0 +1,245 @@
+<!-- Formulario de Reparto -->
+<form method="POST" id="formReparto">
+    {% csrf_token %}
+    
+    <!-- Información General -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Número de Reparto -->
+                <div class="col-md-4 mb-3">
+                    <label for="nro_reparto">Número de Reparto</label>
+                    <input type="text" class="form-control" id="nro_reparto" name="nro_reparto" 
+                           value="{{ reparto.nro_reparto|default:'' }}" {% if reparto %}readonly{% endif %} required>
+                </div>
+                
+                <!-- Fecha -->
+                <div class="col-md-4 mb-3">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" class="form-control" id="fecha" name="fecha" 
+                           value="{{ reparto.fecha|date:'Y-m-d'|default:'' }}" required>
+                </div>
+                
+                <!-- Estado -->
+                <div class="col-md-4 mb-3">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="">Seleccione un estado...</option>
+                        {% for estado in estados %}
+                            <option value="{{ estado.0 }}" {% if reparto.estado == estado.0 %}selected{% endif %}>
+                                {{ estado.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Conductor -->
+                <div class="col-md-4 mb-3">
+                    <label for="conductor">Conductor</label>
+                    <select class="form-control" id="conductor" name="conductor" required>
+                        <option value="">Seleccione un conductor...</option>
+                        {% for conductor in conductores %}
+                            <option value="{{ conductor.id }}" {% if reparto.conductor.id == conductor.id %}selected{% endif %}>
+                                {{ conductor.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Vehículo -->
+                <div class="col-md-4 mb-3">
+                    <label for="vehiculo">Vehículo</label>
+                    <select class="form-control" id="vehiculo" name="vehiculo" required>
+                        <option value="">Seleccione un vehículo...</option>
+                        {% for vehiculo in vehiculos %}
+                            <option value="{{ vehiculo.id }}" {% if reparto.vehiculo.id == vehiculo.id %}selected{% endif %}>
+                                {{ vehiculo.placa }} - {{ vehiculo.modelo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Zona -->
+                <div class="col-md-4 mb-3">
+                    <label for="zona">Zona</label>
+                    <select class="form-control" id="zona" name="zona" required>
+                        <option value="">Seleccione una zona...</option>
+                        {% for zona in zonas %}
+                            <option value="{{ zona.id }}" {% if reparto.zona.id == zona.id %}selected{% endif %}>
+                                {{ zona.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Pedidos</h6>
+            <button type="button" class="btn btn-sm btn-primary" id="btnAgregarPedido">
+                <i class="fas fa-plus fa-sm"></i> Agregar Pedido
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="tablaPedidos">
+                    <thead>
+                        <tr>
+                            <th>N° Factura</th>
+                            <th>Cliente</th>
+                            <th>Dirección</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in reparto.pedidos.all %}
+                        <tr>
+                            <td>{{ pedido.nro_factura }}</td>
+                            <td>{{ pedido.cliente }}</td>
+                            <td>{{ pedido.direccion }}</td>
+                            <td>
+                                <span class="badge badge-{{ pedido.estado_color }}">
+                                    {{ pedido.get_estado_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarPedido(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="text-right mb-4">
+        <a href="{% url 'cronograma_mensual' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save fa-sm"></i> Guardar Reparto
+        </button>
+    </div>
+</form>
+
+<!-- Modal para Agregar Pedido -->
+<div class="modal fade" id="modalAgregarPedido" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Pedido</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="tablaPedidosDisponibles">
+                        <thead>
+                            <tr>
+                                <th>N° Factura</th>
+                                <th>Cliente</th>
+                                <th>Dirección</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_disponibles %}
+                            <tr>
+                                <td>{{ pedido.nro_factura }}</td>
+                                <td>{{ pedido.cliente }}</td>
+                                <td>{{ pedido.direccion }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="seleccionarPedido('{{ pedido.nro_factura }}', '{{ pedido.cliente }}', '{{ pedido.direccion }}')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para el manejo de pedidos -->
+<script>
+    $(document).ready(function() {
+        // Inicializar DataTables
+        $('#tablaPedidosDisponibles').DataTable({
+            language: {
+                url: "{% static 'vendor/datatables/es_ES.json' %}"
+            }
+        });
+
+        // Evento para abrir el modal
+        $('#btnAgregarPedido').click(function() {
+            $('#modalAgregarPedido').modal('show');
+        });
+    });
+
+    // Función para seleccionar un pedido
+    function seleccionarPedido(nroFactura, cliente, direccion) {
+        var nuevaFila = `
+            <tr>
+                <td>${nroFactura}</td>
+                <td>${cliente}</td>
+                <td>${direccion}</td>
+                <td><span class="badge badge-warning">Pendiente</span></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarPedido(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        $('#tablaPedidos tbody').append(nuevaFila);
+        $('#modalAgregarPedido').modal('hide');
+    }
+
+    // Función para eliminar un pedido
+    function eliminarPedido(boton) {
+        $(boton).closest('tr').remove();
+    }
+
+    // Validación del formulario
+    $('#formReparto').submit(function(e) {
+        e.preventDefault();
+        
+        // Validar que haya al menos un pedido
+        if ($('#tablaPedidos tbody tr').length === 0) {
+            alert('Debe agregar al menos un pedido al reparto');
+            return false;
+        }
+
+        // Recopilar los pedidos
+        var pedidos = [];
+        $('#tablaPedidos tbody tr').each(function() {
+            pedidos.push($(this).find('td:first').text());
+        });
+
+        // Agregar los pedidos al formulario
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'pedidos',
+            value: JSON.stringify(pedidos)
+        }).appendTo('#formReparto');
+
+        // Enviar el formulario
+        this.submit();
+    });
+</script> 

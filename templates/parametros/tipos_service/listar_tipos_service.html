@@ -1,0 +1,35 @@
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tipos de Service</h1>
+    </div>
+
+    <!-- Tabla de Tipos de Service -->
+    {% include "parametros/components/tabla_parametros.html" with 
+        titulo="Listado de Tipos de Service"
+        nombre_singular="Tipo de Service"
+        nombre_plural="TiposService"
+        columnas="Nombre,Descripción,Kilómetros,Días"|split:","
+        campos="nombre,descripcion,kilometros,dias"|split:","
+        url_crear="crear_tipo_service"
+        url_editar="editar_tipo_service"
+        url_eliminar="eliminar_tipo_service"
+        items=tipos_service
+    %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %} 

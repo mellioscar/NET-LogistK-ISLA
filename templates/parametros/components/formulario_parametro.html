@@ -1,0 +1,67 @@
+<!-- Componente de Formulario de Parámetro -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            {% if objeto %}Editar{% else %}Crear{% endif %} {{ nombre_singular }}
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="formParametro">
+            {% csrf_token %}
+            
+            {% for campo in formulario %}
+            <div class="form-group">
+                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                {{ campo }}
+                {% if campo.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ campo.errors|join:", " }}
+                    </div>
+                {% endif %}
+                {% if campo.help_text %}
+                    <small class="form-text text-muted">{{ campo.help_text }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Botones de Acción -->
+            <div class="text-right">
+                <a href="{{ url_cancelar }}" class="btn btn-secondary">
+                    <i class="fas fa-times fa-sm"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save fa-sm"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+$(document).ready(function() {
+    // Aplicar clases de Bootstrap a los campos del formulario
+    $('#formParametro input, #formParametro select, #formParametro textarea').addClass('form-control');
+    
+    // Validación del formulario
+    $('#formParametro').submit(function(e) {
+        var form = $(this);
+        if (form[0].checkValidity() === false) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.addClass('was-validated');
+    });
+});
+</script>
+
+<!-- Estilos -->
+<style>
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.invalid-feedback {
+    display: block;
+}
+</style> 

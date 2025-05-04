@@ -1,82 +1,112 @@
-{% extends 'sb_admin2/index.html' %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Usuarios - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Lista de Usuarios</h2>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Usuarios</h1>
+        <a href="{% url 'usuarios:crear' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Crear Usuario
+        </a>
+    </div>
 
-<!-- Barra de búsqueda -->
-<form class="form-inline my-3" method="GET">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar Usuario..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i>
-            </button>
-            <a href="{% url 'listar_usuarios' %}" class="btn btn-danger">
-                <i class="fas fa-times fa-sm"></i>
-            </a>
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Usuarios</h6>
         </div>
-    </div>
-</form>
-
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Usuarios Registrados</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Correo Electrónico</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for usuario in usuarios %}
-                    <tr>
-                        <td>{{ usuario.nombre }}</td>
-                        <td>{{ usuario.apellido }}</td>
-                        <td>{{ usuario.email }}</td>
-                        <td>{{ usuario.rol }}</td>
-                        <td>{{ usuario.estado }}</td>
-                        <td>
-                            <a href="{% url 'editar_usuario' usuario.uid %}" class="btn btn-sm btn-primary">Editar</a>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ usuario.uid }}">Eliminar</button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal de confirmación de eliminación -->
-                    <div class="modal fade" id="deleteModal{{ usuario.uid }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ usuario.uid }}" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel{{ usuario.uid }}">Confirmar Eliminación</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    ¿Estás seguro que deseas eliminar al Usuario: <strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong> 
-                                    con email: <strong>{{ usuario.email }}</strong>?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                                    <form method="POST" action="{% url 'eliminar_usuario' usuario.uid %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Última conexión</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.get_full_name }}</td>
+                            <td>{{ usuario.email }}</td>
+                            <td>{{ usuario.role }}</td>
+                            <td>
+                                {% if usuario.is_active %}
+                                <span class="badge badge-success">Activo</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ usuario.last_login|default:"Nunca" }}</td>
+                            <td>
+                                <a href="{% url 'usuarios:editar' usuario.id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-danger btn-sm" onclick="confirmarEliminacion('{{ usuario.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro que desea eliminar este usuario?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/es_ES.json' %}"
+        },
+        order: [[0, 'asc']]
+    });
+});
+
+function confirmarEliminacion(userId) {
+    $('#deleteForm').attr('action', `/usuarios/${userId}/eliminar/`);
+    $('#deleteModal').modal('show');
+}
+</script>
 {% endblock %}

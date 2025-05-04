@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es-ar">
+{% load static %}
+<head>
+    {% include 'base/components/common/_head.html' %}
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body id="page-top">
+    <!-- Contenedor principal -->
+    <div id="wrapper">
+        {% include 'base/components/navigation/_sidebar.html' %}
+
+        <!-- Contenedor de contenido -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- Contenido principal -->
+            <div id="content">
+                <!-- Barra superior -->
+                {% include 'base/components/navigation/_topbar.html' %}
+
+                <!-- Contenido de la página -->
+                <div class="container-fluid">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+            {% include 'base/components/common/_footer.html' %}
+        </div>
+    </div>
+
+    <!-- Botón para subir arriba -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    {% include 'base/components/modals/_logout.html' %}
+    
+    {% include 'base/components/common/_scripts.html' %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

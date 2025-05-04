@@ -1,0 +1,135 @@
+<!-- Información General -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" class="form-control" id="fecha" name="fecha" value="{{ reparto.fecha|date:'Y-m-d' }}" required>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="chofer">Chofer</label>
+            <select class="form-control select2" id="chofer" name="chofer" required>
+                <option value="">Seleccione un chofer</option>
+                {% for chofer in choferes %}
+                <option value="{{ chofer.id }}" {% if reparto.chofer.id == chofer.id %}selected{% endif %}>
+                    {{ chofer.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="vehiculo">Vehículo</label>
+            <select class="form-control select2" id="vehiculo" name="vehiculo" required>
+                <option value="">Seleccione un vehículo</option>
+                {% for vehiculo in vehiculos %}
+                <option value="{{ vehiculo.id }}" {% if reparto.vehiculo.id == vehiculo.id %}selected{% endif %}>
+                    {{ vehiculo.placa }} - {{ vehiculo.modelo }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="zona">Zona</label>
+            <select class="form-control select2" id="zona" name="zona" required>
+                <option value="">Seleccione una zona</option>
+                {% for zona in zonas %}
+                <option value="{{ zona.id }}" {% if reparto.zona.id == zona.id %}selected{% endif %}>
+                    {{ zona.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Pedidos Asignados -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h5 class="font-weight-bold">Pedidos Asignados</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered" id="tablaPedidos" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="selectAll">
+                                <label class="custom-control-label" for="selectAll"></label>
+                            </div>
+                        </th>
+                        <th>Nro. Factura</th>
+                        <th>Cliente</th>
+                        <th>Dirección</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input pedido-check" 
+                                       id="pedido_{{ pedido.id }}" name="pedidos" value="{{ pedido.id }}"
+                                       {% if pedido in reparto.pedidos.all %}checked{% endif %}>
+                                <label class="custom-control-label" for="pedido_{{ pedido.id }}"></label>
+                            </div>
+                        </td>
+                        <td>{{ pedido.nro_factura }}</td>
+                        <td>{{ pedido.cliente }}</td>
+                        <td>{{ pedido.direccion }}</td>
+                        <td>
+                            <span class="badge badge-{{ pedido.estado|lower }}">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de Acción -->
+<div class="row mt-4">
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+        </button>
+        <a href="{% url 'repartos:listar' %}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+    </div>
+</div>
+
+<style>
+.badge-pendiente { background-color: #f6c23e; color: #fff; }
+.badge-en_proceso { background-color: #4e73df; color: #fff; }
+.badge-completado { background-color: #1cc88a; color: #fff; }
+.badge-cancelado { background-color: #e74a3b; color: #fff; }
+</style>
+
+<script>
+$(document).ready(function() {
+    // Manejar selección de todos los pedidos
+    $('#selectAll').change(function() {
+        $('.pedido-check').prop('checked', $(this).prop('checked'));
+    });
+
+    // Actualizar "Seleccionar Todo" cuando se cambian las selecciones individuales
+    $('.pedido-check').change(function() {
+        if ($('.pedido-check:checked').length == $('.pedido-check').length) {
+            $('#selectAll').prop('checked', true);
+        } else {
+            $('#selectAll').prop('checked', false);
+        }
+    });
+});
+</script> 

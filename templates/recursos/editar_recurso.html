@@ -1,152 +1,47 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Editar Recurso - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Editar Recurso</h2>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Editar Recurso</h1>
+    </div>
 
-<!-- Mostrar mensajes de error -->
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
-
-<form method="POST">
-    {% csrf_token %}
-
-    <!-- Formulario de Datos del Recurso -->
+    <!-- Tarjeta del Formulario -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Datos del Recurso</h6>
         </div>
         <div class="card-body">
-            <div class="row">
-                <!-- Nombre -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ recurso.nombre }}" required>
-                    </div>
-                </div>
-                <!-- Apellido -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="apellido">Apellido</label>
-                        <input type="text" class="form-control" id="apellido" name="apellido" value="{{ recurso.apellido }}" required>
-                    </div>
-                </div>
-                <!-- Legajo -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="legajo">Legajo</label>
-                        <input type="number" class="form-control" id="legajo" name="legajo" value="{{ recurso.legajo }}" required>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <!-- DNI -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="dni">DNI</label>
-                        <input type="text" class="form-control" id="dni" name="dni" value="{{ recurso.dni }}" required>
-                    </div>
-                </div>
-                <!-- Categoría -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="categoria">Categoría</label>
-                        <select class="form-control" id="categoria" name="categoria" required>
-                            <option value="Chofer" {% if recurso.categoria == "Chofer" %}selected{% endif %}>Chofer</option>
-                            <option value="Chofer Gruista" {% if recurso.categoria == "Chofer Gruista" %}selected{% endif %}>Chofer Gruista</option>
-                            <option value="Acompañante" {% if recurso.categoria == "Acompañante" %}selected{% endif %}>Acompañante</option>
-                        </select>
-                    </div>
-                </div>
-                <!-- Sucursal -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="sucursal">Sucursal</label>
-                        <select class="form-control" id="sucursal" name="sucursal" required>
-                            <option value="">Seleccione una sucursal</option>
-                            {% for sucursal in sucursales %}
-                                <option value="{{ sucursal.id }}" {% if recurso.sucursal_id == sucursal.id %}selected{% endif %}>
-                                    {{ sucursal.nombre }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <form method="POST">
+                {% csrf_token %}
+                {% include "recursos/components/formulario_recurso.html" with recurso=recurso %}
+            </form>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Formulario de Fechas de Vencimientos -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Fechas de Vencimientos</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Carnet de Conducir -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="carnet_conducir">Fecha de Vencimiento - Carnet de Conducir</label>
-                        <input type="date" class="form-control" id="carnet_conducir" name="carnet_conducir" value="{{ recurso.carnet_conducir }}" onchange="setMaxDate('aviso_carnet_conducir', this.value)">
-                    </div>
-                </div>
-                <!-- Psicofísico -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="psicofisico">Fecha de Vencimiento - Psicofísico</label>
-                        <input type="date" class="form-control" id="psicofisico" name="psicofisico" value="{{ recurso.psicofisico }}" onchange="setMaxDate('aviso_psicofisico', this.value)">
-                    </div>
-                </div>
-                <!-- Carnet de Cargas Generales -->
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="carnet_cargas_generales">Fecha de Vencimiento - Carnet de Cargas Generales</label>
-                        <input type="date" class="form-control" id="carnet_cargas_generales" name="carnet_cargas_generales" value="{{ recurso.carnet_cargas_generales }}" onchange="setMaxDate('aviso_cargas_generales', this.value)">
-                    </div>
-                </div>
-            </div>
-            <!-- Alertas de Vencimientos -->
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="aviso_carnet_conducir">Alerta para Carnet de Conducir</label>
-                        <input type="date" class="form-control" id="aviso_carnet_conducir" name="aviso_carnet_conducir" value="{{ recurso.aviso_carnet_conducir }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="aviso_psicofisico">Alerta para Psicofísico</label>
-                        <input type="date" class="form-control" id="aviso_psicofisico" name="aviso_psicofisico" value="{{ recurso.aviso_psicofisico }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="aviso_cargas_generales">Alerta para Carnet de Cargas Generales</label>
-                        <input type="date" class="form-control" id="aviso_cargas_generales" name="aviso_cargas_generales" value="{{ recurso.aviso_cargas_generales }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+{% block css %}
+<!-- Select2 -->
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <!-- Botones de Guardar y Cancelar -->
-    <div class="form-group row">
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary btn-block">Actualizar</button>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'listar_recursos' %}" class="btn btn-danger btn-block">Cancelar</a>
-        </div>
-    </div> 
-</form>
+{% block js %}
+<!-- Select2 -->
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
 
 <script>
-function setMaxDate(avisoid, vencimiento) {
-    document.getElementById(avisoid).max = vencimiento;
-}
+$(document).ready(function() {
+    // Inicializar Select2 para los selectores
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+});
 </script>
-
 {% endblock %}

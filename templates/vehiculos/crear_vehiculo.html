@@ -1,175 +1,35 @@
 <!-- vehiculos/crear_vehiculos.html -->
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Crear Vehículo - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Agregar Vehículo</h2>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Crear Vehículo</h1>
+    </div>
 
-{% if errores %}
-<div class="alert alert-danger">
-    <ul>
-        {% for campo, mensaje in errores.items %}
-        <li>{{ mensaje }}</li>
-        {% endfor %}
-    </ul>
+    {% include 'vehiculos/components/formulario_vehiculo.html' %}
 </div>
-{% endif %}
+{% endblock %}
 
-<form method="POST">
-    {% csrf_token %}
+{% block css %}
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <!-- Formulario de Datos del Vehículo -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Datos del Vehículo</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="dominio">Dominio</label>
-                        <input type="text" class="form-control" id="dominio" name="dominio" placeholder="Ingrese el dominio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="marca">Marca</label>
-                        <select class="form-control" id="marca" name="marca" required>
-                            <option value="">Seleccione una marca</option>
-                            {% for marca in marcas %}
-                            <option value="{{ marca.id }}">{{ marca.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="sucursal">Sucursal</label>
-                        <select class="form-control" id="sucursal" name="sucursal" required>
-                            <option value="">Seleccione una sucursal</option>
-                            {% for sucursal in sucursales %}
-                                <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelo">Modelo</label>
-                        <select class="form-control" id="modelo" name="modelo" required>
-                            <option value="">Seleccione un modelo</option>
-                            {% for modelo in modelos %}
-                            <option value="{{ modelo.id }}">{{ modelo.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="anio">Año de Fabricación</label>
-                        <input type="number" class="form-control" id="anio" name="anio" placeholder="Ingrese el año" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="tipo">Tipo de Vehículo</label>
-                        <select class="form-control" id="tipo" name="tipo" required>
-                            <option value="">Seleccione el tipo de vehículo</option>
-                            <option value="Auto">Auto</option>
-                            <option value="Autoelevador">Autoelevador</option>
-                            <option value="Camion">Camión</option>
-                            <option value="Camioneta">Camioneta</option>
-                            <option value="Hidrogrua">Hidrogrua</option>
-                            <option value="Semirremolque">Semirremolque</option>
-                            <option value="Semi_con_Hidrogrua">Semi con Hidrogrua</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Formulario de Vencimientos del Vehículo -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Vencimientos del Vehículo</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="fecha_vtv">Fecha de VTV</label>
-                        <input type="date" class="form-control" id="fecha_vtv" name="fecha_vtv">
-                    </div>
-                    <div class="form-group">
-                        <label for="alerta_vtv">Alerta de VTV</label>
-                        <input type="date" class="form-control" id="alerta_vtv" name="alerta_vtv">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="fecha_ruta">Fecha de RUTA</label>
-                        <input type="date" class="form-control" id="fecha_ruta" name="fecha_ruta">
-                    </div>
-                    <div class="form-group">
-                        <label for="alerta_ruta">Alerta de RUTA</label>
-                        <input type="date" class="form-control" id="alerta_ruta" name="alerta_ruta">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="fecha_seguro">Fecha de Seguro</label>
-                        <input type="date" class="form-control" id="fecha_seguro" name="fecha_seguro">
-                    </div>
-                    <div class="form-group">
-                        <label for="alerta_seguro">Alerta de Seguro</label>
-                        <input type="date" class="form-control" id="alerta_seguro" name="alerta_seguro">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="tipo_service">Tipo de Service</label>
-                        <select class="form-control" id="tipo_service" name="tipo_service">
-                            <option value="">Seleccione un tipo de service</option>
-                            {% for service in tipos_service %}
-                            <option value="{{ service.id }}">{{ service.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="alerta_service">Alerta de Fecha de Service</label>
-                        <input type="date" class="form-control" id="alerta_service" name="alerta_service">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="kilometraje">Kilometraje</label>
-                        <input type="number" class="form-control" id="kilometraje" name="kilometraje" placeholder="Ingrese el kilometraje">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="activo">Activo</label>
-                        <select class="form-control" id="activo" name="activo" required>
-                            <option value="Si">Sí</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="observaciones">Observaciones</label>
-                <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Ingrese observaciones"></textarea>
-            </div>
-        </div>
-    </div>
-
-    <!-- Botones de Guardar y Cancelar -->
-    <div class="form-group row">
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary btn-block">Guardar</button>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger btn-block">Cancelar</a>
-        </div>
-    </div>
-</form>
-
+{% block javascript %}
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 para los campos de selección
+    $('#marca, #modelo, #conductor, #dispositivo').select2({
+        theme: 'bootstrap4',
+        placeholder: 'Seleccione una opción',
+        allowClear: true
+    });
+});
+</script>
 {% endblock %}

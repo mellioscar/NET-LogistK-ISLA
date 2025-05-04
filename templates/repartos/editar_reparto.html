@@ -1,7 +1,8 @@
-{% extends "sb_admin2/index.html" %}
+{% extends 'base/layouts/base.html' %}
 
 {% block content %}
 <h2>Editar Reparto</h2>
+<p class="lead">Estás editando el reparto número <span class="font-weight-bold text-primary">{{ reparto.nro_reparto }}</span></p>
 
 <!-- Mostrar mensajes de error -->
 {% if messages %}

@@ -1,0 +1,35 @@
+{% extends "sb_admin2/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Sucursales</h1>
+    </div>
+
+    <!-- Tabla de Sucursales -->
+    {% include "parametros/components/tabla_parametros.html" with 
+        titulo="Listado de Sucursales"
+        nombre_singular="Sucursal"
+        nombre_plural="Sucursales"
+        columnas="Nombre,Dirección,Teléfono,Email"|split:","
+        campos="nombre,direccion,telefono,email"|split:","
+        url_crear="crear_sucursal"
+        url_editar="editar_sucursal"
+        url_eliminar="eliminar_sucursal"
+        items=sucursales
+    %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %} 

@@ -1,0 +1,204 @@
+{% load static %}
+
+<form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Información Personal -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información Personal</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="first_name">Nombre*</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                               value="{{ form.first_name.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese el nombre
+                        </div>
+                        {% if form.first_name.errors %}
+                            <div class="text-danger">
+                                {{ form.first_name.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">Apellido*</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                               value="{{ form.last_name.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese el apellido
+                        </div>
+                        {% if form.last_name.errors %}
+                            <div class="text-danger">
+                                {{ form.last_name.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email*</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ form.email.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese un email válido
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {{ form.email.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                               value="{{ form.phone.value|default:'' }}">
+                        {% if form.phone.errors %}
+                            <div class="text-danger">
+                                {{ form.phone.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Cuenta -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información de Cuenta</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="username">Nombre de Usuario*</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               value="{{ form.username.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese un nombre de usuario
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {{ form.username.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if not form.instance.pk %}
+                    <div class="form-group">
+                        <label for="password1">Contraseña*</label>
+                        <input type="password" class="form-control" id="password1" name="password1" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese una contraseña
+                        </div>
+                        {% if form.password1.errors %}
+                            <div class="text-danger">
+                                {{ form.password1.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password2">Confirmar Contraseña*</label>
+                        <input type="password" class="form-control" id="password2" name="password2" required>
+                        <div class="invalid-feedback">
+                            Por favor confirme la contraseña
+                        </div>
+                        {% if form.password2.errors %}
+                            <div class="text-danger">
+                                {{ form.password2.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="role">Rol*</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="">Seleccione un rol</option>
+                            {% for role_id, role_name in form.fields.role.choices %}
+                                <option value="{{ role_id }}" {% if form.role.value == role_id %}selected{% endif %}>
+                                    {{ role_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor seleccione un rol
+                        </div>
+                        {% if form.role.errors %}
+                            <div class="text-danger">
+                                {{ form.role.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="avatar">Avatar</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="avatar" name="avatar" 
+                                   accept="image/*">
+                            <label class="custom-file-label" for="avatar">Elegir archivo</label>
+                        </div>
+                        {% if form.avatar.errors %}
+                            <div class="text-danger">
+                                {{ form.avatar.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        {% if form.instance.avatar %}
+                            <div class="mt-2">
+                                <img src="{{ form.instance.avatar.url }}" alt="Avatar actual" 
+                                     class="img-thumbnail" style="max-width: 100px;">
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save fa-sm text-white-50"></i>
+                        Guardar
+                    </button>
+                    <a href="{% url 'usuarios:lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times fa-sm text-white-50"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+// Validación del formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Actualizar label del input file
+$('.custom-file-input').on('change', function() {
+    var fileName = $(this).val().split('\\').pop();
+    $(this).next('.custom-file-label').html(fileName);
+});
+</script> 

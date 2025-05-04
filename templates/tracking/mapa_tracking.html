@@ -1,10 +1,175 @@
 <!-- mapa_tracking.html -->
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
 {% load static %}
 
+{% block title %}Tracking - NET-LogistK ISLA{% endblock %}
+
+{% block css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- MarkerCluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+<!-- Select2 -->
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+
+<style>
+    #mapaTracking {
+        height: 75vh;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .filtros-container {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .info-window {
+        padding: 10px;
+    }
+    .info-window h5 {
+        margin-bottom: 10px;
+        color: #4e73df;
+    }
+    .info-window p {
+        margin: 5px 0;
+    }
+    .badge-tracking {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Mapa de Tracking</h2>
-    <iframe src="{% static 'tracking/tracking_mapa.html' %}" width="100%" height="600px"></iframe>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tracking en Tiempo Real</h1>
+        <div>
+            <button class="btn btn-primary" id="btnCentrarMapa">
+                <i class="fas fa-crosshairs"></i> Centrar Mapa
+            </button>
+            <button class="btn btn-info" id="btnActualizar">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filtros-container">
+                <form id="filtrosForm" class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="zona">Zona:</label>
+                            <select class="form-control select2" id="zona" name="zona">
+                                <option value="">Todas las zonas</option>
+                                {% for zona in zonas %}
+                                <option value="{{ zona.id }}">{{ zona.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="estado">Estado:</label>
+                            <select class="form-control select2" id="estado" name="estado">
+                                <option value="">Todos los estados</option>
+                                <option value="en_curso">En curso</option>
+                                <option value="completado">Completado</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mapa y Panel de Información -->
+    <div class="row">
+        <!-- Mapa -->
+        <div class="col-lg-9">
+            <div class="card shadow mb-4">
+                <div class="card-body p-0">
+                    <iframe src="{% static 'tracking/mapa_leaflet.html' %}" width="100%" height="600" style="border:none; border-radius:8px;"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Información -->
+        <div class="col-lg-3">
+            {% include 'tracking/components/panel_info.html' %}
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- MarkerCluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<!-- Select2 -->
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+<!-- leaflet-omnivore para cargar KML -->
+<script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.4/leaflet-omnivore.min.js"></script>
+<!-- Socket.IO -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<!-- Tracking Scripts -->
+<script src="{% static 'js/modules/tracking/mapa.js' %}"></script>
+<script src="{% static 'js/modules/tracking/filtros.js' %}"></script>
+<script src="{% static 'js/modules/tracking/websocket.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar Select2
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+
+    // Inicializar el mapa
+    var map = L.map('mapaTracking').setView([-39.044, -67.579], 10);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Cargar el KML de zonas
+    omnivore.kml('{% static "tracking/ZonasCI.kml" %}')
+        .on('ready', function() {
+            this.setStyle({color: '#3388ff', weight: 2, fillOpacity: 0.3});
+            map.fitBounds(this.getBounds());
+        })
+        .addTo(map);
+
+    // Eventos de filtros (mantener si ya tienes lógica en filtros.js)
+    $('#filtrosForm select, #filtrosForm input').change(function() {
+        actualizarMarcadores && actualizarMarcadores();
+    });
+
+    // Botón de centrar mapa
+    $('#btnCentrarMapa').click(function() {
+        map.setView([-39.044, -67.579], 10);
+    });
+
+    // Botón de actualizar
+    $('#btnActualizar').click(function() {
+        actualizarMarcadores && actualizarMarcadores();
+    });
+
+    // Actualización automática cada 30 segundos
+    setInterval(function() {
+        actualizarMarcadores && actualizarMarcadores();
+    }, 30000);
+});
+</script>
 {% endblock %}

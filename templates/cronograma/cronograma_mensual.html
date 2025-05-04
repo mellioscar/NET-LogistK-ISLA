@@ -1,276 +1,33 @@
-{% extends "sb_admin2/index.html" %}
+{% extends 'base/layouts/base.html' %}
+{% load static %}
 
-{% block extrahead %}
-<!-- Cargar jQuery y Select2 en el head -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% block extra_css %}
+<!-- FullCalendar CSS desde CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<h2>Cronograma Mensual</h2>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Cronograma</h1>
+        <a href="{% url 'crear_reparto' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Reparto
+        </a>
+    </div>
 
-<!-- Filtro de Zonas -->
-<div class="mb-4">
-    <form method="get" class="d-flex align-items-center">
-        <select name="zona" class="form-control" style="width: 300px;">
-            <option value="">Todas las zonas</option>
-            {% for zona in zonas %}
-                <option value="{{ zona.nombre }}" {% if zona_seleccionada == zona.nombre %}selected{% endif %}>
-                    {{ zona.display }}
-                </option>
-            {% endfor %}
-        </select>
-        <input type="hidden" name="mes" value="{{ mes }}">
-        <input type="hidden" name="anio" value="{{ anio }}">
-        <button type="submit" class="btn btn-primary ml-2">Filtrar</button>
-    </form>
+    <!-- Calendario -->
+    {% with vista_mensual=True %}
+        {% include "cronograma/components/calendario.html" %}
+    {% endwith %}
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <a href="{{ prev_url }}{% if zona_seleccionada %}?zona={{ zona_seleccionada }}{% endif %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-chevron-left"></i> Mes Anterior
-                </a>
-            </div>
-
-            <h6 class="m-0 font-weight-bold text-primary">{{ nombre_mes }} {{ anio }}</h6>
-            
-            <div>
-                <a href="{{ next_url }}{% if zona_seleccionada %}?zona={{ zona_seleccionada }}{% endif %}" class="btn btn-primary btn-sm">
-                    Mes Siguiente <i class="fas fa-chevron-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="calendario">
-                <thead>
-                    <tr>
-                        <th class="text-center">Lunes</th>
-                        <th class="text-center">Martes</th>
-                        <th class="text-center">Miércoles</th>
-                        <th class="text-center">Jueves</th>
-                        <th class="text-center">Viernes</th>
-                        <th class="text-center">Sábado</th>
-                        <th class="text-center">Domingo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for semana in calendario %}
-                    <tr>
-                        {% for dia in semana %}
-                        <td class="{% if dia.hoy %}bg-light{% endif %} position-relative" style="height: 120px; min-width: 150px;">
-                            <div class="d-flex justify-content-between">
-                                <span class="{% if dia.otro_mes %}text-muted{% endif %} font-weight-bold">
-                                    {{ dia.numero }}
-                                </span>
-                                {% if dia.repartos %}
-                                <span class="badge badge-info">
-                                    {{ dia.repartos|length }} reparto{{ dia.repartos|length|pluralize }}
-                                </span>
-                                {% endif %}
-                            </div>
-                            
-                            {% if dia.repartos %}
-                            <div class="mt-2" style="max-height: 85px; overflow-y: auto;">
-                                {% for reparto in dia.repartos %}
-                                <div class="small mb-1 p-1 border-left border-{{ reparto.estado_color }} reparto-item" 
-                                    onclick="verDetallesReparto('{{ reparto.nro_reparto|escapejs }}')"
-                                    data-zona="{{ reparto.zona }}"
-                                    style="cursor: pointer;">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="font-weight-bold">#{{ reparto.nro_reparto }}</span>
-                                        <span class="badge badge-{{ reparto.estado_color }}">{{ reparto.estado }}</span>
-                                    </div>
-                                    <div class="text-muted small">
-                                        <i class="fas fa-map-marker-alt"></i> {{ reparto.zona }}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<style>
-#calendario td {
-    padding: 0.5rem;
-    vertical-align: top;
-}
-
-#calendario td:hover {
-    background-color: rgba(0,0,0,0.02);
-}
-
-/* Estilo para el scrollbar en celdas con muchos repartos */
-#calendario td div::-webkit-scrollbar {
-    width: 4px;
-}
-
-#calendario td div::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-#calendario td div::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 2px;
-}
-
-#calendario td div::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-</style>
-
-<!-- Modal de Detalles del Reparto -->
-<div class="modal fade" id="modalDetallesReparto" tabindex="-1" role="dialog" aria-labelledby="modalDetallesRepartoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDetallesRepartoLabel">Detalles del Reparto</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Nro. Reparto:</strong> <span id="modalNroReparto"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Estado:</strong> <span id="modalEstado"></span>
-                        <strong class="ml-3">Fecha:</strong> <span id="modalFecha"></span>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Chofer:</strong> <span id="modalChofer"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Zona:</strong> <span id="modalZona"></span>
-                        (<span id="modalZonaDescripcion" class="text-muted"></span>)
-                    </div>
-                </div>
-                <hr>
-                <h6 class="font-weight-bold">Pedidos Asignados</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered" id="tablaPedidos">
-                        <thead>
-                            <tr>
-                                <th>Nro. Factura</th>
-                                <th>Cliente</th>
-                                <th>Dirección</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaPedidosBody">
-                            <!-- Los pedidos se cargarán dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% block extrajs %}
-<script>
-function verDetallesReparto(nroReparto) {
-    $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
-    $('#modalDetallesReparto').modal('show');
-    
-    fetch(`/obtener_detalles_reparto/${encodeURIComponent(nroReparto)}/`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            $('#modalNroReparto').text(data.reparto.nro_reparto);
-            $('#modalEstado').html(`<span class="badge badge-${data.reparto.estado_color}">${data.reparto.estado}</span>`);
-            $('#modalFecha').text(data.reparto.fecha);
-            $('#modalChofer').text(data.reparto.chofer);
-            $('#modalZona').text(data.reparto.zona);
-            $('#modalZonaDescripcion').text(data.reparto.zona_descripcion);
-            
-            let pedidosHtml = '';
-            if (data.pedidos && data.pedidos.length > 0) {
-                data.pedidos.forEach(pedido => {
-                    pedidosHtml += `
-                        <tr>
-                            <td>${pedido.nro_factura}</td>
-                            <td>${pedido.cliente}</td>
-                            <td>${pedido.direccion}</td>
-                            <td><span class="badge badge-${pedido.estado_color}">${pedido.estado}</span></td>
-                        </tr>
-                    `;
-                });
-            } else {
-                pedidosHtml = '<tr><td colspan="4" class="text-center">No hay pedidos asignados</td></tr>';
-            }
-            $('#tablaPedidosBody').html(pedidosHtml);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            $('#tablaPedidosBody').html('<tr><td colspan="4" class="text-center text-danger">Error al cargar los datos</td></tr>');
-        });
-}
-</script>
-
-<style>
-    /* Personalización de Select2 */
-    .select2-container--default .select2-selection--single {
-        background-color: #f8f9fc;
-        border: 1px solid #d1d3e2;
-        height: 38px;
-        line-height: 38px;
-        border-radius: 4px;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 38px;
-        padding-left: 15px;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 38px;
-    }
-
-    .select2-dropdown {
-        border: 1px solid #d1d3e2;
-    }
-
-    .select2-search__field {
-        padding: 8px !important;
-    }
-
-    .select2-results__option {
-        padding: 8px 15px;
-    }
-
-    /* Asegurar que los repartos filtrados sean visibles */
-    .reparto-item {
-        display: block;
-    }
-
-    .reparto-item.hidden {
-        display: none;
-    }
-</style>
+<!-- Modal de Detalle -->
+{% include "cronograma/components/detalle_reparto.html" %}
 {% endblock %}
 
+{% block extra_js %}
+<!-- FullCalendar JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js"></script>
 {% endblock %}

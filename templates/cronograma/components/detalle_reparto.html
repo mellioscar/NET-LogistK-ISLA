@@ -1,0 +1,162 @@
+<!-- Componente de Detalle de Reparto -->
+<div class="modal fade" id="modalDetalleReparto" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle del Reparto</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Información del Reparto -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nro. Reparto:</strong> <span id="modalNroReparto"></span></p>
+                                <p><strong>Fecha:</strong> <span id="modalFecha"></span></p>
+                                <p><strong>Estado:</strong> <span id="modalEstado"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Chofer:</strong> <span id="modalChofer"></span></p>
+                                <p><strong>Zona:</strong> <span id="modalZona"></span></p>
+                                <p><strong>Vehículo:</strong> <span id="modalVehiculo"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Pedidos -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Pedidos del Reparto</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Factura</th>
+                                        <th>Cliente</th>
+                                        <th>Dirección</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPedidosBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapa de entregas Leaflet -->
+                <div id="mapaEntregas" style="height: 220px; width: 100%; margin-bottom: 0.5rem; display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para cargar los detalles -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script>
+function mostrarDetalleReparto(repartoId) {
+    $.ajax({
+        url: `/obtener_detalles_reparto/${repartoId}/`,
+        method: 'GET',
+        success: function(data) {
+            // Mostrar en consola los datos recibidos
+            console.log("DETALLE REPARTO:", data);
+            // Actualizar información general
+            $('#modalNroReparto').text(data.numero);
+            $('#modalFecha').text(data.fecha);
+            $('#modalEstado').html(`<span class="badge badge-${data.estado_clase}">${data.estado}</span>`);
+            $('#modalChofer').text(data.chofer);
+            $('#modalZona').text(data.zona);
+            $('#modalVehiculo').text(data.vehiculo);
+            // Actualizar tabla de pedidos
+            let pedidosHtml = '';
+            data.pedidos.forEach(function(pedido) {
+                pedidosHtml += `
+                    <tr>
+                        <td>${pedido.factura}</td>
+                        <td>${pedido.cliente}</td>
+                        <td>${pedido.direccion}</td>
+                        <td><span class="badge badge-${pedido.estado_clase}">${pedido.estado}</span></td>
+                    </tr>
+                `;
+            });
+            $('#tablaPedidosBody').html(pedidosHtml);
+            // Actualizar enlaces de los botones
+            $('#btnVerMapa').attr('href', `/mapa/`);
+            // Mostrar el modal
+            $('#modalDetalleReparto').modal('show');
+            // Mostrar y cargar el mapa de entregas
+            setTimeout(function() {
+                $('#mapaEntregas').show();
+                if (window.mapaEntregasObj) {
+                    window.mapaEntregasObj.remove();
+                }
+                window.mapaEntregasObj = L.map('mapaEntregas').setView([-39.044, -67.579], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(window.mapaEntregasObj);
+                var bounds = [];
+                data.pedidos.forEach(function(pedido) {
+                    if (pedido.latitud && pedido.longitud) {
+                        var lat = parseFloat(pedido.latitud);
+                        var lon = parseFloat(pedido.longitud);
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            var marker = L.marker([lat, lon]).addTo(window.mapaEntregasObj);
+                            marker.bindPopup(`<b>Factura:</b> ${pedido.factura}`);
+                            bounds.push([lat, lon]);
+                        }
+                    }
+                });
+                if (bounds.length > 0) {
+                    window.mapaEntregasObj.fitBounds(bounds, {padding: [20, 20]});
+                }
+            }, 300);
+        },
+        error: function() {
+            alert('Error al cargar los detalles del reparto!');
+        }
+    });
+}
+</script>
+
+<style>
+#modalDetalleReparto .modal-content {
+    font-size: 0.85rem;
+}
+#modalDetalleReparto .card-header, #modalDetalleReparto .card-body {
+    padding: 0.3rem 0.5rem;
+}
+#modalDetalleReparto .table {
+    font-size: 0.80rem;
+    margin-bottom: 0;
+}
+#modalDetalleReparto .table th, #modalDetalleReparto .table td {
+    padding: 0.15rem 0.3rem;
+    vertical-align: middle;
+}
+#modalDetalleReparto .badge {
+    font-size: 0.75em;
+    padding: 0.2em 0.5em;
+}
+#modalDetalleReparto .modal-title {
+    font-size: 1.05rem;
+}
+</style> 

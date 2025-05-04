@@ -1,0 +1,38 @@
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if tipo_service %}Editar{% else %}Nuevo{% endif %} Tipo de Service
+        </h1>
+    </div>
+
+    <!-- Formulario de Tipo de Service -->
+    {% include "parametros/components/formulario_parametro.html" with 
+        nombre_singular="Tipo de Service"
+        formulario=formulario
+        objeto=tipo_service
+        url_cancelar="listar_tipos_service"
+    %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validación adicional para campos numéricos
+    $('#id_kilometros, #id_dias').on('input', function() {
+        let value = $(this).val();
+        if (value < 0) {
+            $(this).val(0);
+        }
+    });
+
+    // Agregar tooltips para ayuda
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %} 

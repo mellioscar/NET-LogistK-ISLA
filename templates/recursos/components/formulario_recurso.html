@@ -1,0 +1,147 @@
+<!-- Datos Personales -->
+<div class="row">
+    <!-- Nombre -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" 
+                   value="{{ recurso.nombre|default:'' }}" required>
+        </div>
+    </div>
+    <!-- Apellido -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="apellido">Apellido</label>
+            <input type="text" class="form-control" id="apellido" name="apellido" 
+                   value="{{ recurso.apellido|default:'' }}" required>
+        </div>
+    </div>
+    <!-- Legajo -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="legajo">Legajo</label>
+            <input type="number" class="form-control" id="legajo" name="legajo" 
+                   value="{{ recurso.legajo|default:'' }}" required>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- DNI -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="dni">DNI</label>
+            <input type="text" class="form-control" id="dni" name="dni" 
+                   value="{{ recurso.dni|default:'' }}" required>
+        </div>
+    </div>
+    <!-- Categoría -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="categoria">Categoría</label>
+            <select class="form-control select2" id="categoria" name="categoria" required>
+                <option value="">Seleccione una categoría</option>
+                <option value="Chofer" {% if recurso.categoria == "Chofer" %}selected{% endif %}>Chofer</option>
+                <option value="Chofer Gruista" {% if recurso.categoria == "Chofer Gruista" %}selected{% endif %}>Chofer Gruista</option>
+                <option value="Acompañante" {% if recurso.categoria == "Acompañante" %}selected{% endif %}>Acompañante</option>
+            </select>
+        </div>
+    </div>
+    <!-- Sucursal -->
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="sucursal">Sucursal</label>
+            <select class="form-control select2" id="sucursal" name="sucursal" required>
+                <option value="">Seleccione una sucursal</option>
+                {% for sucursal in sucursales %}
+                    <option value="{{ sucursal.id }}" {% if recurso.sucursal_id == sucursal.id %}selected{% endif %}>
+                        {{ sucursal.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Fechas de Vencimientos -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Fechas de Vencimientos</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Carnet de Conducir -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="carnet_conducir">Fecha de Vencimiento - Carnet de Conducir</label>
+                    <input type="date" class="form-control" id="carnet_conducir" name="carnet_conducir" 
+                           value="{{ recurso.carnet_conducir|date:'Y-m-d'|default:'' }}" 
+                           onchange="setMaxDate('aviso_carnet_conducir', this.value)">
+                </div>
+            </div>
+            <!-- Psicofísico -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="psicofisico">Fecha de Vencimiento - Psicofísico</label>
+                    <input type="date" class="form-control" id="psicofisico" name="psicofisico" 
+                           value="{{ recurso.psicofisico|date:'Y-m-d'|default:'' }}" 
+                           onchange="setMaxDate('aviso_psicofisico', this.value)">
+                </div>
+            </div>
+            <!-- Carnet de Cargas Generales -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="carnet_cargas_generales">Fecha de Vencimiento - Carnet de Cargas Generales</label>
+                    <input type="date" class="form-control" id="carnet_cargas_generales" name="carnet_cargas_generales" 
+                           value="{{ recurso.carnet_cargas_generales|date:'Y-m-d'|default:'' }}" 
+                           onchange="setMaxDate('aviso_cargas_generales', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas de Vencimientos -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="aviso_carnet_conducir">Alerta para Carnet de Conducir</label>
+                    <input type="date" class="form-control" id="aviso_carnet_conducir" name="aviso_carnet_conducir" 
+                           value="{{ recurso.aviso_carnet_conducir|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="aviso_psicofisico">Alerta para Psicofísico</label>
+                    <input type="date" class="form-control" id="aviso_psicofisico" name="aviso_psicofisico" 
+                           value="{{ recurso.aviso_psicofisico|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="aviso_cargas_generales">Alerta para Carnet de Cargas Generales</label>
+                    <input type="date" class="form-control" id="aviso_cargas_generales" name="aviso_cargas_generales" 
+                           value="{{ recurso.aviso_cargas_generales|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de Acción -->
+<div class="form-group row">
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary btn-block">
+            {% if recurso %}Actualizar{% else %}Guardar{% endif %}
+        </button>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'listar_recursos' %}" class="btn btn-secondary btn-block">Cancelar</a>
+    </div>
+</div>
+
+<script>
+function setMaxDate(avisoid, vencimiento) {
+    if (vencimiento) {
+        document.getElementById(avisoid).max = vencimiento;
+    }
+}
+</script> 

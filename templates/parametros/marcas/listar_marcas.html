@@ -1,0 +1,35 @@
+{% extends "sb_admin2/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Marcas de Vehículos</h1>
+    </div>
+
+    <!-- Tabla de Marcas -->
+    {% include "parametros/components/tabla_parametros.html" with 
+        titulo="Listado de Marcas"
+        nombre_singular="Marca"
+        nombre_plural="Marcas"
+        columnas="Nombre,Descripción"|split:","
+        campos="nombre,descripcion"|split:","
+        url_crear="crear_marca"
+        url_editar="editar_marca"
+        url_eliminar="eliminar_marca"
+        items=marcas
+    %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %} 

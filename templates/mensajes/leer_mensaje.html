@@ -1,45 +1,17 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Leer Mensaje - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Detalles del Mensaje</h2>
-<div class="card o-hidden border-0 shadow-lg">
-    <div class="card-body p-0">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="p-5">
-                    <div class="form-group">
-                        <label for="emisor">De:</label>
-                        <input type="text" class="form-control" id="emisor" 
-                            value="{{ usuario.nombre }} {{ usuario.apellido }} {% if usuario.email %}({{ usuario.email }}){% endif %}" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contenido">Mensaje:</label>
-                        <textarea class="form-control" id="contenido" rows="4" readonly>{{ mensaje.contenido }}</textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="fecha_envio">Fecha de envío:</label>
-                        <input type="text" class="form-control" id="fecha_envio" 
-                            value="{% if mensaje.fecha_envio %}{{ mensaje.fecha_envio|date:'d M. Y H:i' }}{% else %}Fecha no disponible{% endif %}" readonly>
-                    </div>
-
-                    <!-- Botones de acción -->
-                    <div class="form-group row">
-                        <div class="col-md-3">
-                            <a href="{% url 'responder_mensaje' mensaje.emisor_uid %}" class="btn btn-primary btn-block">Responder</a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{% url 'eliminar_mensaje' mensaje.id %}" class="btn btn-danger btn-block" 
-                               onclick="return confirm('¿Estás seguro de eliminar este mensaje?');">Eliminar</a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{% url 'ver_mensajes' %}" class="btn btn-secondary btn-block">Volver</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Leer Mensaje</h1>
     </div>
+
+    {% include "mensajes/components/detalle_mensaje.html" %}
 </div>
+
+{% include "mensajes/components/modal_eliminar.html" %}
 {% endblock %}

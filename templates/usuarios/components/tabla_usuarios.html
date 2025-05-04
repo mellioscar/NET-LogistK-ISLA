@@ -1,0 +1,96 @@
+<!-- Tabla de Usuarios -->
+<div class="table-responsive">
+    <table class="table table-bordered" id="tablaUsuarios" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Última Conexión</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar mr-2">
+                            {% if usuario.avatar %}
+                                <img src="{{ usuario.avatar.url }}" class="rounded-circle" width="32" height="32">
+                            {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 32px; height: 32px;">
+                                    {{ usuario.iniciales }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {{ usuario.nombre_completo }}
+                    </div>
+                </td>
+                <td>{{ usuario.email }}</td>
+                <td>
+                    <span class="badge badge-{{ usuario.rol_badge }}">
+                        {{ usuario.get_rol_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-{{ usuario.estado|lower }}">
+                        {{ usuario.get_estado_display }}
+                    </span>
+                </td>
+                <td>{{ usuario.ultima_conexion|default:"Nunca" }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{% url 'usuarios:editar' usuario.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% if usuario.is_active %}
+                        <button type="button" class="btn btn-warning btn-sm" 
+                                onclick="confirmarDesactivacion('{{ usuario.id }}')">
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-success btn-sm" 
+                                onclick="confirmarActivacion('{{ usuario.id }}')">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-danger btn-sm" 
+                                onclick="confirmarEliminacion('{{ usuario.id }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay usuarios registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Estilos para los badges -->
+<style>
+    .badge-admin { background-color: #4e73df; color: #fff; }
+    .badge-chofer { background-color: #1cc88a; color: #fff; }
+    .badge-supervisor { background-color: #f6c23e; color: #fff; }
+    .badge-activo { background-color: #1cc88a; color: #fff; }
+    .badge-inactivo { background-color: #e74a3b; color: #fff; }
+</style>
+
+<!-- Scripts para la tabla -->
+<script>
+$(document).ready(function() {
+    $('#tablaUsuarios').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/es_ES.json' %}"
+        },
+        order: [[0, 'asc']],
+        pageLength: 25
+    });
+});
+</script> 

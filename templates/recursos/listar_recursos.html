@@ -1,80 +1,145 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Recursos - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Listado de Recursos</h2>
-<!-- Barra de búsqueda -->
-<form class="form-inline my-3" method="GET">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar Recurso..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i>
-            </button>
-            <a href="{% url 'listar_recursos' %}" class="btn btn-danger">
-                <i class="fas fa-times fa-sm"></i>
-            </a>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Recursos</h1>
+        <a href="{% url 'crear_recurso' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Agregar Recurso
+        </a>
+    </div>
+
+    <!-- Tarjeta de Recursos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Recursos</h6>
+        </div>
+        <div class="card-body">
+            <!-- Barra de búsqueda -->
+            <form class="mb-4" method="GET">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control bg-light border-1 small" 
+                           placeholder="Buscar Recurso..." value="{{ search }}" 
+                           aria-label="Search" aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                        <a href="{% url 'listar_recursos' %}" class="btn btn-secondary">
+                            <i class="fas fa-times fa-sm"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Tabla de Recursos -->
+            <div class="table-responsive">
+                <table class="table table-bordered" id="tablaRecursos" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Categoría</th>
+                            <th>Legajo</th>
+                            <th>Sucursal</th>
+                            <th>Vencimiento<br><small>Carnet de Conducir</small></th>
+                            <th>Vencimiento<br><small>Psicofísico</small></th>
+                            <th>Vencimiento<br><small>Cargas Generales</small></th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recurso in recursos %}
+                        <tr>
+                            <td>{{ recurso.nombre }}</td>
+                            <td>{{ recurso.apellido }}</td>
+                            <td>{{ recurso.categoria }}</td>
+                            <td>{{ recurso.legajo }}</td>
+                            <td>{{ recurso.sucursal }}</td>
+                            <td class="{% if recurso.alerta_carnet %}text-danger{% endif %}">
+                                {{ recurso.vencimiento_carnet|date:"d/m/Y" }}
+                            </td>
+                            <td class="{% if recurso.alerta_psicofisico %}text-danger{% endif %}">
+                                {{ recurso.vencimiento_psicofisico|date:"d/m/Y" }}
+                            </td>
+                            <td class="{% if recurso.alerta_cargas %}text-danger{% endif %}">
+                                {{ recurso.vencimiento_cargas|date:"d/m/Y" }}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'editar_recurso' recurso.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm" 
+                                            onclick="confirmarEliminacion('{{ recurso.id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</form>
+</div>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th class="align-middle">Nombre</th>
-            <th class="align-middle">Apellido</th>
-            <th class="align-middle">Categoría</th>
-            <th class="align-middle">Legajo</th>
-            <th class="align-middle">Sucursal</th>
-            <th>
-                Vencimiento<br>
-                <small>Carnet de Conducir</small>
-            </th>
-            <th>
-                Vencimiento<br>
-                <small>Psicofísico</small>
-            </th>
-            <th>
-                Vencimiento<br>
-                <small>Cargas Generales</small>
-            </th>
-            <th class="align-middle">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for recurso in recursos %}
-        <tr>
-            <td>{{ recurso.nombre }}</td>
-            <td>{{ recurso.apellido }}</td>
-            <td>{{ recurso.categoria }}</td>
-            <td>{{ recurso.legajo }}</td>
-            <td>{{ recurso.sucursal }}</td>
-            <td>
-                {% if recurso.carnet_conducir %}
-                    {{ recurso.carnet_conducir }}
-                {% else %}
-                    Sin definir
-                {% endif %}
-            </td>
-            <td>
-                {% if recurso.psicofisico %}
-                    {{ recurso.psicofisico }}
-                {% else %}
-                    Sin definir
-                {% endif %}
-            </td>
-            <td>
-                {% if recurso.carnet_cargas_generales %}
-                    {{ recurso.carnet_cargas_generales }}
-                {% else %}
-                    Sin definir
-                {% endif %}
-            </td>
-            <td>
-                <a href="{% url 'editar_recurso' recurso.id %}" class="btn btn-info btn-sm">Editar</a>
-                <a href="{% url 'eliminar_recurso' recurso.id %}" class="btn btn-danger btn-sm">Eliminar</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar este recurso?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar DataTables
+    $('#tablaRecursos').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/es_ES.json' %}"
+        },
+        order: [[0, 'asc']], // Ordenar por nombre ascendente
+        pageLength: 25
+    });
+});
+
+function confirmarEliminacion(recursoId) {
+    $('#formEliminar').attr('action', `/recursos/eliminar/${recursoId}/`);
+    $('#modalEliminar').modal('show');
+}
+</script>
 {% endblock %}

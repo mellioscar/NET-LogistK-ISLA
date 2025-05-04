@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <title>Mapa de Zonas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; }
+        #map { width: 100%; height: 100vh; min-height: 600px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+    <script>
+        var map = L.map('map').setView([-39.044, -67.579], 10);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Paleta de colores para las zonas
+        var colores = [
+            '#3388ff', '#ff5733', '#33ff57', '#f1c40f', '#8e44ad', '#e67e22', '#16a085', '#c0392b',
+            '#3358ff', '#ff9733', '#11ff17', '#f9c99f', '#9994ad', '#e97e92', '#76a085', '#c7372b',
+            '#2ecc71', '#e84393', '#00b894', '#fdcb6e', '#6c5ce7', '#fd79a8', '#00cec9', '#d35400'
+        ];
+
+        // Cargar el KML de zonas y asignar un color diferente a cada una, mostrando el nombre como tooltip
+        omnivore.kml('ZonasCI.kml')
+            .on('ready', function() {
+                var i = 0;
+                this.eachLayer(function(layer) {
+                    layer.setStyle({
+                        color: colores[i % colores.length],
+                        weight: 2,
+                        fillOpacity: 0.3
+                    });
+                    // Mostrar el nombre como tooltip
+                    if (layer.feature && layer.feature.properties && layer.feature.properties.name) {
+                        layer.bindTooltip(layer.feature.properties.name, {sticky: true});
+                    }
+                    i++;
+                });
+                map.fitBounds(this.getBounds());
+            })
+            .addTo(map);
+    </script>
+</body>
+</html> 

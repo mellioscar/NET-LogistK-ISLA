@@ -1,357 +1,78 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Pedidos - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Listado de Pedidos</h2>
-
-<!-- Barra de búsqueda -->
-<form id="filter-form" class="form-inline my-3 d-flex justify-content-between align-items-center" method="GET">
-    <!-- Contenedor de búsqueda y filtros -->
-    <div class="d-flex align-items-center flex-wrap">
-        <!-- Campo de búsqueda -->
-        <div class="input-group mr-3" style="width: 400px;">
-            <input type="text" name="search" class="form-control bg-light border-1" placeholder="Buscar Pedido..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-search fa-sm"></i>
-                </button>
-                <a href="{% url 'listar_pedidos' %}" class="btn btn-danger">
-                    <i class="fas fa-times fa-sm"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Filtros de fecha -->
-        <div class="d-flex align-items-center ml-3">
-            <label class="mr-2 mb-0"><strong>Desde:</strong></label>
-            <input type="date" name="fecha_desde" class="form-control mr-3" value="{{ fecha_desde }}">
-            
-            <label class="mr-2 mb-0"><strong>Hasta:</strong></label>
-            <input type="date" name="fecha_hasta" class="form-control mr-3" value="{{ fecha_hasta }}">
-            
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i> Buscar
-            </button>
-            <a href="{% url 'listar_pedidos' %}" class="btn btn-secondary ml-2">
-                <i class="fas fa-sync-alt fa-sm"></i> Limpiar
-            </a>
-        </div>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Pedidos</h1>
     </div>
-</form>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Pedidos</h6>
-        <small class="text-muted">Mostrando {{ total_pedidos }} pedidos en el rango: {{ rango_fechas }}</small>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr class="small">
-                        <th>Fecha</th>
-                        <th>Factura</th>
-                        <th>Cliente</th>
-                        <th>Dirección</th>
-                        <th>Reparto</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="small">
-                    {% for pedido in pedidos %}
-                    <tr>
-                        <td>{{ pedido.fecha }}</td>
-                        <td>{{ pedido.nro_factura }}</td>
-                        <td>{{ pedido.cliente }}</td>
-                        <td>{{ pedido.direccion }}</td>
-                        <td>{{ pedido.nro_reparto }}</td>
-                        <td>
-                            <span class="badge badge-{% if pedido.estado == 'Asignado' %}primary{% else %}secondary{% endif %}">
-                                {{ pedido.estado }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-info" title="Ver detalles" onclick="verPedido('{{ pedido.id }}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                {% if pedido.estado == 'Asignado' %}
-                                <button class="btn btn-sm btn-danger" title="Eliminar" onclick="eliminarPedido('{{ pedido.id }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <!-- Tabla de Pedidos -->
+    {% include "pedidos/components/tabla_pedidos.html" with titulo="Listado de Pedidos" pedidos=pedidos estados=estados zonas=zonas mostrar_filtros=True mostrar_importar=True mostrar_historial=True %}
 </div>
+{% endblock %}
 
-<!-- Modal -->
-<div class="modal fade" id="verPedidoModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">
-                    <i class="fas fa-file-invoice"></i> Detalles del Pedido
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="pedidoDetalles"></div>
-            </div>
-        </div>
-    </div>
-</div>
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
 
-<style>
-    /* Estilos generales del modal */
-    .modal-dialog {
-        max-width: 900px;
-    }
-
-    .modal-content {
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-        background-color: #007bff;
-        color: white;
-        border-radius: 12px 12px 0 0;
-        padding: 10px;
-    }
-
-    .modal-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-
-    /* Contenedor de detalles */
-    .pedido-details {
-        padding: 5px;
-        background-color: #fff;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        border: 1px solid #7c7c7d;
-    }
-
-    .detail-row {
-        display: flex;
-        padding: 5px 0;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .detail-label {
-        font-weight: 700;
-        color: #0e2d6b;
-    }
-
-    .detail-value {
-        font-weight: 400;
-        margin-right: 30px;
-        color: #212529;
-    }
-
-    .full-width {
-        width: 100%;
-    }
-
-    /* Tabla de artículos */
-    .table-articles {
-        width: 100%;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .table-articles thead th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-        font-weight: 600;
-        padding: 5px;
-    }
-
-    .table-articles tbody td {
-        padding: 5px;
-        border-bottom: 1px solid #d0d2d4;
-    }
-
-    /* Mapa */
-    .map-container {
-        padding: 10px;
-        font-weight: 600;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    #map {
-        height: 300px;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-    }
-</style>
-
-
-<!-- Script para el modal y filtros -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-// Función para ver detalles del pedido
-function getEstadoColor(estado) {
-    switch(estado) {
-        case 'Entregado':
-            return 'success';
-        case 'Sin Stock':
-            return 'warning';
-        case 'Pendiente':
-            return 'secondary';
-        default:
-            return 'secondary';
-    }
-}
-
-function eliminarPedido(pedidoId) {
-    if (confirm('¿Está seguro de que desea eliminar este pedido?')) {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        fetch(`/pedidos/eliminar/${pedidoId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Error al eliminar el pedido: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al eliminar el pedido');
-        });
-    }
-}
-
-// Enviar formulario al cambiar las fechas
-document.querySelectorAll('input[type="date"]').forEach(input => {
-    input.addEventListener('change', function() {
-        document.getElementById('filter-form').submit();
-    });
-});
-</script>
+<!-- Select2 -->
+<link href="{% static 'vendor/select2/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_css %}
-{{ block.super }}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- Select2 -->
+<script src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
 {% endblock %}
 
 {% block extra_js %}
-{{ block.super }}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 <script>
-function verPedido(pedidoId) {
-    $.ajax({
-        url: `/pedidos/detalle/${pedidoId}/`,
-        type: 'GET',
-        success: function(response) {
-            let detallesHTML = `
-                <div class="pedido-details">
-                    <div class="detail-row">
-                        <div class="detail-group">
-                            <span class="detail-label">Nº Factura:</span>
-                            <span class="detail-value">${response.nro_factura || ''}</span>
-                        </div>
-                        <div class="detail-group">
-                            <span class="detail-label">Cliente:</span>
-                            <span class="detail-value">${response.cliente || ''}</span>
-                        </div>
-                        <div class="detail-group">
-                            <span class="detail-label">Fecha:</span>
-                            <span class="detail-value">${response.fecha || ''}</span>
-                        </div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-group full-width">
-                            <span class="detail-label">Dirección:</span>
-                            <span class="detail-value">${response.direccion || ''}</span>
-                        </div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-group">
-                            <span class="detail-label">Nº Reparto:</span>
-                            <span class="detail-value">${response.nro_reparto || 'Sin asignar'}</span>
-                        </div>
-                        <div class="detail-group">
-                            <span class="detail-label">Fecha Reparto:</span>
-                            <span class="detail-value">${response.fecha_reparto || 'Sin asignar'}</span>
-                        </div>
-                        <div class="detail-group total-weight">
-                            <span class="detail-label">Peso Total:</span>
-                            <span class="detail-value">${response.peso_total || 0} kg</span>
-                        </div>
-                        <div class="detail-group">
-                            <span class="detail-label">Estado:</span>
-                            <span class="detail-value">${response.estado || ''}</span>
-                        </div>
-                    </div>
-                </div>`;
-
-            if (response.articulos && response.articulos.length > 0) {
-                detallesHTML += `
-                    <h6 class="map-title mt-3">Artículos del Pedido</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm table-articles">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Descripción</th>
-                                    <th>Cantidad</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${response.articulos.map(art => `
-                                    <tr>
-                                        <td>${art.codigo || ''}</td>
-                                        <td>${art.descripcion || ''}</td>
-                                        <td>${art.cantidad || ''}</td>
-                                        <td>
-                                            <span class="badge badge-${getEstadoColor(art.estado || 'Pendiente')}">
-                                                ${art.estado || 'Pendiente'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
+$(document).ready(function() {
+    $('#tablaPedidos').DataTable({
+        language: {
+            "sProcessing":     "Procesando...",
+            "sLengthMenu":     "Mostrar _MENU_ registros",
+            "sZeroRecords":    "No se encontraron resultados",
+            "sEmptyTable":     "Ningún dato disponible en esta tabla",
+            "sInfo":           "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "sInfoEmpty":      "Mostrando 0 a 0 de 0 registros",
+            "sInfoFiltered":   "(filtrado de _MAX_ registros en total)",
+            "sInfoPostFix":    "",
+            "sSearch":         "Buscar:",
+            "sUrl":            "",
+            "sInfoThousands":  ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst":    "Primero",
+                "sLast":     "Último",
+                "sNext":     "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending":  ": activar para ordenar la columna ascendente",
+                "sSortDescending": ": activar para ordenar la columna descendente"
             }
-
-            detallesHTML += `
-                <div class="map-container">
-                    <h6 class="map-title">Ubicación del cliente</h6>
-                    <div id="map">${response.mapa_html || 'No se pudo cargar el mapa'}</div>
-                </div>`;
-
-            $('#pedidoDetalles').html(detallesHTML);
-            $('#verPedidoModal').modal('show');
         },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert('Error al obtener los detalles del pedido');
-        }
+        order: [[3, 'desc']], // Ordenar por fecha descendente
+        pageLength: 25
     });
-}
+});
 </script>
 {% endblock %}
 

@@ -1,0 +1,44 @@
+<!-- Content Row -->
+<div class="row">
+    <!-- Area Chart -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Repartos Mensuales</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="myAreaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Estados de Repartos</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar">
+                    <canvas id="estadosRepartosChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Datos JSON para los gráficos -->
+<script type="application/json" id="labelsRepartosMensuales">
+    {{ labels_repartos_mensuales|safe }}
+</script>
+<script type="application/json" id="dataRepartosMensuales">
+    {{ data_repartos_mensuales|safe }}
+</script>
+<script type="application/json" id="labelsEstados">
+    {{ labels_estados|safe }}
+</script>
+<script type="application/json" id="dataEstados">
+    {{ data_estados|safe }}
+</script> 

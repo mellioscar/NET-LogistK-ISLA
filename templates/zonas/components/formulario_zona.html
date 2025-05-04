@@ -1,0 +1,308 @@
+{% load static %}
+
+<form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Información Básica -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información Básica</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="nombre">Nombre*</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" 
+                               value="{{ form.nombre.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese el nombre de la zona
+                        </div>
+                        {% if form.nombre.errors %}
+                            <div class="text-danger">
+                                {{ form.nombre.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ form.descripcion.value|default:'' }}</textarea>
+                        {% if form.descripcion.errors %}
+                            <div class="text-danger">
+                                {{ form.descripcion.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">Color</label>
+                        <input type="color" class="form-control" id="color" name="color" 
+                               value="{{ form.color.value|default:'#3498db' }}">
+                        {% if form.color.errors %}
+                            <div class="text-danger">
+                                {{ form.color.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Color para identificar la zona en el mapa</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Zona -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Configuración de Zona</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="supervisor">Supervisor Asignado</label>
+                        <select class="form-control" id="supervisor" name="supervisor">
+                            <option value="">Sin supervisor asignado</option>
+                            {% for supervisor_id, supervisor_nombre in form.fields.supervisor.choices %}
+                                <option value="{{ supervisor_id }}" {% if form.supervisor.value == supervisor_id %}selected{% endif %}>
+                                    {{ supervisor_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.supervisor.errors %}
+                            <div class="text-danger">
+                                {{ form.supervisor.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="horario_inicio">Horario de Inicio*</label>
+                        <input type="time" class="form-control" id="horario_inicio" name="horario_inicio" 
+                               value="{{ form.horario_inicio.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese el horario de inicio
+                        </div>
+                        {% if form.horario_inicio.errors %}
+                            <div class="text-danger">
+                                {{ form.horario_inicio.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="horario_fin">Horario de Fin*</label>
+                        <input type="time" class="form-control" id="horario_fin" name="horario_fin" 
+                               value="{{ form.horario_fin.value|default:'' }}" required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese el horario de fin
+                        </div>
+                        {% if form.horario_fin.errors %}
+                            <div class="text-danger">
+                                {{ form.horario_fin.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label>Días de Operación*</label>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="lunes" name="dias_operacion" value="1" 
+                                   {% if '1' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="lunes">Lunes</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="martes" name="dias_operacion" value="2"
+                                   {% if '2' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="martes">Martes</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="miercoles" name="dias_operacion" value="3"
+                                   {% if '3' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="miercoles">Miércoles</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="jueves" name="dias_operacion" value="4"
+                                   {% if '4' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="jueves">Jueves</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="viernes" name="dias_operacion" value="5"
+                                   {% if '5' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="viernes">Viernes</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="sabado" name="dias_operacion" value="6"
+                                   {% if '6' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="sabado">Sábado</label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="domingo" name="dias_operacion" value="7"
+                                   {% if '7' in form.dias_operacion.value %}checked{% endif %}>
+                            <label class="custom-control-label" for="domingo">Domingo</label>
+                        </div>
+                        {% if form.dias_operacion.errors %}
+                            <div class="text-danger">
+                                {{ form.dias_operacion.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mapa de la Zona -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Área de la Zona</h6>
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 400px;"></div>
+                    <input type="hidden" id="coordenadas" name="coordenadas" value="{{ form.coordenadas.value|default:'' }}">
+                    {% if form.coordenadas.errors %}
+                        <div class="text-danger">
+                            {{ form.coordenadas.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save fa-sm text-white-50"></i>
+                        Guardar
+                    </button>
+                    <a href="{% url 'zonas:lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times fa-sm text-white-50"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+// Validación del formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Inicialización del mapa
+var map;
+var drawingManager;
+var selectedShape;
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -34.6037, lng: -58.3816 }, // Buenos Aires como centro por defecto
+        zoom: 12
+    });
+
+    drawingManager = new google.maps.drawing.DrawingManager({
+        drawingMode: google.maps.drawing.OverlayType.POLYGON,
+        drawingControl: true,
+        drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_CENTER,
+            drawingModes: ['polygon']
+        },
+        polygonOptions: {
+            fillColor: $('#color').val(),
+            fillOpacity: 0.3,
+            strokeWeight: 2,
+            clickable: true,
+            editable: true,
+            zIndex: 1
+        }
+    });
+    drawingManager.setMap(map);
+
+    // Cargar polígono existente si hay coordenadas
+    var coordenadas = $('#coordenadas').val();
+    if (coordenadas) {
+        var paths = JSON.parse(coordenadas);
+        var polygon = new google.maps.Polygon({
+            paths: paths,
+            fillColor: $('#color').val(),
+            fillOpacity: 0.3,
+            strokeWeight: 2,
+            editable: true
+        });
+        polygon.setMap(map);
+        selectedShape = polygon;
+        
+        // Centrar mapa en el polígono
+        var bounds = new google.maps.LatLngBounds();
+        paths.forEach(function(path) {
+            bounds.extend(path);
+        });
+        map.fitBounds(bounds);
+    }
+
+    // Eventos para el dibujo del polígono
+    google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
+        if (selectedShape) {
+            selectedShape.setMap(null);
+        }
+        selectedShape = polygon;
+        drawingManager.setDrawingMode(null);
+        updateCoordinates();
+
+        // Eventos para actualizar coordenadas cuando se edita el polígono
+        google.maps.event.addListener(polygon.getPath(), 'set_at', updateCoordinates);
+        google.maps.event.addListener(polygon.getPath(), 'insert_at', updateCoordinates);
+    });
+
+    // Actualizar color del polígono cuando cambia el input de color
+    $('#color').change(function() {
+        if (selectedShape) {
+            selectedShape.setOptions({
+                fillColor: $(this).val()
+            });
+        }
+        drawingManager.setOptions({
+            polygonOptions: {
+                fillColor: $(this).val(),
+                fillOpacity: 0.3,
+                strokeWeight: 2,
+                clickable: true,
+                editable: true,
+                zIndex: 1
+            }
+        });
+    });
+}
+
+function updateCoordinates() {
+    if (!selectedShape) return;
+    
+    var coordinates = [];
+    var path = selectedShape.getPath();
+    path.forEach(function(coordinate) {
+        coordinates.push({
+            lat: coordinate.lat(),
+            lng: coordinate.lng()
+        });
+    });
+    $('#coordenadas').val(JSON.stringify(coordinates));
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=drawing&callback=initMap" async defer></script> 

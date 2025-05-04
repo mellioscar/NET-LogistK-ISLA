@@ -1,138 +1,130 @@
 <!-- listar_vehiculos.html -->
-{% extends "sb_admin2/index.html" %}
+{% extends 'base/layouts/base.html' %}
 {% load static %}
 
+{% block title %}Vehículos - NET-LogistK ISLA{% endblock %}
+
 {% block content %}
-<h2>Listado de Vehículos</h2>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Vehículos</h1>
+        <a href="{% url 'vehiculos:crear' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Crear Vehículo
+        </a>
+    </div>
 
-<!-- Barra de búsqueda -->
-<form class="form-inline my-2" method="GET">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control bg-light border-1 small" placeholder="Buscar Vehículo..." value="{{ search }}" aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search fa-sm"></i>
-            </button>
-            <a href="{% url 'ver_vehiculos' %}" class="btn btn-danger">
-                <i class="fas fa-times fa-sm"></i>
-            </a>
+    <!-- Tarjeta de Vehículos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Vehículos</h6>
         </div>
-    </div>
-</form>
-
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Vehículos Registrados</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>
-                            <a href="?sort=dominio&order={% if sort == 'dominio' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Dominio
-                                {% if sort == "dominio" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=marca&order={% if sort == 'marca' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Marca
-                                {% if sort == "marca" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=marca&order={% if sort == 'modelo' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Modelo
-                                {% if sort == "modelo" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=modelo&order={% if sort == 'tipo' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Tipo
-                                {% if sort == "tipo" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=tipo&order={% if sort == 'sucursal' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Sucursal
-                                {% if sort == "sucursal" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=anio&order={% if sort == 'anio' and order == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
-                                Año
-                                {% if sort == "anio" %}
-                                    <i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>Activo</th>
-                        <th>VTV</th>
-                        <th>RUTA</th>
-                        <th>Seguro</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>                
-                <tbody>
-                    {% for vehiculo in vehiculos %}
-                    <tr>
-                        <td>{{ vehiculo.dominio }}</td>
-                        <td>{{ vehiculo.marca }}</td>
-                        <td>{{ vehiculo.modelo }}</td>
-                        <td style="text-align: center;">
-                            <img src="{% static 'img/' %}{{ vehiculo.tipo|lower }}.png" alt="{{ vehiculo.tipo }}" style="width: 55px;" title="{{ vehiculo.tipo }}">
-                        </td>                        
-                        <td>{{ vehiculo.sucursal }}</td>
-                        <td>{{ vehiculo.anio }}</td>
-                        <td>{{ vehiculo.activo }}</td>
-                        <td>{{ vehiculo.fecha_vtv }}</td>
-                        <td>{{ vehiculo.fecha_ruta }}</td>
-                        <td>{{ vehiculo.fecha_seguro }}</td>
-                        <td>
-                            <a href="{% url 'editar_vehiculo' vehiculo.id %}" class="btn btn-info btn-sm">Editar</a>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ vehiculo.id }}">Eliminar</button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal de confirmación de eliminación -->
-                    <div class="modal fade" id="deleteModal{{ vehiculo.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ vehiculo.id }}" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel{{ vehiculo.id }}">Confirmar Eliminación</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    ¿Estás seguro que deseas eliminar el vehículo <strong>{{ vehiculo.marca_nombre }} {{ vehiculo.modelo_nombre }} Dominio: {{ vehiculo.dominio }}</strong>?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                                    <form method="POST" action="{% url 'eliminar_vehiculo' vehiculo.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            {% include 'vehiculos/components/tabla_vehiculos.html' %}
         </div>
     </div>
 </div>
 
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar este vehículo?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Desactivación -->
+<div class="modal fade" id="modalDesactivar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Desactivación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea desactivar este vehículo?</p>
+                <p>El vehículo no podrá ser asignado a repartos hasta que sea reactivado.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formDesactivar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Desactivar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Activación -->
+<div class="modal fade" id="modalActivar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Activación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea activar este vehículo?</p>
+                <p>El vehículo podrá ser asignado nuevamente a repartos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formActivar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Activar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block javascript %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+function confirmarDesactivacion(vehiculoId) {
+    $('#formDesactivar').attr('action', `/vehiculos/${vehiculoId}/desactivar/`);
+    $('#modalDesactivar').modal('show');
+}
+
+function confirmarActivacion(vehiculoId) {
+    $('#formActivar').attr('action', `/vehiculos/${vehiculoId}/activar/`);
+    $('#modalActivar').modal('show');
+}
+
+function confirmarEliminacion(vehiculoId) {
+    $('#formEliminar').attr('action', `/vehiculos/${vehiculoId}/eliminar/`);
+    $('#modalEliminar').modal('show');
+}
+</script>
 {% endblock %}

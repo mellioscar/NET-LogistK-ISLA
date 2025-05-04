@@ -1,52 +1,40 @@
 <!-- ver_mensajes.html -->
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Mensajes - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Mensajes</h2>
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Lista de Mensajes</h6>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Mensajes</h1>
+        <a href="{% url 'enviar_mensaje' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-paper-plane fa-sm text-white-50"></i> Nuevo Mensaje
+        </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Remitente</th>
-                        <th>Fecha de Envío</th>
-                        <th>Contenido</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
 
-                <tbody>
-                    {% for mensaje in mensajes %}
-                        <tr {% if not mensaje.leido %} class="table-warning font-weight-bold" {% endif %}>
-                            <td>{{ mensaje.emisor }}</td>
-                            <td>
-                                {% if mensaje.fecha_envio %}
-                                    {{ mensaje.fecha_envio|date:"d M Y, H:i" }}
-                                {% else %}
-                                    Sin fecha
-                                {% endif %}
-                            </td>
-                            <td>{{ mensaje.contenido|truncatewords:10 }}</td>
-                            <td>{{ mensaje.leido|yesno:"Leído,No leído" }}</td>
-                            <td>
-                                <a href="{% url 'leer_mensaje' mensaje.id %}" class="btn btn-sm btn-primary">Leer</a>
-                                <a href="{% url 'responder_mensaje' mensaje.emisor_uid %}" class="btn btn-sm btn-success">Responder</a>
-                                <a href="{% url 'eliminar_mensaje' mensaje.id %}" onclick="return confirm('¿Estás seguro de eliminar este mensaje?');" class="btn btn-sm btn-danger">Eliminar</a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center">No tienes mensajes.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Tarjeta de Mensajes -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Bandeja de Entrada</h6>
+        </div>
+        <div class="card-body">
+            {% include "mensajes/components/lista_mensajes.html" %}
         </div>
     </div>
 </div>
+
+{% include "mensajes/components/modal_eliminar.html" %}
+{% endblock %}
+
+{% block css %}
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<!-- DataTables -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 {% endblock %}

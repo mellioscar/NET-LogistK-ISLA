@@ -1,76 +1,19 @@
-{% extends "sb_admin2/index.html" %}
+{% extends "base/layouts/base.html" %}
+{% load static %}
+
+{% block title %}Nuevo Mensaje - NET-LogistK ISLA{% endblock %}
 
 {% block content %}
-<h2>Enviar Mensaje</h2>
-<div class="card o-hidden border-0 shadow-lg">
-    <div class="card-body p-0">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="p-5">
-                    <form method="post">
-                        {% csrf_token %}
-
-                        <div class="form-group">
-                            <label for="destinatario">Para:</label>
-                            {% if es_respuesta %}
-                                <!-- Campo para responder mensaje -->
-                                <input type="text" class="form-control" id="destinatario" 
-                                    value="{{ usuario.nombre }} {{ usuario.apellido }} ({{ usuario.email }})" readonly>
-                            {% else %}
-                                <!-- Selección de destinatarios para enviar mensaje directo -->
-                                <select class="form-control" id="receptor" name="receptor" required>
-                                    {% for usuario in usuarios %}
-                                    <option value="{{ usuario.uid }}">
-                                        {{ usuario.nombre }} {{ usuario.apellido }} ({{ usuario.email }})
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            {% endif %}
-                        </div>
-                        
-                        
-                        <div class="form-group">
-                        <label for="contenido">Mensaje:</label>
-                        <textarea class="form-control" id="contenido" name="contenido" maxlength="200" rows="3" required></textarea>
-                        <small class="form-text text-muted">Máximo 200 caracteres.</small>
-                        </div>
-                        
-                        <!-- Botones de Guardar y Cancelar -->
-                        <div class="form-group row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary btn-block">Enviar</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{% url 'ver_mensajes' %}" class="btn btn-danger btn-block">
-                                    Cancelar
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-
-                    <!-- Modal de Confirmación -->
-                    <div class="modal fade" id="mensajeEnviadoModal" tabindex="-1" aria-labelledby="mensajeEnviadoModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                            <h5 class="modal-title" id="mensajeEnviadoModalLabel">Mensaje Enviado</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            </div>
-                            <div class="modal-body">
-                            El mensaje se ha enviado con éxito.
-                            </div>
-                            <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container-fluid">
+    <!-- Encabezado de página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Nuevo Mensaje</h1>
     </div>
-</div>
 
+    <!-- Formulario -->
+    <form method="POST">
+        {% csrf_token %}
+        {% include "mensajes/components/formulario_mensaje.html" %}
+    </form>
+</div>
 {% endblock %}

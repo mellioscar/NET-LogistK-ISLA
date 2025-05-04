@@ -1,0 +1,46 @@
+<!-- Componente de Formulario de Mensaje -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <!-- Campo Destinatario -->
+        <div class="form-group">
+            <label for="destinatario">Destinatario</label>
+            <select class="form-control" id="destinatario" name="destinatario" required>
+                <option value="">Seleccione un destinatario</option>
+                {% for usuario in usuarios %}
+                    <option value="{{ usuario.id }}" {% if mensaje.destinatario.id == usuario.id %}selected{% endif %}>
+                        {{ usuario.nombre }} {{ usuario.apellido }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Campo Asunto -->
+        <div class="form-group">
+            <label for="asunto">Asunto</label>
+            <input type="text" class="form-control" id="asunto" name="asunto" 
+                placeholder="Ingrese el asunto del mensaje"
+                value="{{ mensaje.asunto|default:'' }}" required>
+        </div>
+
+        <!-- Campo Contenido -->
+        <div class="form-group">
+            <label for="contenido">Mensaje</label>
+            <textarea class="form-control" id="contenido" name="contenido" 
+                rows="5" placeholder="Escriba su mensaje aquí" required>{{ mensaje.contenido|default:'' }}</textarea>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="form-group row">
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'ver_mensajes' %}" class="btn btn-secondary btn-block">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</div> 

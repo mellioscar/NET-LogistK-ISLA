@@ -1,0 +1,84 @@
+<!-- Componente de Tabla de Parámetros -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ titulo }}</h6>
+        <a href="{{ url_crear }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm"></i> Agregar {{ nombre_singular }}
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="tabla{{ nombre_plural }}" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        {% for columna in columnas %}
+                            <th>{{ columna }}</th>
+                        {% endfor %}
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        {% for campo in campos %}
+                            <td>{{ item|get_attr:campo }}</td>
+                        {% endfor %}
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_editar }}{{ item.id }}/" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" 
+                                        onclick="confirmarEliminacion('{{ url_eliminar }}{{ item.id }}/')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar este {{ nombre_singular }}?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+$(document).ready(function() {
+    $('#tabla{{ nombre_plural }}').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/es_ES.json' %}"
+        }
+    });
+});
+
+function confirmarEliminacion(url) {
+    $('#formEliminar').attr('action', url);
+    $('#modalConfirmacion').modal('show');
+}
+</script> 

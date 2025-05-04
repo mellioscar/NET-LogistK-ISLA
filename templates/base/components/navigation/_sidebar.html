@@ -1,0 +1,204 @@
+{% load static %}
+<!-- Sidebar -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <!-- Sidebar - Marca de la aplicación -->
+    <a class="sidebar-brand d-flex align-items-center bg-gradient-light justify-content-center" href="{% url 'dashboard' %}" style="border-radius: 10px;">
+        <div class="sidebar-brand-icon">
+            <img src="{% static 'img/NET-LOGISTK.jpg' %}" alt="Net-LogistK Logo" width="70" height="50" style="border-radius: 10%; border: 1px solid #ccc;" loading="lazy">
+        </div>
+        <div class="sidebar-brand-text mx-1">
+            <span style="color: rgb(0, 24, 206); font-weight: bold; text-shadow: 1px 1px 4px rgb(48, 147, 239);">NET-LogistK</span> 
+            <span style="color: rgb(238, 11, 41); font-weight: bold; text-shadow: 1px 1px 4px rgb(48, 147, 239);">ISLA</span>
+        </div>
+    </a>
+
+    <!-- Separador -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Dashboard -->
+    <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'dashboard' %}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+
+    <!-- Separador -->
+    <hr class="sidebar-divider">
+
+    <!-- Encabezado Logística -->
+    <div class="sidebar-heading">Logística</div>
+
+    <!-- Repartos -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepartos">
+            <i class="fas fa-fw fa-road"></i>
+            <span>Repartos</span>
+        </a>
+        <div id="collapseRepartos" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Repartos:</h6>
+                <a class="collapse-item" href="{% url 'listar_repartos' %}">Listar Repartos</a>
+                <a class="collapse-item" href="{% url 'crear_reparto' %}">Crear Reparto</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Pedidos -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePedidos">
+            <i class="fas fa-fw fa-clipboard-list"></i>
+            <span>Pedidos</span>
+        </a>
+        <div id="collapsePedidos" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Pedidos:</h6>
+                <a class="collapse-item" href="{% url 'listar_pedidos' %}">Listar Pedidos</a>
+                <a class="collapse-item" href="{% url 'importar_y_previsualizar_pedidos' %}">Importar Pedidos</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Tracking -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTracking">
+            <i class="fas fa-fw fa-map-marked-alt"></i>
+            <span>Tracking</span>
+        </a>
+        <div id="collapseTracking" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Tracking:</h6>
+                <a class="collapse-item" href="{% url 'mapa_tracking' %}">Mapa Tracking</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Cronograma -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCronograma">
+            <i class="fas fa-fw fa-calendar-alt"></i>
+            <span>Cronograma</span>
+        </a>
+        <div id="collapseCronograma" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Cronograma:</h6>
+                <a class="collapse-item" href="{% url 'cronograma_mensual' %}">Cronograma Mensual</a>
+                <a class="collapse-item" href="{% url 'cronograma_semanal' %}">Cronograma Semanal</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Recursos -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecursos">
+            <i class="fas fa-fw fa-users-cog"></i>
+            <span>Recursos</span>
+        </a>
+        <div id="collapseRecursos" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Recursos:</h6>
+                <a class="collapse-item" href="{% url 'listar_recursos' %}">Listar Recursos</a>
+                <a class="collapse-item" href="{% url 'crear_recurso' %}">Agregar Recurso</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Separador -->
+    <hr class="sidebar-divider">
+
+    <!-- Encabezado Utilidades -->
+    <div class="sidebar-heading">Utilidades</div>
+
+    <!-- Mensajes -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMensajes">
+            <i class="fas fa-fw fa-mail-bulk"></i>
+            <span>Mensajes</span>
+        </a>
+        <div id="collapseMensajes" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Mensajes:</h6>
+                <a class="collapse-item" href="{% url 'ver_mensajes' %}">Ver Mensajes</a>
+                <a class="collapse-item" href="{% url 'enviar_mensaje' %}">Enviar Mensaje</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Separador -->
+    <hr class="sidebar-divider">
+
+    <!-- Encabezado Ajustes -->
+    <div class="sidebar-heading">Ajustes</div>
+
+    <!-- Vehículos -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVehiculos">
+            <i class="fas fa-fw fa-truck"></i>
+            <span>Vehículos</span>
+        </a>
+        <div id="collapseVehiculos" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Vehículos:</h6>
+                <a class="collapse-item" href="{% url 'ver_vehiculos' %}">Listar Vehículos</a>
+                <a class="collapse-item" href="{% url 'agregar_vehiculo' %}">Agregar Vehículo</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Usuarios -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsuarios">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Usuarios</span>
+        </a>
+        <div id="collapseUsuarios" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Opciones de Usuarios:</h6>
+                <a class="collapse-item" href="{% url 'listar_usuarios' %}">Listar Usuarios</a>
+                <a class="collapse-item" href="{% url 'crear_usuario' %}">Agregar Usuario</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Dispositivos -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#configuracionDispositivo">
+            <i class="fas fa-fw fa-mobile-alt"></i>
+            <span>Dispositivos</span>
+        </a>
+        <div id="configuracionDispositivo" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Gestión de Dispositivos:</h6>
+                <a class="collapse-item" href="{% url 'listar_dispositivos' %}">Listar Dispositivos</a>
+                <a class="collapse-item" href="{% url 'crear_dispositivo' %}">Agregar Dispositivo</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Parámetros -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#configuracionParametros">
+            <i class="fas fa-fw fa-cogs"></i>
+            <span>Parámetros</span>
+        </a>
+        <div id="configuracionParametros" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Gestión de Parámetros:</h6>
+                <a class="collapse-item" href="{% url 'listar_sucursales' %}">Sucursales</a>
+                <a class="collapse-item" href="{% url 'listar_marcas' %}">Marcas</a>
+                <a class="collapse-item" href="{% url 'listar_modelos' %}">Modelos</a>
+                <a class="collapse-item" href="{% url 'listar_tipos_service' %}">Tipos de Service</a>
+                <a class="collapse-item" href="{% url 'listar_zonas' %}">Zonas de Reparto</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Separador -->
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Botón para alternar la visibilidad del menú -->
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+</ul>
+<!-- Fin del Sidebar --> 
