@@ -1,13 +1,12 @@
+{% load static %}
 <!-- Tabla de Zonas -->
 <div class="table-responsive">
     <table class="table table-bordered" id="tablaZonas" width="100%" cellspacing="0">
         <thead>
             <tr>
                 <th>Nombre</th>
-                <th>Supervisor</th>
-                <th>Horario</th>
-                <th>Días</th>
-                <th>Estado</th>
+                <th>Descripción</th>
+                <th>Sucursal</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -20,43 +19,17 @@
                         {{ zona.nombre }}
                     </div>
                 </td>
-                <td>
-                    {% if zona.supervisor %}
-                        {{ zona.supervisor.get_full_name }}
-                    {% else %}
-                        <span class="text-muted">Sin asignar</span>
-                    {% endif %}
-                </td>
-                <td>{{ zona.horario_inicio|time:"H:i" }} - {{ zona.horario_fin|time:"H:i" }}</td>
-                <td>
-                    {% for dia in zona.get_dias_display %}
-                        <span class="badge badge-info">{{ dia }}</span>
-                    {% endfor %}
-                </td>
-                <td>
-                    <span class="badge badge-{{ zona.estado|lower }}">
-                        {{ zona.get_estado_display }}
-                    </span>
-                </td>
+                <td>{{ zona.descripcion }}</td>
+                <td>{{ zona.sucursal }}</td>
                 <td>
                     <div class="btn-group">
-                        <a href="{% url 'zonas:editar' zona.id %}" class="btn btn-info btn-sm">
+                        <a href="{% url 'editar_zona' zona.id %}" class="btn btn-info btn-sm">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'zonas:ver' zona.id %}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-map-marked-alt"></i>
-                        </a>
-                        {% if zona.estado == 'ACTIVA' %}
-                        <button type="button" class="btn btn-warning btn-sm" 
-                                onclick="confirmarDesactivacion('{{ zona.id }}')">
-                            <i class="fas fa-ban"></i>
-                        </button>
-                        {% else %}
                         <button type="button" class="btn btn-success btn-sm" 
                                 onclick="confirmarActivacion('{{ zona.id }}')">
                             <i class="fas fa-check"></i>
                         </button>
-                        {% endif %}
                         <button type="button" class="btn btn-danger btn-sm" 
                                 onclick="confirmarEliminacion('{{ zona.id }}')">
                             <i class="fas fa-trash"></i>
@@ -66,7 +39,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No hay zonas registradas</td>
+                <td colspan="4" class="text-center">No hay zonas registradas</td>
             </tr>
             {% endfor %}
         </tbody>

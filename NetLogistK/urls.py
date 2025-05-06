@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path
+from django.urls import path, include
 from apps.vehiculos import views as vehiculos_views
 from apps.usuarios import views as usuarios_views
 from apps.repartos import views as repartos_views
@@ -11,10 +11,11 @@ from apps.mensajes import views as mensajes_views
 from apps.parametros import views as parametros_views
 from apps.recursos import views as recursos_views
 from apps.dispositivos import views as dispositivos_views
-from apps.zonas import views as zonas_views
 from apps.pedidos import views as pedidos_views
 from apps.cronograma import views as cronograma_views
 from .views import dashboard as dashboard_views
+from apps.bienvenida import views as bienvenida_views
+from apps.zonas import views as zonas_views
 
 
 urlpatterns = [
@@ -22,22 +23,19 @@ urlpatterns = [
     #path('exportar-excel/', views.exportar_repartos_excel, name='exportar_excel'),
 
     # Rutas para Vehículos
-    path('editar_vehiculo/<str:vehiculo_id>/', vehiculos_views.editar_vehiculo, name='editar_vehiculo'),
     path('ver_vehiculos/', vehiculos_views.listar_vehiculos, name='ver_vehiculos'),
     path('crear_vehiculo/', vehiculos_views.crear_vehiculo, name='agregar_vehiculo'),
+    path('editar_vehiculo/<str:vehiculo_id>/', vehiculos_views.editar_vehiculo, name='editar_vehiculo'),
     path('eliminar_vehiculo/<str:vehiculo_id>/', vehiculos_views.eliminar_vehiculo, name='eliminar_vehiculo'),
 
     # Rutas para Usuarios
-    path('usuarios/', usuarios_views.listar_usuarios, name='listar_usuarios'),
-    path('crear_usuario/', usuarios_views.crear_usuario, name='crear_usuario'),
-    path('editar_usuario/<str:uid>/', usuarios_views.editar_usuario, name='editar_usuario'),
-    path('eliminar_usuario/<str:uid>/', usuarios_views.eliminar_usuario, name='eliminar_usuario'),
-    path('', usuarios_views.login_view, name='login'),  # Página inicial para el login
     path('login/', usuarios_views.login_view, name='login'),
-    path('logout/', usuarios_views.logout_view, name='logout'),  # Cerrar sesión
-    path('profile/', usuarios_views.logged_in_user_profile, name='profile_logged_in'),  # Perfil del usuario logueado
-    path('profile/', usuarios_views.logged_in_user_profile, name='profile'),
-    path('perfil/', usuarios_views.perfil_usuario, name='perfil_usuario'),
+    path('logout/', usuarios_views.logout_view, name='logout'),
+    path('usuarios/', usuarios_views.listar_usuarios, name='listar_usuarios'),
+    path('usuarios/crear/', usuarios_views.crear_usuario, name='crear_usuario'),
+    path('usuarios/editar/<str:uid>/', usuarios_views.editar_usuario, name='editar_usuario'),
+    path('usuarios/eliminar/<str:uid>/', usuarios_views.eliminar_usuario, name='eliminar_usuario'),
+    path('usuarios/perfil/', usuarios_views.perfil_usuario, name='perfil_usuario'),
 
     # Rutas para Repartos
     path('ver_repartos/', repartos_views.listar_repartos, name='listar_repartos'),
@@ -115,5 +113,7 @@ urlpatterns = [
 
     # Ruta para el dashboard
     path('dashboard/', dashboard_views.dashboard_view, name='dashboard'),
+
+    path('', bienvenida_views.bienvenida_view, name='bienvenida'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

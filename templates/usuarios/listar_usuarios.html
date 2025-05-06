@@ -8,7 +8,7 @@
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Usuarios</h1>
-        <a href="{% url 'usuarios:crear' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <a href="{% url 'crear_usuario' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
             <i class="fas fa-plus fa-sm text-white-50"></i> Crear Usuario
         </a>
     </div>
@@ -24,32 +24,36 @@
                     <thead>
                         <tr>
                             <th>Nombre</th>
+                            <th>Apellido</th>
                             <th>Email</th>
                             <th>Rol</th>
                             <th>Estado</th>
-                            <th>Última conexión</th>
+                            <th>Sucursal</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for usuario in usuarios %}
                         <tr>
-                            <td>{{ usuario.get_full_name }}</td>
+                            <td>{{ usuario.nombre }}</td>
+                            <td>{{ usuario.apellido }}</td>
                             <td>{{ usuario.email }}</td>
-                            <td>{{ usuario.role }}</td>
+                            <td>{{ usuario.rol }}</td>
                             <td>
-                                {% if usuario.is_active %}
-                                <span class="badge badge-success">Activo</span>
+                                {% if usuario.estado == 'Activo' or usuario.estado == 'activo' %}
+                                    <span class="badge badge-success">Activo</span>
                                 {% else %}
-                                <span class="badge badge-danger">Inactivo</span>
+                                    <span class="badge badge-danger">Inactivo</span>
                                 {% endif %}
                             </td>
-                            <td>{{ usuario.last_login|default:"Nunca" }}</td>
+                            <td>{{ usuario.sucursal }}</td>
                             <td>
-                                <a href="{% url 'usuarios:editar' usuario.id %}" class="btn btn-info btn-sm">
+                                {% if usuario.uid %}
+                                <a href="{% url 'editar_usuario' usuario.uid %}" class="btn btn-info btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-danger btn-sm" onclick="confirmarEliminacion('{{ usuario.id }}')">
+                                {% endif %}
+                                <button class="btn btn-danger btn-sm" onclick="confirmarEliminacion('{{ usuario.uid }}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>

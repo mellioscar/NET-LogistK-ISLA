@@ -1,3 +1,5 @@
+{% load static %}
+
 <!-- Tabla de Vehículos -->
 <div class="table-responsive">
     <table class="table table-bordered" id="tablaVehiculos" width="100%" cellspacing="0">
@@ -7,7 +9,8 @@
                 <th>Marca</th>
                 <th>Modelo</th>
                 <th>Año</th>
-                <th>Conductor</th>
+                <th>Sucursal</th>
+                <th>Tipo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -15,38 +18,32 @@
         <tbody>
             {% for vehiculo in vehiculos %}
             <tr>
-                <td>{{ vehiculo.placa }}</td>
-                <td>{{ vehiculo.modelo.marca.nombre }}</td>
-                <td>{{ vehiculo.modelo.nombre }}</td>
+                <td>{{ vehiculo.dominio }}</td>
+                <td>{{ vehiculo.marca }}</td>
+                <td>{{ vehiculo.modelo }}</td>
                 <td>{{ vehiculo.anio }}</td>
+                <td>{{ vehiculo.sucursal }}</td>
                 <td>
-                    {% if vehiculo.conductor %}
-                        {{ vehiculo.conductor.get_full_name }}
-                    {% else %}
-                        <span class="text-muted">Sin asignar</span>
+                    {% if vehiculo.tipo == 'Semi' %}
+                        <img src="{% static 'img/Semirremolque.png' %}" alt="Semirremolque" width="40">
+                    {% elif vehiculo.tipo == 'Semi_con_Hidrogrua' %}
+                        <img src="{% static 'img/Semi_con_Hidrogrua.png' %}" alt="Semi con Hidrogrua" width="40">
+                    {% elif vehiculo.tipo == 'Hidrogrua' %}
+                        <img src="{% static 'img/Hidrogrua.png' %}" alt="Hidrogrua" width="40">
+                    {% elif vehiculo.tipo == 'Camion' %}
+                        <img src="{% static 'img/Camion.png' %}" alt="Camion" width="40">
                     {% endif %}
                 </td>
                 <td>
-                    <span class="badge badge-{{ vehiculo.estado|lower }}">
-                        {{ vehiculo.get_estado_display }}
+                    <span class="badge badge-{{ vehiculo.estado|default:'activo'|lower }}">
+                        {{ vehiculo.estado|default:'Activo' }}
                     </span>
                 </td>
                 <td>
                     <div class="btn-group">
-                        <a href="{% url 'vehiculos:editar' vehiculo.id %}" class="btn btn-info btn-sm">
+                        <a href="{% url 'editar_vehiculo' vehiculo.id %}" class="btn btn-info btn-sm">
                             <i class="fas fa-edit"></i>
                         </a>
-                        {% if vehiculo.estado == 'ACTIVO' %}
-                        <button type="button" class="btn btn-warning btn-sm" 
-                                onclick="confirmarDesactivacion('{{ vehiculo.id }}')">
-                            <i class="fas fa-ban"></i>
-                        </button>
-                        {% else %}
-                        <button type="button" class="btn btn-success btn-sm" 
-                                onclick="confirmarActivacion('{{ vehiculo.id }}')">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        {% endif %}
                         <button type="button" class="btn btn-danger btn-sm" 
                                 onclick="confirmarEliminacion('{{ vehiculo.id }}')">
                             <i class="fas fa-trash"></i>
@@ -80,4 +77,35 @@ $(document).ready(function() {
         order: [[0, 'asc']],
         pageLength: 25
     });
-});</script> 
+});
+
+function confirmarEliminacion(vehiculoId) {
+    $('#formEliminarVehiculo').attr('action', `/eliminar_vehiculo/${vehiculoId}/`);
+    $('#modalEliminarVehiculo').modal('show');
+}
+</script>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminarVehiculo" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar este vehículo?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form id="formEliminarVehiculo" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> 

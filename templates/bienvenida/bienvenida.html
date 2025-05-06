@@ -1,0 +1,112 @@
+{% extends 'base/layouts/base.html' %}
+{% load static %}
+
+{% block title %}Bienvenido a NET-LogistK ISLA{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4 font-weight-bold" style="color: #0e2d6b; text-shadow: 2px 2px 8px rgba(14,45,107,0.15);">¡Bienvenido a NET-LogistK ISLA!</h1>
+            <p class="lead">Selecciona una opción para comenzar</p>
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="col-lg-10">
+            <div class="row g-4 d-flex justify-content-center">
+                <!-- Tarjeta: Repartos -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'listar_repartos' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-primary card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-truck fa-3x mb-3" style="color: #0e2d6b;"></i>
+                                <h5 class="card-title" style="color: #0e2d6b;">Repartos</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <!-- Tarjeta: Pedidos -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'listar_pedidos' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-success card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-boxes fa-3x mb-3" style="color: #2ecc71;"></i>
+                                <h5 class="card-title" style="color: #2ecc71;">Pedidos</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <!-- Tarjeta: Tracking -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'mapa_tracking' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-info card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-map-marked-alt fa-3x mb-3" style="color: #1abc9c;"></i>
+                                <h5 class="card-title" style="color: #1abc9c;">Tracking</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <!-- Tarjeta: Cronograma -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'cronograma_mensual' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-warning card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-calendar-alt fa-3x mb-3" style="color: #f1c40f;"></i>
+                                <h5 class="card-title" style="color: #f1c40f;">Cronograma</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <!-- Tarjeta: Mensajes -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'ver_mensajes' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-info card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-envelope fa-3x mb-3" style="color: #2980b9;"></i>
+                                <h5 class="card-title" style="color: #2980b9;">Mensajes</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <!-- Tarjeta: Dashboard -->
+                <div class="col-12 col-md-4 mb-4 d-flex align-items-stretch">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none w-100">
+                        <div class="card shadow-lg h-100 text-center border-primary card-3d card-hover">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <i class="fas fa-chart-bar fa-3x mb-3" style="color: #0e2d6b;"></i>
+                                <h5 class="card-title" style="color: #0e2d6b;">Dashboard</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.card-3d {
+    transition: transform 0.2s cubic-bezier(.25,.8,.25,1), box-shadow 0.2s;
+    box-shadow: 0 8px 24px 0 rgba(14,45,107,0.15), 0 1.5px 4px 0 rgba(0,0,0,0.08);
+    border-radius: 1rem;
+    border-width: 2px !important;
+    background: #fff;
+}
+.card-3d:hover, .card-3d:focus {
+    transform: translateY(-8px) scale(1.04);
+    box-shadow: 0 16px 32px 0 rgba(14,45,107,0.25), 0 3px 8px 0 rgba(0,0,0,0.12);
+    z-index: 2;
+    border-color: #0e2d6b !important;
+}
+.card-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+@media (min-width: 992px) {
+    .row.g-4 > [class^='col-'] {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+    }
+}
+</style>
+{% endblock %} 

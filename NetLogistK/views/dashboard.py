@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from django.http import HttpRequest, HttpResponse
 from django.contrib import messages
@@ -58,6 +58,55 @@ async def dashboard_view(request: HttpRequest) -> HttpResponse:
         stats_mensuales = await firebase_service.get_monthly_repartos_stats(fecha_seleccionada.year)
         total_vehiculos = await firebase_service.get_available_vehicles_count()
 
+        # --- Consulta y procesamiento de zonas para los próximos 2 días ---
+        zonas_dashboard = []
+        try:
+            # Obtener todas las zonas
+            zonas_ref = firebase_service.db.collection('zonas')
+            zonas_docs = zonas_ref.stream()
+            zonas_dict = {z.id: z.to_dict() for z in zonas_docs}
+
+            # Fechas de los próximos dos días (como datetime)
+            fechas_objetivo = [fecha_actual + timedelta(days=1), fecha_actual + timedelta(days=2)]
+            fecha_inicio = datetime.combine(fechas_objetivo[0], datetime.min.time()).astimezone(zona_horaria)
+            fecha_fin = datetime.combine(fechas_objetivo[1], datetime.max.time()).astimezone(zona_horaria)
+
+            # Obtener repartos de los próximos dos días usando rango de fechas
+            repartos_ref = firebase_service.db.collection('repartos')
+            repartos_query = repartos_ref.where('fecha_salida', '>=', fecha_inicio).where('fecha_salida', '<=', fecha_fin)
+            repartos_docs = repartos_query.stream()
+
+            # Agrupar repartos por zona (normalizando)
+            zona_repartos = {}
+            for r in repartos_docs:
+                data = r.to_dict()
+                zona = str(data.get('zona', '')).strip().lower()
+                estado = data.get('estado_reparto', '').lower()
+                if zona not in zona_repartos:
+                    zona_repartos[zona] = []
+                zona_repartos[zona].append(estado)
+
+            # Procesar estado de cada zona (normalizando nombre)
+            for zona_id, zona_data in zonas_dict.items():
+                nombre_zona = str(zona_data.get('nombre', '')).strip().lower()
+                estados = zona_repartos.get(nombre_zona, [])
+                if not estados:
+                    estado = 'sin_actividad'
+                elif any(e == 'abierto' for e in estados):
+                    estado = 'abierta'
+                elif all(e in ['cerrado', 'finalizado'] for e in estados):
+                    estado = 'cerrada'
+                else:
+                    estado = 'sin_actividad'
+                zonas_dashboard.append({
+                    'nombre': zona_data.get('nombre', zona_id),
+                    'descripcion': zona_data.get('descripcion', ''),
+                    'estado': estado,
+                    'cantidad_repartos': len(estados)
+                })
+        except Exception as ex_zonas:
+            print(f"Error obteniendo estado de zonas: {ex_zonas}")
+
         context = {
             'total_repartos_hoy': stats_dia.get('total', 0),
             'total_repartos_finalizados_hoy': stats_dia.get('finalizados', 0),
@@ -68,7 +117,8 @@ async def dashboard_view(request: HttpRequest) -> HttpResponse:
             'labels_repartos_mensuales': json.dumps(stats_mensuales.get('labels', [])),
             'data_repartos_mensuales': json.dumps(stats_mensuales.get('data', [])),
             'labels_estados': json.dumps(stats_dia.get('labels_estados', [])),
-            'data_estados': json.dumps(stats_dia.get('data_estados', []))
+            'data_estados': json.dumps(stats_dia.get('data_estados', [])),
+            'zonas_dashboard': zonas_dashboard
         }
         # Asegúrate que la plantilla 'dashboard.html' exista en 'templates/'
         return render(request, 'dashboard/dashboard.html', context)
@@ -83,7 +133,8 @@ async def dashboard_view(request: HttpRequest) -> HttpResponse:
             'porcentaje_repartos_finalizados': 0, 'total_vehiculos_disponibles': 0,
             'entregas_incompletas': 0, 'fecha_seleccionada': fecha_actual.strftime("%Y-%m-%d"),
             'labels_repartos_mensuales': json.dumps([]), 'data_repartos_mensuales': json.dumps([0]*12),
-            'labels_estados': json.dumps(['Abierto', 'En Curso', 'Finalizado']), 'data_estados': json.dumps([0,0,0])
+            'labels_estados': json.dumps(['Abierto', 'En Curso', 'Finalizado']), 'data_estados': json.dumps([0,0,0]),
+            'zonas_dashboard': []
         }
         return render(request, 'dashboard/dashboard.html', context_error)
 

@@ -11,6 +11,8 @@
     </div>
 
     {% include 'usuarios/components/formulario_usuario.html' with usuario=usuario %}
+
+    <a href="{% url 'listar_usuarios' %}" class="btn btn-danger btn-block">Cancelar</a>
 </div>
 {% endblock %}
 

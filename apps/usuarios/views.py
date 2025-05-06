@@ -61,7 +61,7 @@ def login_view(request):
 
             # Mensaje de bienvenida
             messages.success(request, f"Bienvenido/a, {nombre} {apellido}!")
-            return redirect("dashboard")
+            return redirect("bienvenida")
 
         except ValueError as e:
             messages.error(request, str(e))

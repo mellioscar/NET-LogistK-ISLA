@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'zonas',
     'pedidos',
     'cronograma',
+    'bienvenida',
 ]
 
 # Middlewares

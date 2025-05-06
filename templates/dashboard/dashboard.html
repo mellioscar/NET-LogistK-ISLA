@@ -121,6 +121,37 @@
             </div>
         </div>
     </div>
+
+    <!-- Botón y acordeón de zonas -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#zonasAccordion" aria-expanded="false" aria-controls="zonasAccordion">
+                Estado de Zonas
+            </button>
+        </div>
+    </div>
+    <div class="collapse" id="zonasAccordion">
+        <div class="zonas-row row justify-content-center flex-wrap">
+            {% for zona in zonas_dashboard %}
+            <div class="zona-col col-6 col-sm-4 col-md-3 col-lg-2 custom-col-xl mb-3 d-flex align-items-stretch">
+                <div class="card card-estado-zona w-100 text-center border-0"
+                    style="background-color: {% if zona.estado == 'abierta' %}#eafaf1{% elif zona.estado == 'cerrada' %}#fdeaea{% else %}#f4f4f4{% endif %}; box-shadow: 0 4px 16px 0 rgba(14,45,107,0.10);">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1" style="color: #0e2d6b; font-size: 1rem;">Zona {{ zona.nombre }}</h6>
+                        <p class="card-text text-muted mb-1" style="font-size: 0.70rem; min-height: 2.2em;">{{ zona.descripcion }}</p>
+                        <span class="badge"
+                            style="font-size: 0.85rem; background-color: {% if zona.estado == 'abierta' %}#2ecc71{% elif zona.estado == 'cerrada' %}#e74c3c{% else %}#b2bec3{% endif %}; color: white;">
+                            {% if zona.estado == 'abierta' %}Abierta{% elif zona.estado == 'cerrada' %}Cerrada{% else %}Sin actividad{% endif %}
+                        </span>
+                        <div class="mt-1">
+                            <small class="text-muted">Próx. 2 días: {{ zona.cantidad_repartos }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <!-- Datos JSON para los gráficos -->
@@ -157,5 +188,34 @@
     border-radius: 5px;
     transition: width 1s ease-in-out;
 }
+
+.card-estado-zona {
+    border-radius: 0.7rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    min-width: 90px;
+    max-width: 120px;
+    margin: 0 auto;
+}
+.card-estado-zona:hover {
+    box-shadow: 0 8px 32px 0 rgba(14,45,107,0.18);
+    transform: translateY(-4px) scale(1.05);
+}
+
+@media (min-width: 1200px) {
+  .zonas-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .custom-col-xl {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+}
 </style>
+
+<script>
+$(document).ready(function() {
+    $('#zonasAccordion').collapse({ toggle: false });
+});
+</script>
 {% endblock %} 
